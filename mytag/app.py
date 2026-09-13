@@ -7,15 +7,12 @@ from PySide6.QtWidgets import QApplication
 
 from .ui.main_window import MainWindow
 
+# Solo ajustes de espaciado/forma: los colores se dejan en manos del tema
+# nativo de la plataforma (en Omarchy, Qt hereda el tema GTK/Adwaita activo
+# vía QT_QPA_PLATFORMTHEME=gtk3, igual que Nautilus). Usar `palette(...)`
+# en vez de colores fijos hace que esto siga funcionando en claro y oscuro.
 STYLESHEET = """
-QMainWindow, QWidget {
-    background-color: #f4f5f7;
-    color: #23262b;
-    font-size: 13px;
-}
 QToolBar {
-    background-color: #ffffff;
-    border-bottom: 1px solid #dcdfe4;
     padding: 6px;
     spacing: 6px;
 }
@@ -24,77 +21,41 @@ QToolBar QToolButton {
     border-radius: 6px;
 }
 QToolBar QToolButton:hover {
-    background-color: #e7ecff;
+    background-color: palette(midlight);
 }
 QTableWidget {
-    background-color: #ffffff;
-    border: 1px solid #dcdfe4;
-    border-radius: 8px;
-    gridline-color: #edeff2;
-    selection-background-color: #d6e0ff;
-    selection-color: #1a1c20;
+    border-radius: 6px;
 }
 QHeaderView::section {
-    background-color: #f0f1f4;
-    color: #4a4f57;
     padding: 6px;
-    border: none;
-    border-bottom: 1px solid #dcdfe4;
     font-weight: 600;
 }
 QLineEdit {
-    background-color: #ffffff;
-    border: 1px solid #ccd0d7;
     border-radius: 6px;
     padding: 5px 8px;
 }
-QLineEdit:focus {
-    border: 1px solid #5b7cfa;
-}
-QLineEdit:disabled {
-    background-color: #eceef1;
-}
 QPushButton {
-    background-color: #ffffff;
-    border: 1px solid #ccd0d7;
     border-radius: 6px;
     padding: 7px 12px;
 }
-QPushButton:hover {
-    background-color: #eef1f8;
-}
-QPushButton:disabled {
-    color: #9aa0a8;
-}
 QPushButton#primaryButton {
-    background-color: #5b7cfa;
+    background-color: palette(highlight);
+    color: palette(highlighted-text);
     border: none;
-    color: #ffffff;
     font-weight: 600;
-}
-QPushButton#primaryButton:hover {
-    background-color: #4a6bf0;
+    padding: 8px 12px;
 }
 QLabel#coverPreview {
-    background-color: #ffffff;
-    border: 1px dashed #ccd0d7;
+    border: 1px dashed palette(mid);
     border-radius: 8px;
-    color: #9aa0a8;
 }
 QLabel#coverInfo {
-    color: #6b7078;
+    color: palette(mid);
     font-size: 11px;
 }
 QLabel#editorStatus {
-    color: #6b7078;
+    color: palette(mid);
     font-style: italic;
-}
-QStatusBar {
-    background-color: #ffffff;
-    border-top: 1px solid #dcdfe4;
-}
-QSplitter::handle {
-    background-color: #dcdfe4;
 }
 """
 
@@ -102,7 +63,6 @@ QSplitter::handle {
 def main() -> int:
     app = QApplication(sys.argv)
     app.setApplicationName("MyTag")
-    app.setStyle("Fusion")
     app.setStyleSheet(STYLESHEET)
 
     window = MainWindow()
