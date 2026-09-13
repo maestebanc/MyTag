@@ -1,4 +1,4 @@
-"""Diálogo para buscar y elegir una portada de MusicBrainz/Cover Art Archive."""
+"""Diálogo para buscar y elegir una portada (MusicBrainz, iTunes, ...)."""
 from __future__ import annotations
 
 import threading
@@ -9,7 +9,8 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gdk, GdkPixbuf, GLib, GObject, Gtk
 
-from .. import musicbrainz
+from .. import cover_search
+from ..cover_types import CoverCandidate, CoverSearchError, download_bytes
 
 
 class CoverSearchDialog(Adw.Dialog):
@@ -23,14 +24,16 @@ class CoverSearchDialog(Adw.Dialog):
         super().__init__()
         self._album = album
         self._artist = artist
-        self._selected_candidate: musicbrainz.CoverCandidate | None = None
-        self.set_title("Buscar portada en MusicBrainz")
+        self._selected_candidate: CoverCandidate | None = None
+        # bytes ya descargados por candidato, para no volver a bajarlos al aceptar
+        self._downloaded: dict[int, bytes] = {}
+        self.set_title("Buscar portada")
         self.set_content_width(640)
         self.set_content_height(560)
 
         toolbar_view = Adw.ToolbarView()
         header = Adw.HeaderBar()
-        subtitle = Adw.WindowTitle(title="Buscar portada en MusicBrainz", subtitle=f"{artist} — {album}")
+        subtitle = Adw.WindowTitle(title="Buscar portada", subtitle=f"{artist} — {album}")
         header.set_title_widget(subtitle)
         toolbar_view.add_top_bar(header)
 
@@ -57,7 +60,7 @@ class CoverSearchDialog(Adw.Dialog):
         spinner.set_size_request(32, 32)
         spinner.start()
         box.append(spinner)
-        self._loading_label = Gtk.Label(label="Buscando portadas en MusicBrainz…")
+        self._loading_label = Gtk.Label(label="Buscando portadas…")
         box.append(self._loading_label)
         return box
 
@@ -99,12 +102,8 @@ class CoverSearchDialog(Adw.Dialog):
     # ---------- búsqueda en segundo plano ----------
 
     def _search_worker(self) -> None:
-        try:
-            candidates = musicbrainz.search_cover_candidates(self._album, self._artist)
-        except musicbrainz.MusicBrainzError as exc:
-            GLib.idle_add(self._show_message, "dialog-warning-symbolic", "No se pudo buscar", str(exc))
-            return
-        GLib.idle_add(self._show_results, candidates)
+        candidates, errors = cover_search.search_all(self._album, self._artist)
+        GLib.idle_add(self._show_results, candidates, errors)
 
     def _show_message(self, icon_name: str, title: str, description: str) -> bool:
         self._status_page.set_icon_name(icon_name)
@@ -113,20 +112,23 @@ class CoverSearchDialog(Adw.Dialog):
         self._stack.set_visible_child_name("message")
         return False
 
-    def _show_results(self, candidates: list) -> bool:
+    def _show_results(self, candidates: list[CoverCandidate], errors: list[str]) -> bool:
         if not candidates:
-            self._show_message(
-                "edit-find-symbolic",
-                "Sin portadas",
-                "No se encontró ninguna portada en MusicBrainz para este álbum y artista.",
-            )
+            if errors:
+                self._show_message("dialog-warning-symbolic", "No se pudo buscar", "\n".join(errors))
+            else:
+                self._show_message(
+                    "edit-find-symbolic",
+                    "Sin portadas",
+                    "No se encontró ninguna portada para este álbum y artista.",
+                )
             return False
         for candidate in candidates:
             self._flow.append(self._build_candidate_widget(candidate))
         self._stack.set_visible_child_name("results")
         return False
 
-    def _build_candidate_widget(self, candidate: musicbrainz.CoverCandidate) -> Gtk.FlowBoxChild:
+    def _build_candidate_widget(self, candidate: CoverCandidate) -> Gtk.FlowBoxChild:
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         box.set_size_request(150, 150)
         box.set_margin_top(6)
@@ -139,35 +141,43 @@ class CoverSearchDialog(Adw.Dialog):
         picture.set_size_request(140, 140)
         box.append(picture)
 
-        detail = " · ".join(part for part in (candidate.date, candidate.country) if part)
-        label = Gtk.Label(label=detail or "Edición sin fecha")
-        label.add_css_class("dim-label")
-        label.add_css_class("caption")
-        box.append(label)
+        size_label = Gtk.Label(label="Cargando…")
+        size_label.add_css_class("dim-label")
+        size_label.add_css_class("caption")
+        box.append(size_label)
+
+        source_label = Gtk.Label(label=candidate.source)
+        source_label.add_css_class("dim-label")
+        source_label.add_css_class("caption")
+        box.append(source_label)
 
         child = Gtk.FlowBoxChild()
         child.set_child(box)
         child.mytag_candidate = candidate
 
-        threading.Thread(target=self._load_thumbnail, args=(candidate, picture), daemon=True).start()
+        threading.Thread(target=self._load_image, args=(candidate, picture, size_label), daemon=True).start()
         return child
 
-    def _load_thumbnail(self, candidate: musicbrainz.CoverCandidate, picture: Gtk.Picture) -> None:
+    def _load_image(self, candidate: CoverCandidate, picture: Gtk.Picture, size_label: Gtk.Label) -> None:
         try:
-            data = musicbrainz.download_bytes(candidate.thumbnail_url)
-        except musicbrainz.MusicBrainzError:
+            data = download_bytes(candidate.image_url)
+        except CoverSearchError:
+            GLib.idle_add(size_label.set_text, "Error al cargar")
             return
-        GLib.idle_add(self._set_picture_bytes, picture, data)
+        self._downloaded[id(candidate)] = data
+        GLib.idle_add(self._set_picture_bytes, picture, size_label, data)
 
-    def _set_picture_bytes(self, picture: Gtk.Picture, data: bytes) -> bool:
+    def _set_picture_bytes(self, picture: Gtk.Picture, size_label: Gtk.Label, data: bytes) -> bool:
         try:
             loader = GdkPixbuf.PixbufLoader()
             loader.write(data)
             loader.close()
-            texture = Gdk.Texture.new_for_pixbuf(loader.get_pixbuf())
+            pixbuf = loader.get_pixbuf()
+            texture = Gdk.Texture.new_for_pixbuf(pixbuf)
             picture.set_paintable(texture)
+            size_label.set_text(f"{pixbuf.get_width()}×{pixbuf.get_height()}px")
         except GLib.Error:
-            pass
+            size_label.set_text("Imagen no válida")
         return False
 
     # ---------- elegir portada ----------
@@ -186,16 +196,20 @@ class CoverSearchDialog(Adw.Dialog):
         if self._selected_candidate is not None:
             self._accept(self._selected_candidate)
 
-    def _accept(self, candidate: musicbrainz.CoverCandidate) -> None:
+    def _accept(self, candidate: CoverCandidate) -> None:
+        cached = self._downloaded.get(id(candidate))
+        if cached is not None:
+            self._finish(cached)
+            return
         self._loading_label.set_text("Descargando portada…")
         self._stack.set_visible_child_name("loading")
         self.btn_accept.set_sensitive(False)
         threading.Thread(target=self._download_and_finish, args=(candidate,), daemon=True).start()
 
-    def _download_and_finish(self, candidate: musicbrainz.CoverCandidate) -> None:
+    def _download_and_finish(self, candidate: CoverCandidate) -> None:
         try:
-            data = musicbrainz.download_bytes(candidate.large_url)
-        except musicbrainz.MusicBrainzError as exc:
+            data = download_bytes(candidate.image_url)
+        except CoverSearchError as exc:
             GLib.idle_add(self._show_message, "dialog-warning-symbolic", "No se pudo descargar", str(exc))
             return
         GLib.idle_add(self._finish, data)
