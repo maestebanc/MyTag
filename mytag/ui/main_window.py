@@ -86,6 +86,9 @@ class MainWindow(Adw.ApplicationWindow):
     def _build_headerbar(self) -> Adw.HeaderBar:
         header = Adw.HeaderBar()
 
+        self.window_title = Adw.WindowTitle(title="MyTag", subtitle="")
+        header.set_title_widget(self.window_title)
+
         btn_open_files = Gtk.Button(label="Abrir archivos…")
         btn_open_files.connect("clicked", lambda _b: self.open_files_dialog())
         header.pack_start(btn_open_files)
@@ -246,7 +249,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.tag_editor.set_tracks(tracks)
         self.cover_panel.set_tracks(tracks)
 
-    # ---------- aplicar cambios ----------
+    # ---------- aplicar cambios (en memoria, en vivo) ----------
 
     def _on_tag_changes_requested(self, _editor, changes: dict) -> None:
         tracks = self._selected_tracks()
@@ -254,22 +257,21 @@ class MainWindow(Adw.ApplicationWindow):
             for key, value in changes.items():
                 track.set_tag(key, value)
             self._refresh_row_for_track(track)
-        self.tag_editor.set_tracks(tracks)
-        self._toast(f"Cambios aplicados a {len(tracks)} tema(s). Recuerda guardar.")
+        self._update_title_state()
 
     def _on_cover_change_requested(self, _panel, data: bytes, mime: str) -> None:
         tracks = self._selected_tracks()
         for track in tracks:
             track.set_cover_bytes(data, mime)
         self.cover_panel.set_tracks(tracks)
-        self._toast(f"Portada aplicada a {len(tracks)} tema(s). Recuerda guardar.")
+        self._update_title_state()
 
     def _on_cover_remove_requested(self, _panel) -> None:
         tracks = self._selected_tracks()
         for track in tracks:
             track.remove_cover()
         self.cover_panel.set_tracks(tracks)
-        self._toast(f"Portada eliminada de {len(tracks)} tema(s). Recuerda guardar.")
+        self._update_title_state()
 
     def remove_selected_rows(self) -> None:
         indexes = sorted(
@@ -280,15 +282,11 @@ class MainWindow(Adw.ApplicationWindow):
             del self.tracks[i]
             self.list_store.remove(i)
         self._toast(f"Total: {len(self.tracks)} archivo(s) en la lista.")
+        self._update_title_state()
 
     # ---------- guardar ----------
 
     def save_all(self) -> None:
-        if self.tag_editor.has_pending_changes():
-            self.tag_editor.apply_pending()
-        if self.cover_panel.has_pending_changes():
-            self.cover_panel.apply_pending()
-
         dirty = [t for t in self.tracks if t.is_dirty]
         if not dirty:
             self._toast("No hay cambios pendientes de guardar.")
@@ -302,9 +300,17 @@ class MainWindow(Adw.ApplicationWindow):
         if errors:
             self._show_message("Error al guardar", "\n".join(errors))
         self._toast(f"Guardado completado ({len(dirty) - len(errors)} archivo(s)).")
+        self._update_title_state()
 
     def _has_unsaved_changes(self) -> bool:
         return any(t.is_dirty for t in self.tracks)
+
+    def _update_title_state(self) -> None:
+        dirty_count = sum(1 for t in self.tracks if t.is_dirty)
+        if dirty_count:
+            self.window_title.set_subtitle(f"{dirty_count} cambio(s) sin guardar")
+        else:
+            self.window_title.set_subtitle("")
 
     # ---------- arrastrar y soltar ----------
 

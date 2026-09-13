@@ -1,11 +1,16 @@
-"""Panel de previsualización y edición de la portada del álbum (GTK4/Adwaita)."""
+"""Panel de previsualización y edición de la portada del álbum (GTK4/Adwaita).
+
+Cada acción (elegir imagen, redimensionar, quitar) se aplica de inmediato a
+los temas seleccionados (en memoria); "Guardar cambios" en la ventana
+principal es lo único que escribe a disco.
+"""
 from __future__ import annotations
 
 import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Gdk, GdkPixbuf, Gio, GObject, Gtk
+from gi.repository import Gdk, GdkPixbuf, Gio, GLib, GObject, Gtk
 
 from ..cover_utils import read_image_file, resize_image_bytes
 
@@ -23,8 +28,6 @@ class CoverPanel(Gtk.Box):
     def __init__(self):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         self._tracks = []
-        self._pending_data: bytes | None = None
-        self._pending_mime: str = "image/jpeg"
 
         frame = Gtk.Frame()
         frame.add_css_class("card")
@@ -45,52 +48,36 @@ class CoverPanel(Gtk.Box):
         self.info_label = Gtk.Label(label="")
         self.info_label.add_css_class("dim-label")
         self.info_label.add_css_class("caption")
+        self.info_label.set_wrap(True)
+        self.info_label.set_justify(Gtk.Justification.CENTER)
         self.append(self.info_label)
 
-        btn_select = Gtk.Button(label="Seleccionar imagen…")
-        btn_select.connect("clicked", self._on_select_image)
-        self.append(btn_select)
+        self.btn_select = Gtk.Button(label="Seleccionar imagen…")
+        self.btn_select.connect("clicked", self._on_select_image)
+        self.append(self.btn_select)
 
-        btn_resize = Gtk.Button(label="Redimensionar a 500 × 500")
-        btn_resize.connect("clicked", self._on_resize)
-        self.append(btn_resize)
+        self.btn_resize = Gtk.Button(label="Redimensionar (máx. 500 px)")
+        self.btn_resize.connect("clicked", self._on_resize)
+        self.append(self.btn_resize)
 
-        btn_apply = Gtk.Button(label="Aplicar a los seleccionados")
-        btn_apply.add_css_class("suggested-action")
-        btn_apply.connect("clicked", self._on_apply)
-        self.append(btn_apply)
+        self.btn_remove = Gtk.Button(label="Quitar portada")
+        self.btn_remove.add_css_class("destructive-action")
+        self.btn_remove.connect("clicked", self._on_remove)
+        self.append(self.btn_remove)
 
-        btn_remove = Gtk.Button(label="Quitar portada")
-        btn_remove.add_css_class("destructive-action")
-        btn_remove.connect("clicked", self._on_remove)
-        self.append(btn_remove)
-
-        self._refresh_preview()
+        self.set_tracks([])
 
     def set_tracks(self, tracks) -> None:
         self._tracks = tracks
-        self._pending_data = None
-        self._refresh_preview()
-
-    def has_pending_changes(self) -> bool:
-        return bool(self._pending_data is not None and self._tracks)
-
-    def apply_pending(self) -> None:
-        if not self.has_pending_changes():
-            return
-        self.emit("cover-change-requested", self._pending_data, self._pending_mime)
-        self._pending_data = None
+        enabled = bool(tracks)
+        self.btn_select.set_sensitive(enabled)
+        self.btn_resize.set_sensitive(enabled)
+        self.btn_remove.set_sensitive(enabled)
         self._refresh_preview()
 
     # ---------- helpers internos ----------
 
     def _refresh_preview(self) -> None:
-        if self._pending_data is not None:
-            self._show_bytes(self._pending_data)
-            w, h = self._pixbuf_size(self._pending_data)
-            self.info_label.set_text(f"Pendiente de aplicar · {w}×{h}px")
-            return
-
         if not self._tracks:
             self._show_placeholder("Sin temas cargados")
             self.info_label.set_text("")
@@ -123,7 +110,7 @@ class CoverPanel(Gtk.Box):
             texture = Gdk.Texture.new_for_pixbuf(pixbuf)
             self.picture.set_paintable(texture)
             self._stack.set_visible_child_name("picture")
-        except GObject.GError:
+        except GLib.Error:
             self._show_placeholder("Imagen no válida")
 
     @staticmethod
@@ -152,35 +139,31 @@ class CoverPanel(Gtk.Box):
     def _on_select_image_finished(self, dialog, result) -> None:
         try:
             gfile = dialog.open_finish(result)
-        except GObject.GError:
+        except GLib.Error:
             return
-        if gfile is None:
+        if gfile is None or not self._tracks:
             return
         path = gfile.get_path()
         if not path:
             return
         data, mime = read_image_file(path)
-        self._pending_data = data
-        self._pending_mime = mime
-        self._refresh_preview()
+        self.emit("cover-change-requested", data, mime)
 
     def _on_resize(self, _button) -> None:
-        source = self._pending_data
-        if source is None and len(self._tracks) == 1:
-            source = self._tracks[0].get_cover_bytes()
+        if not self._tracks:
+            return
+        covers = {t.get_cover_bytes() for t in self._tracks}
+        if len(covers) != 1:
+            self.info_label.set_text("Los temas seleccionados tienen portadas distintas.")
+            return
+        source = next(iter(covers))
         if source is None:
+            self.info_label.set_text("No hay portada que redimensionar.")
             return
         data, mime = resize_image_bytes(source)
-        self._pending_data = data
-        self._pending_mime = mime
-        self._refresh_preview()
-
-    def _on_apply(self, _button) -> None:
-        self.apply_pending()
+        self.emit("cover-change-requested", data, mime)
 
     def _on_remove(self, _button) -> None:
         if not self._tracks:
             return
-        self._pending_data = None
         self.emit("cover-remove-requested")
-        self._refresh_preview()

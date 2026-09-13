@@ -4,7 +4,7 @@ from __future__ import annotations
 import io
 import mimetypes
 
-from PIL import Image, ImageOps
+from PIL import Image
 
 from .constants import COVER_SIZE
 
@@ -20,12 +20,17 @@ def read_image_file(path: str) -> tuple[bytes, str]:
 
 
 def resize_image_bytes(data: bytes, size: tuple[int, int] = COVER_SIZE) -> tuple[bytes, str]:
-    """Recorta y redimensiona una imagen (bytes) al tamaño dado, devolviendo JPEG."""
+    """Redimensiona una imagen (bytes) para que quepa en el tamaño dado,
+    manteniendo su proporción original (sin recortar). Por ejemplo, una
+    imagen de 5000x4900 con size=(500, 500) queda en 500x490."""
     img = Image.open(io.BytesIO(data))
     img = img.convert("RGB")
-    fitted = ImageOps.fit(img, size, Image.LANCZOS)
+    max_w, max_h = size
+    ratio = min(max_w / img.width, max_h / img.height)
+    new_size = (max(1, round(img.width * ratio)), max(1, round(img.height * ratio)))
+    resized = img.resize(new_size, Image.LANCZOS)
     buf = io.BytesIO()
-    fitted.save(buf, format="JPEG", quality=92)
+    resized.save(buf, format="JPEG", quality=92)
     return buf.getvalue(), "image/jpeg"
 
 

@@ -1,4 +1,8 @@
-"""Panel de edición de etiquetas, con soporte para edición múltiple (GTK4/Adwaita)."""
+"""Panel de edición de etiquetas, con soporte para edición múltiple (GTK4/Adwaita).
+
+Cada cambio se aplica de inmediato a los temas seleccionados (en memoria);
+"Guardar cambios" en la ventana principal es lo único que escribe a disco.
+"""
 from __future__ import annotations
 
 import gi
@@ -22,10 +26,8 @@ class TagEditor(Gtk.Box):
     def __init__(self):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         self._tracks = []
-        self._touched: set[str] = set()
         self._loading = False
         self._rows: dict[str, Adw.EntryRow] = {}
-
         self._labels: dict[str, str] = dict(TAG_FIELDS)
 
         group = Adw.PreferencesGroup()
@@ -44,16 +46,10 @@ class TagEditor(Gtk.Box):
         self.status_label.set_xalign(0)
         self.append(self.status_label)
 
-        self.apply_button = Gtk.Button(label="Aplicar cambios a los seleccionados")
-        self.apply_button.add_css_class("suggested-action")
-        self.apply_button.connect("clicked", lambda _b: self.apply_pending())
-        self.append(self.apply_button)
-
         self.set_tracks([])
 
     def set_tracks(self, tracks) -> None:
         self._tracks = tracks
-        self._touched.clear()
         self._loading = True
         enabled = bool(tracks)
         for key, row in self._rows.items():
@@ -71,7 +67,6 @@ class TagEditor(Gtk.Box):
                 row.set_text("")
                 row.set_title(f"{base_label} · {MULTIPLE_VALUES_PLACEHOLDER}")
         self._loading = False
-        self.apply_button.set_sensitive(enabled)
 
         if not tracks:
             self.status_label.set_text("Selecciona uno o varios archivos FLAC en la tabla.")
@@ -80,17 +75,7 @@ class TagEditor(Gtk.Box):
         else:
             self.status_label.set_text(f"Editando {len(tracks)} temas a la vez")
 
-    def has_pending_changes(self) -> bool:
-        return bool(self._tracks and self._touched)
-
-    def apply_pending(self) -> None:
-        if not self.has_pending_changes():
-            return
-        changes = {key: self._rows[key].get_text() for key in self._touched}
-        self.emit("changes-requested", changes)
-        self._touched.clear()
-
     def _on_row_changed(self, row, key: str) -> None:
-        if self._loading:
+        if self._loading or not self._tracks:
             return
-        self._touched.add(key)
+        self.emit("changes-requested", {key: row.get_text()})
