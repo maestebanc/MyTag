@@ -12,15 +12,26 @@ gi.require_version("Pango", "1.0")
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk, Pango
 
 from ..audio_track import AudioTrack
-from ..constants import TAG_FIELDS
 from .cover_panel import CoverPanel
 from .tag_editor import TagEditor
 from .track_item import TrackItem
 
-COLUMNS = [("__file__", "Archivo")] + TAG_FIELDS
+DEFAULT_WINDOW_WIDTH = 1150
+DEFAULT_WINDOW_HEIGHT = 650
+
+# Columnas de la tabla de pistas: solo lo imprescindible para identificar
+# cada tema de un vistazo. La edición completa de tags vive en el panel
+# de la derecha.
+TRACK_LIST_COLUMNS = [
+    ("tracknumber", "Nº", 56),
+    ("title", "Título", None),  # se expande para ocupar el espacio restante
+    ("albumartist", "Artista", 150),
+]
 
 
-def _make_column(title: str, prop_name: str, expand: bool = False) -> Gtk.ColumnViewColumn:
+def _make_column(
+    title: str, prop_name: str, expand: bool = False, fixed_width: int | None = None
+) -> Gtk.ColumnViewColumn:
     factory = Gtk.SignalListItemFactory()
 
     def on_setup(_factory, list_item: Gtk.ListItem) -> None:
@@ -54,6 +65,8 @@ def _make_column(title: str, prop_name: str, expand: bool = False) -> Gtk.Column
     column = Gtk.ColumnViewColumn(title=title, factory=factory)
     if expand:
         column.set_expand(True)
+    if fixed_width is not None:
+        column.set_fixed_width(fixed_width)
     column.set_resizable(True)
     return column
 
@@ -61,7 +74,7 @@ def _make_column(title: str, prop_name: str, expand: bool = False) -> Gtk.Column
 class MainWindow(Adw.ApplicationWindow):
     def __init__(self, app: Adw.Application):
         super().__init__(application=app, title="MyTag")
-        self.set_default_size(1150, 650)
+        self.set_default_size(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)
 
         self.tracks: list[AudioTrack] = []
         self.list_store = Gio.ListStore(item_type=TrackItem)
@@ -111,12 +124,13 @@ class MainWindow(Adw.ApplicationWindow):
     def _build_body(self) -> Gtk.Widget:
         paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
         paned.set_wide_handle(True)
-        paned.set_position(700)
+        paned.set_position(DEFAULT_WINDOW_WIDTH // 2)
 
         self.column_view = Gtk.ColumnView(model=self.selection_model)
-        self.column_view.append_column(_make_column("Archivo", "filename", expand=True))
-        for key, label in TAG_FIELDS:
-            self.column_view.append_column(_make_column(label, key.lower()))
+        for prop_name, label, width in TRACK_LIST_COLUMNS:
+            self.column_view.append_column(
+                _make_column(label, prop_name, expand=width is None, fixed_width=width)
+            )
 
         scroller = Gtk.ScrolledWindow()
         scroller.set_child(self.column_view)
@@ -145,7 +159,7 @@ class MainWindow(Adw.ApplicationWindow):
         side_scroller.set_child(side_box)
         side_scroller.set_hexpand(True)
         paned.set_end_child(side_scroller)
-        paned.set_resize_end_child(False)
+        paned.set_resize_end_child(True)
 
         return paned
 
