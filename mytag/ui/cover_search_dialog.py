@@ -23,9 +23,10 @@ class CoverSearchDialog(Adw.Dialog):
         super().__init__()
         self._album = album
         self._artist = artist
+        self._selected_candidate: musicbrainz.CoverCandidate | None = None
         self.set_title("Buscar portada en MusicBrainz")
         self.set_content_width(640)
-        self.set_content_height(520)
+        self.set_content_height(560)
 
         toolbar_view = Adw.ToolbarView()
         header = Adw.HeaderBar()
@@ -40,6 +41,8 @@ class CoverSearchDialog(Adw.Dialog):
         self._stack.add_named(self._build_results_page(), "results")
         toolbar_view.set_content(self._stack)
 
+        toolbar_view.add_bottom_bar(self._build_action_bar())
+
         self.set_child(toolbar_view)
         self._stack.set_visible_child_name("loading")
 
@@ -49,6 +52,7 @@ class CoverSearchDialog(Adw.Dialog):
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         box.set_halign(Gtk.Align.CENTER)
         box.set_valign(Gtk.Align.CENTER)
+        box.set_vexpand(True)
         spinner = Gtk.Spinner()
         spinner.set_size_request(32, 32)
         spinner.start()
@@ -68,12 +72,29 @@ class CoverSearchDialog(Adw.Dialog):
         self._flow.set_margin_bottom(16)
         self._flow.set_margin_start(16)
         self._flow.set_margin_end(16)
-        self._flow.set_selection_mode(Gtk.SelectionMode.NONE)
+        self._flow.set_selection_mode(Gtk.SelectionMode.SINGLE)
+        self._flow.connect("selected-children-changed", self._on_selection_changed)
+        self._flow.connect("child-activated", self._on_child_activated)
 
         scroller = Gtk.ScrolledWindow()
         scroller.set_child(self._flow)
         scroller.set_vexpand(True)
         return scroller
+
+    def _build_action_bar(self) -> Gtk.Widget:
+        bar = Gtk.ActionBar()
+
+        btn_cancel = Gtk.Button(label="Cancelar")
+        btn_cancel.connect("clicked", lambda _b: self.close())
+        bar.pack_start(btn_cancel)
+
+        self.btn_accept = Gtk.Button(label="Aceptar")
+        self.btn_accept.add_css_class("suggested-action")
+        self.btn_accept.set_sensitive(False)
+        self.btn_accept.connect("clicked", self._on_accept_clicked)
+        bar.pack_end(self.btn_accept)
+
+        return bar
 
     # ---------- búsqueda en segundo plano ----------
 
@@ -105,9 +126,13 @@ class CoverSearchDialog(Adw.Dialog):
         self._stack.set_visible_child_name("results")
         return False
 
-    def _build_candidate_widget(self, candidate: musicbrainz.CoverCandidate) -> Gtk.Widget:
+    def _build_candidate_widget(self, candidate: musicbrainz.CoverCandidate) -> Gtk.FlowBoxChild:
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         box.set_size_request(150, 150)
+        box.set_margin_top(6)
+        box.set_margin_bottom(6)
+        box.set_margin_start(6)
+        box.set_margin_end(6)
 
         picture = Gtk.Picture()
         picture.set_content_fit(Gtk.ContentFit.COVER)
@@ -120,14 +145,12 @@ class CoverSearchDialog(Adw.Dialog):
         label.add_css_class("caption")
         box.append(label)
 
-        button = Gtk.Button()
-        button.set_child(box)
-        button.add_css_class("flat")
-        button.set_tooltip_text("Usar esta portada")
-        button.connect("clicked", self._on_candidate_clicked, candidate)
+        child = Gtk.FlowBoxChild()
+        child.set_child(box)
+        child.mytag_candidate = candidate
 
         threading.Thread(target=self._load_thumbnail, args=(candidate, picture), daemon=True).start()
-        return button
+        return child
 
     def _load_thumbnail(self, candidate: musicbrainz.CoverCandidate, picture: Gtk.Picture) -> None:
         try:
@@ -149,9 +172,24 @@ class CoverSearchDialog(Adw.Dialog):
 
     # ---------- elegir portada ----------
 
-    def _on_candidate_clicked(self, _button, candidate: musicbrainz.CoverCandidate) -> None:
+    def _on_selection_changed(self, flow_box: Gtk.FlowBox) -> None:
+        selected = flow_box.get_selected_children()
+        self._selected_candidate = selected[0].mytag_candidate if selected else None
+        self.btn_accept.set_sensitive(self._selected_candidate is not None)
+
+    def _on_child_activated(self, _flow_box, child: Gtk.FlowBoxChild) -> None:
+        # doble clic (o Enter): equivale a seleccionar y aceptar directamente
+        self._selected_candidate = child.mytag_candidate
+        self._accept(self._selected_candidate)
+
+    def _on_accept_clicked(self, _button) -> None:
+        if self._selected_candidate is not None:
+            self._accept(self._selected_candidate)
+
+    def _accept(self, candidate: musicbrainz.CoverCandidate) -> None:
         self._loading_label.set_text("Descargando portada…")
         self._stack.set_visible_child_name("loading")
+        self.btn_accept.set_sensitive(False)
         threading.Thread(target=self._download_and_finish, args=(candidate,), daemon=True).start()
 
     def _download_and_finish(self, candidate: musicbrainz.CoverCandidate) -> None:
