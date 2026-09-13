@@ -59,7 +59,7 @@ class CoverPanel(QWidget):
 
         btn_apply = QPushButton("Aplicar a los temas seleccionados")
         btn_apply.setObjectName("primaryButton")
-        btn_apply.clicked.connect(self._on_apply)
+        btn_apply.clicked.connect(self.apply_pending)
 
         btn_remove = QPushButton("Quitar portada")
         btn_remove.clicked.connect(self._on_remove)
@@ -142,8 +142,11 @@ class CoverPanel(QWidget):
         self._pending_mime = mime
         self._refresh_preview()
 
-    def _on_apply(self) -> None:
-        if self._pending_data is None or not self._tracks:
+    def has_pending_changes(self) -> bool:
+        return bool(self._pending_data is not None and self._tracks)
+
+    def apply_pending(self) -> None:
+        if not self.has_pending_changes():
             return
         self.coverChangeRequested.emit(self._pending_data, self._pending_mime)
         self._pending_data = None

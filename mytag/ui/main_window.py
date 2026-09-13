@@ -212,6 +212,14 @@ class MainWindow(QMainWindow):
     # ---------- guardar ----------
 
     def save_all(self) -> None:
+        # Confirma automáticamente cualquier edición de tags o portada que se
+        # vea en pantalla pero que el usuario no haya pulsado "Aplicar" para
+        # ella, para que "Guardar cambios" nunca se quede sin efecto.
+        if self.tag_editor.has_pending_changes():
+            self.tag_editor.apply_pending()
+        if self.cover_panel.has_pending_changes():
+            self.cover_panel.apply_pending()
+
         dirty = [t for t in self.tracks if t.is_dirty]
         if not dirty:
             self.statusBar().showMessage("No hay cambios pendientes de guardar.")

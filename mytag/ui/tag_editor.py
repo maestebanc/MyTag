@@ -37,7 +37,7 @@ class TagEditor(QWidget):
 
         self.apply_button = QPushButton("Aplicar cambios a los temas seleccionados")
         self.apply_button.setObjectName("primaryButton")
-        self.apply_button.clicked.connect(self._on_apply)
+        self.apply_button.clicked.connect(self.apply_pending)
         outer.addWidget(self.apply_button)
         outer.addStretch()
 
@@ -71,8 +71,11 @@ class TagEditor(QWidget):
         else:
             self.status_label.setText(f"Editando {len(tracks)} temas a la vez")
 
-    def _on_apply(self) -> None:
-        if not self._tracks or not self._touched:
+    def has_pending_changes(self) -> bool:
+        return bool(self._tracks and self._touched)
+
+    def apply_pending(self) -> None:
+        if not self.has_pending_changes():
             return
         changes = {key: self._edits[key].text() for key in self._touched}
         self.changesRequested.emit(changes)
