@@ -1,3 +1,7 @@
-PySide6>=6.7
+# La interfaz usa GTK4 + Libadwaita a través de PyGObject, que en Arch se
+# instala como paquete de sistema (no vía pip):
+#   sudo pacman -S --needed gtk4 libadwaita python-gobject
+# El venv del proyecto se crea con --system-site-packages para poder
+# importar esos bindings; estos dos paquetes sí se instalan con pip:
 mutagen>=1.47
 Pillow>=10.0
