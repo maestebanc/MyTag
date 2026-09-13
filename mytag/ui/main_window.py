@@ -243,6 +243,9 @@ class MainWindow(Adw.ApplicationWindow):
             self._show_message("Algunos archivos no se pudieron cargar", "\n".join(errors))
         self._toast(f"{added} archivo(s) añadido(s). Total: {len(self.tracks)}.")
 
+        if added and self.selection_model.get_selection().get_size() == 0:
+            self.selection_model.select_item(0, True)
+
     def _refresh_row_for_track(self, track: AudioTrack) -> None:
         index = self.tracks.index(track)
         item = self.list_store.get_item(index)
