@@ -23,6 +23,7 @@ class CoverPanel(Gtk.Box):
     __gsignals__ = {
         "cover-change-requested": (GObject.SignalFlags.RUN_FIRST, None, (object, str)),
         "cover-remove-requested": (GObject.SignalFlags.RUN_FIRST, None, ()),
+        "musicbrainz-search-requested": (GObject.SignalFlags.RUN_FIRST, None, ()),
     }
 
     def __init__(self):
@@ -56,6 +57,10 @@ class CoverPanel(Gtk.Box):
         self.btn_select.connect("clicked", self._on_select_image)
         self.append(self.btn_select)
 
+        self.btn_musicbrainz = Gtk.Button(label="Buscar en MusicBrainz…")
+        self.btn_musicbrainz.connect("clicked", lambda _b: self.emit("musicbrainz-search-requested"))
+        self.append(self.btn_musicbrainz)
+
         self.btn_resize = Gtk.Button(label="Redimensionar (máx. 500 px)")
         self.btn_resize.connect("clicked", self._on_resize)
         self.append(self.btn_resize)
@@ -71,6 +76,7 @@ class CoverPanel(Gtk.Box):
         self._tracks = tracks
         enabled = bool(tracks)
         self.btn_select.set_sensitive(enabled)
+        self.btn_musicbrainz.set_sensitive(enabled)
         self.btn_resize.set_sensitive(enabled)
         self.btn_remove.set_sensitive(enabled)
         self._refresh_preview()

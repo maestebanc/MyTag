@@ -13,6 +13,7 @@ from gi.repository import Adw, Gdk, Gio, GLib, Gtk, Pango
 
 from ..audio_track import AudioTrack
 from .cover_panel import CoverPanel
+from .cover_search_dialog import CoverSearchDialog
 from .tag_editor import TagEditor
 from .track_item import TrackItem
 
@@ -148,6 +149,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.cover_panel = CoverPanel()
         self.cover_panel.connect("cover-change-requested", self._on_cover_change_requested)
         self.cover_panel.connect("cover-remove-requested", self._on_cover_remove_requested)
+        self.cover_panel.connect("musicbrainz-search-requested", self._on_musicbrainz_search_requested)
         side_box.append(self.cover_panel)
 
         self.tag_editor = TagEditor()
@@ -289,6 +291,33 @@ class MainWindow(Adw.ApplicationWindow):
             track.remove_cover()
         self.cover_panel.set_tracks(tracks)
         self._update_title_state()
+
+    def _on_musicbrainz_search_requested(self, _panel) -> None:
+        tracks = self._selected_tracks()
+        if not tracks:
+            self._show_message("MusicBrainz", "Selecciona antes uno o varios temas.")
+            return
+
+        albums = {t.get_tag("ALBUM").strip() for t in tracks}
+        artists = {t.get_tag("ALBUMARTIST").strip() for t in tracks}
+        if len(albums) != 1 or len(artists) != 1 or not next(iter(albums)) or not next(iter(artists)):
+            self._show_message(
+                "MusicBrainz",
+                "Todos los temas seleccionados deben compartir el mismo Álbum y el mismo "
+                "Artista del álbum (y ninguno de los dos puede estar vacío) para poder "
+                "buscar la portada.",
+            )
+            return
+
+        album = next(iter(albums))
+        artist = next(iter(artists))
+        dialog = CoverSearchDialog(album, artist)
+        dialog.connect("cover-chosen", self._on_musicbrainz_cover_chosen)
+        dialog.present(self)
+
+    def _on_musicbrainz_cover_chosen(self, _dialog, data: bytes, mime: str) -> None:
+        self._on_cover_change_requested(None, data, mime)
+        self._toast("Portada de MusicBrainz aplicada. Recuerda guardar.")
 
     def remove_selected_rows(self) -> None:
         indexes = sorted(
