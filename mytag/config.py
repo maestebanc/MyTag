@@ -9,10 +9,27 @@ import gi
 gi.require_version("GLib", "2.0")
 from gi.repository import GLib
 
+SUPPORTED_LANGUAGES = ["es", "en", "ca"]
+# Si el idioma del sistema no es ninguno de los soportados, se usa este.
+DEFAULT_LANGUAGE_FALLBACK = "en"
+
 DEFAULTS = {
-    "language": "es",
     "ui_scale": 100,
 }
+
+
+def _detect_system_language() -> str:
+    """Idioma del sistema (variables LANGUAGE/LC_ALL/LC_MESSAGES/LANG), si es
+    uno de los soportados; si no, DEFAULT_LANGUAGE_FALLBACK."""
+    for var in ("LANGUAGE", "LC_ALL", "LC_MESSAGES", "LANG"):
+        value = os.environ.get(var)
+        if not value:
+            continue
+        for part in value.split(":"):
+            code = part.split(".")[0].split("_")[0].lower()
+            if code in SUPPORTED_LANGUAGES:
+                return code
+    return DEFAULT_LANGUAGE_FALLBACK
 
 
 def _config_path() -> str:
@@ -28,8 +45,17 @@ def load_config() -> dict:
             data = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         data = {}
+
+    is_first_run = "language" not in data
+    if is_first_run:
+        data["language"] = _detect_system_language()
+
     merged = dict(DEFAULTS)
     merged.update(data)
+
+    if is_first_run:
+        save_config(merged)
+
     return merged
 
 

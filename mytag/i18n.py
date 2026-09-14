@@ -2,8 +2,7 @@
 from __future__ import annotations
 
 from . import config as _config
-
-SUPPORTED_LANGUAGES = ["es", "en", "ca"]
+from .config import SUPPORTED_LANGUAGES
 
 # El nombre de cada idioma se muestra siempre en sí mismo (autoglotónimo),
 # no se traduce según el idioma activo.
