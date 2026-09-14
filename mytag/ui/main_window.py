@@ -9,7 +9,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 gi.require_version("Gdk", "4.0")
 gi.require_version("Pango", "1.0")
-from gi.repository import Adw, Gdk, Gio, GLib, Gtk, Pango
+from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk, Pango
 
 from .. import i18n
 from ..audio_track import AudioTrack
@@ -80,8 +80,11 @@ class MainWindow(Adw.ApplicationWindow):
         self.set_default_size(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)
 
         self.tracks: list[AudioTrack] = []
+        self._search_query = ""
         self.list_store = Gio.ListStore(item_type=TrackItem)
-        self.selection_model = Gtk.MultiSelection(model=self.list_store)
+        self.search_filter = Gtk.CustomFilter.new(self._track_matches_search)
+        self.filter_model = Gtk.FilterListModel(model=self.list_store, filter=self.search_filter)
+        self.selection_model = Gtk.MultiSelection(model=self.filter_model)
         self.selection_model.connect("selection-changed", self._on_selection_changed)
 
         self.toast_overlay = Adw.ToastOverlay()
@@ -105,17 +108,14 @@ class MainWindow(Adw.ApplicationWindow):
         self.window_title = Adw.WindowTitle(title=i18n.t("app.title"), subtitle="")
         header.set_title_widget(self.window_title)
 
-        btn_open_files = Gtk.Button(label=i18n.t("toolbar.open_files"))
-        btn_open_files.connect("clicked", lambda _b: self.open_files_dialog())
-        header.pack_start(btn_open_files)
+        header.pack_start(self._build_open_menu_button())
 
-        btn_open_folder = Gtk.Button(label=i18n.t("toolbar.open_folder"))
-        btn_open_folder.connect("clicked", lambda _b: self.open_folder_dialog())
-        header.pack_start(btn_open_folder)
+        self.btn_search_toggle = Gtk.ToggleButton()
+        self.btn_search_toggle.set_icon_name("system-search-symbolic")
+        self.btn_search_toggle.set_tooltip_text(i18n.t("toolbar.search"))
+        header.pack_start(self.btn_search_toggle)
 
-        btn_remove = Gtk.Button(label=i18n.t("toolbar.remove"))
-        btn_remove.connect("clicked", lambda _b: self.remove_selected_rows())
-        header.pack_start(btn_remove)
+        header.pack_start(self._build_more_menu_button())
 
         btn_save = Gtk.Button(label=i18n.t("toolbar.save"))
         btn_save.add_css_class("suggested-action")
@@ -130,18 +130,76 @@ class MainWindow(Adw.ApplicationWindow):
 
         return header
 
+    def _build_open_menu_button(self) -> Gtk.MenuButton:
+        menu_button = Gtk.MenuButton(label=i18n.t("toolbar.open"))
+
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        box.set_margin_top(6)
+        box.set_margin_bottom(6)
+        box.set_margin_start(6)
+        box.set_margin_end(6)
+
+        popover = Gtk.Popover()
+
+        def add_item(label: str, callback) -> None:
+            btn = Gtk.Button(label=label)
+            btn.add_css_class("flat")
+            btn.get_child().set_halign(Gtk.Align.START)
+            btn.connect("clicked", lambda _b: (callback(), popover.popdown()))
+            box.append(btn)
+
+        add_item(i18n.t("toolbar.open_files"), self.open_files_dialog)
+        add_item(i18n.t("toolbar.open_folder"), self.open_folder_dialog)
+
+        popover.set_child(box)
+        menu_button.set_popover(popover)
+        return menu_button
+
+    def _build_more_menu_button(self) -> Gtk.MenuButton:
+        menu_button = Gtk.MenuButton()
+        menu_button.set_icon_name("view-more-symbolic")
+        menu_button.set_tooltip_text(i18n.t("toolbar.more_actions"))
+
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        box.set_margin_top(6)
+        box.set_margin_bottom(6)
+        box.set_margin_start(6)
+        box.set_margin_end(6)
+
+        popover = Gtk.Popover()
+
+        def add_item(label: str, callback) -> None:
+            btn = Gtk.Button(label=label)
+            btn.add_css_class("flat")
+            btn.get_child().set_halign(Gtk.Align.START)
+            btn.connect("clicked", lambda _b: (callback(), popover.popdown()))
+            box.append(btn)
+
+        add_item(i18n.t("menu.autonumber"), self.autonumber_selected)
+        add_item(i18n.t("menu.revert_selected"), self.revert_selected)
+
+        popover.set_child(box)
+        menu_button.set_popover(popover)
+        return menu_button
+
     def _open_preferences(self) -> None:
         dialog = PreferencesDialog()
         dialog.present(self)
 
-    def _build_body(self) -> Gtk.Widget:
-        paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
-        paned.set_wide_handle(True)
-        paned.set_position(DEFAULT_WINDOW_WIDTH // 2)
-        paned.set_margin_top(12)
-        paned.set_margin_bottom(12)
-        paned.set_margin_start(12)
-        paned.set_margin_end(12)
+    def _build_track_list_panel(self) -> Gtk.Widget:
+        self.search_entry = Gtk.SearchEntry()
+        self.search_entry.set_placeholder_text(i18n.t("list.search_placeholder"))
+        self.search_entry.connect("changed", self._on_search_changed)
+
+        self.search_bar = Gtk.SearchBar()
+        self.search_bar.set_child(self.search_entry)
+        self.search_bar.connect_entry(self.search_entry)
+        self.btn_search_toggle.bind_property(
+            "active",
+            self.search_bar,
+            "search-mode-enabled",
+            GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE,
+        )
 
         self.column_view = Gtk.ColumnView(model=self.selection_model)
         for prop_name, label_key, width in TRACK_LIST_COLUMNS:
@@ -153,9 +211,56 @@ class MainWindow(Adw.ApplicationWindow):
         scroller.set_child(self.column_view)
         scroller.set_hexpand(True)
         scroller.set_vexpand(True)
-        scroller.add_css_class("card")
-        scroller.set_overflow(Gtk.Overflow.HIDDEN)
-        paned.set_start_child(scroller)
+
+        bottom_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        bottom_bar.set_margin_top(8)
+        bottom_bar.set_margin_bottom(8)
+        bottom_bar.set_margin_start(8)
+        bottom_bar.set_margin_end(8)
+
+        btn_remove_selected = Gtk.Button(label=i18n.t("toolbar.remove"))
+        btn_remove_selected.set_hexpand(True)
+        btn_remove_selected.connect("clicked", lambda _b: self.remove_selected_rows())
+        bottom_bar.append(btn_remove_selected)
+
+        btn_clear_all = Gtk.Button(label=i18n.t("list.clear_all"))
+        btn_clear_all.set_hexpand(True)
+        btn_clear_all.add_css_class("destructive-action")
+        btn_clear_all.connect("clicked", lambda _b: self.clear_all_tracks())
+        bottom_bar.append(btn_clear_all)
+
+        left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        left_box.append(self.search_bar)
+        left_box.append(scroller)
+        left_box.append(Gtk.Separator())
+        left_box.append(bottom_bar)
+
+        left_frame = Gtk.Frame()
+        left_frame.add_css_class("card")
+        left_frame.set_overflow(Gtk.Overflow.HIDDEN)
+        left_frame.set_child(left_box)
+        return left_frame
+
+    def _track_matches_search(self, item: TrackItem, _user_data=None) -> bool:
+        if not self._search_query:
+            return True
+        haystack = f"{item.title} {item.artist} {item.filename}".lower()
+        return self._search_query in haystack
+
+    def _on_search_changed(self, entry: Gtk.SearchEntry) -> None:
+        self._search_query = entry.get_text().strip().lower()
+        self.search_filter.changed(Gtk.FilterChange.DIFFERENT)
+
+    def _build_body(self) -> Gtk.Widget:
+        paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
+        paned.set_wide_handle(True)
+        paned.set_position(DEFAULT_WINDOW_WIDTH // 2)
+        paned.set_margin_top(12)
+        paned.set_margin_bottom(12)
+        paned.set_margin_start(12)
+        paned.set_margin_end(12)
+
+        paned.set_start_child(self._build_track_list_panel())
         paned.set_resize_start_child(True)
 
         side_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
@@ -275,10 +380,10 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _selected_tracks(self) -> list[AudioTrack]:
         tracks = []
-        n = self.list_store.get_n_items()
+        n = self.selection_model.get_n_items()
         for i in range(n):
             if self.selection_model.is_selected(i):
-                tracks.append(self.list_store.get_item(i).track)
+                tracks.append(self.selection_model.get_item(i).track)
         return tracks
 
     def _on_selection_changed(self, _model, _pos, _n_items) -> None:
@@ -332,16 +437,79 @@ class MainWindow(Adw.ApplicationWindow):
         self._on_cover_change_requested(None, data, mime)
         self._toast(i18n.t("toast.cover_mb_applied"))
 
-    def remove_selected_rows(self) -> None:
-        indexes = sorted(
-            (i for i in range(self.list_store.get_n_items()) if self.selection_model.is_selected(i)),
-            reverse=True,
-        )
-        for i in indexes:
-            del self.tracks[i]
-            self.list_store.remove(i)
-        self._toast(i18n.t("toast.total_files", total=len(self.tracks)))
+    # ---------- otras acciones sobre los seleccionados ----------
+
+    def autonumber_selected(self) -> None:
+        tracks = self._selected_tracks()
+        if not tracks:
+            return
+        for index, track in enumerate(tracks, start=1):
+            track.set_tag("TRACKNUMBER", str(index))
+            self._refresh_row_for_track(track)
+        self.tag_editor.set_tracks(self._selected_tracks())
         self._update_title_state()
+        self._toast(i18n.t("toast.autonumbered", n=len(tracks)))
+
+    def revert_selected(self) -> None:
+        tracks = self._selected_tracks()
+        if not tracks:
+            return
+        for track in tracks:
+            track.revert()
+            self._refresh_row_for_track(track)
+        self.tag_editor.set_tracks(tracks)
+        self.cover_panel.set_tracks(tracks)
+        self._update_title_state()
+        self._toast(i18n.t("toast.reverted", n=len(tracks)))
+
+    def remove_selected_rows(self) -> None:
+        tracks = self._selected_tracks()
+        if not tracks:
+            return
+
+        def do_remove() -> None:
+            self._remove_tracks({id(t) for t in tracks})
+            self._toast(i18n.t("toast.total_files", total=len(self.tracks)))
+            self._update_title_state()
+
+        self._confirm_discard_unsaved(tracks, do_remove)
+
+    def clear_all_tracks(self) -> None:
+        if not self.tracks:
+            return
+        tracks = list(self.tracks)
+
+        def do_clear() -> None:
+            self.list_store.remove_all()
+            self.tracks = []
+            self._toast(i18n.t("toast.total_files", total=0))
+            self._update_title_state()
+
+        self._confirm_discard_unsaved(tracks, do_clear)
+
+    def _remove_tracks(self, ids: set[int]) -> None:
+        for i in reversed(range(self.list_store.get_n_items())):
+            if id(self.list_store.get_item(i).track) in ids:
+                self.list_store.remove(i)
+        self.tracks = [t for t in self.tracks if id(t) not in ids]
+
+    def _confirm_discard_unsaved(self, tracks: list[AudioTrack], on_confirmed) -> None:
+        dirty_count = sum(1 for t in tracks if t.is_dirty)
+        if not dirty_count:
+            on_confirmed()
+            return
+
+        dialog = Adw.AlertDialog(
+            heading=i18n.t("dialog.unsaved_title"),
+            body=i18n.t("confirm.discard_unsaved_body", n=dirty_count),
+        )
+        dialog.add_response("cancel", i18n.t("action.cancel"))
+        dialog.add_response("continue", i18n.t("action.continue"))
+        dialog.set_response_appearance("continue", Adw.ResponseAppearance.DESTRUCTIVE)
+        dialog.set_default_response("cancel")
+        dialog.set_close_response("cancel")
+        dialog.connect("response", lambda _d, response: on_confirmed() if response == "continue" else None)
+        dialog.present(self)
 
     # ---------- guardar ----------
 

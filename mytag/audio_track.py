@@ -71,3 +71,9 @@ class AudioTrack:
         if self.dirty_tags or had_cover_change:
             self.flac.save()
         self.dirty_tags = False
+
+    def revert(self) -> None:
+        """Descarta los cambios pendientes (tags y portada), releyendo del disco."""
+        self.flac = FLAC(self.path)
+        self.pending_cover = None
+        self.dirty_tags = False

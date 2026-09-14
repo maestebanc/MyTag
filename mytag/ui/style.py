@@ -1,5 +1,7 @@
-"""Utilidades de estilo compartidas: CSS extra y escala de interfaz."""
+"""Utilidades de estilo compartidas: CSS extra, icono y escala de interfaz."""
 from __future__ import annotations
+
+import os
 
 import gi
 
@@ -7,6 +9,21 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Gdk, Gtk
 
 from .. import config
+
+APP_ID = "com.maestebanc.MyTag"
+
+# Cuando se ejecuta desde el propio repositorio (./run.sh) los iconos no
+# están instalados en el tema de iconos del sistema; en un paquete
+# (deb/rpm/flatpak) sí lo estarán en /usr/share/icons, donde GTK ya busca
+# por defecto, y esta ruta extra simplemente no existirá.
+_REPO_ICON_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "icons"
+)
+
+
+def register_icon_theme() -> None:
+    if os.path.isdir(_REPO_ICON_DIR):
+        Gtk.IconTheme.get_for_display(Gdk.Display.get_default()).add_search_path(_REPO_ICON_DIR)
 
 # Un pequeño toque de profundidad: los paneles "elevados" (.card, listas en
 # caja) se tiñen con una fracción del color de primer plano del tema activo,

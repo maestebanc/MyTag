@@ -47,11 +47,30 @@ def t(key: str, **kwargs) -> str:
 
 STRINGS: dict[str, dict[str, str]] = {
     # ---- barra de herramientas / ventana principal ----
+    "toolbar.open": {"es": "Abrir", "en": "Open", "ca": "Obre"},
     "toolbar.open_files": {"es": "Abrir archivos…", "en": "Open files…", "ca": "Obre fitxers…"},
     "toolbar.open_folder": {"es": "Abrir carpeta…", "en": "Open folder…", "ca": "Obre una carpeta…"},
-    "toolbar.remove": {"es": "Quitar de la lista", "en": "Remove from list", "ca": "Treu de la llista"},
+    "toolbar.remove": {"es": "Quitar seleccionados", "en": "Remove selected", "ca": "Treu els seleccionats"},
     "toolbar.save": {"es": "Guardar cambios", "en": "Save changes", "ca": "Desa els canvis"},
     "toolbar.preferences": {"es": "Preferencias", "en": "Preferences", "ca": "Preferències"},
+    "toolbar.search": {"es": "Buscar", "en": "Search", "ca": "Cerca"},
+    "toolbar.more_actions": {"es": "Más acciones", "en": "More actions", "ca": "Més accions"},
+    "menu.autonumber": {
+        "es": "Autonumerar pistas seleccionadas",
+        "en": "Auto-number selected tracks",
+        "ca": "Numera automàticament els temes seleccionats",
+    },
+    "menu.revert_selected": {
+        "es": "Revertir cambios de los seleccionados",
+        "en": "Revert changes to selected tracks",
+        "ca": "Reverteix els canvis dels temes seleccionats",
+    },
+    "list.clear_all": {"es": "Vaciar lista", "en": "Clear list", "ca": "Buida la llista"},
+    "list.search_placeholder": {
+        "es": "Buscar por título o artista…",
+        "en": "Search by title or artist…",
+        "ca": "Cerca per títol o artista…",
+    },
     "window.unsaved_changes": {
         "es": "{n} cambio(s) sin guardar",
         "en": "{n} unsaved change(s)",
@@ -115,6 +134,35 @@ STRINGS: dict[str, dict[str, str]] = {
     "action.discard": {"es": "Salir sin guardar", "en": "Quit without saving", "ca": "Surt sense desar"},
     "action.ok": {"es": "Vale", "en": "OK", "ca": "D'acord"},
     "action.accept": {"es": "Aceptar", "en": "Accept", "ca": "Accepta"},
+    "action.continue": {"es": "Continuar", "en": "Continue", "ca": "Continua"},
+    "action.save": {"es": "Guardar", "en": "Save", "ca": "Desa"},
+    # ---- confirmaciones de pérdida de cambios sin guardar ----
+    "confirm.discard_unsaved_body": {
+        "es": "Hay {n} tema(s) con cambios sin guardar. Si continúas, se perderán. "
+        "¿Quieres continuar?",
+        "en": "There are {n} track(s) with unsaved changes. If you continue, they "
+        "will be lost. Do you want to continue?",
+        "ca": "Hi ha {n} tema(es) amb canvis sense desar. Si continues, es "
+        "perdran. Vols continuar?",
+    },
+    # ---- toasts de las nuevas acciones de lista ----
+    "toast.autonumbered": {
+        "es": "Numeración aplicada a {n} tema(s).",
+        "en": "Numbering applied to {n} track(s).",
+        "ca": "Numeració aplicada a {n} tema(es).",
+    },
+    "toast.reverted": {
+        "es": "Cambios descartados en {n} tema(s).",
+        "en": "Changes discarded for {n} track(s).",
+        "ca": "Canvis descartats a {n} tema(es).",
+    },
+    # ---- portada: pegar desde el portapapeles ----
+    "cover.paste": {"es": "Pegar portada", "en": "Paste cover", "ca": "Enganxa la portada"},
+    "cover.paste_no_image": {
+        "es": "El portapapeles no contiene ninguna imagen.",
+        "en": "The clipboard doesn't contain an image.",
+        "ca": "El porta-retalls no conté cap imatge.",
+    },
     # ---- MusicBrainz (validación) ----
     "mb.title": {"es": "MusicBrainz", "en": "MusicBrainz", "ca": "MusicBrainz"},
     "mb.select_tracks_first": {
@@ -263,8 +311,11 @@ STRINGS: dict[str, dict[str, str]] = {
     },
     "prefs.appearance_group": {"es": "Apariencia", "en": "Appearance", "ca": "Aparença"},
     "prefs.ui_scale": {
-        "es": "Escala de la interfaz (%)",
-        "en": "Interface scale (%)",
-        "ca": "Escala de la interfície (%)",
+        "es": "Escala de la interfaz",
+        "en": "Interface scale",
+        "ca": "Escala de la interfície",
     },
+    "prefs.ui_scale_custom": {"es": "Personalizada (%)", "en": "Custom (%)", "ca": "Personalitzada (%)"},
+    "prefs.ui_scale_custom_option": {"es": "Personalizada…", "en": "Custom…", "ca": "Personalitzada…"},
+    "prefs.save": {"es": "Guardar", "en": "Save", "ca": "Desa"},
 }

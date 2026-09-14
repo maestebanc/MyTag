@@ -55,9 +55,15 @@ class CoverPanel(Gtk.Box):
         self.info_label.set_justify(Gtk.Justification.CENTER)
         self.append(self.info_label)
 
+        pick_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8, homogeneous=True)
         self.btn_select = Gtk.Button(label=i18n.t("cover.select_image"))
         self.btn_select.connect("clicked", self._on_select_image)
-        self.append(self.btn_select)
+        pick_row.append(self.btn_select)
+
+        self.btn_paste = Gtk.Button(label=i18n.t("cover.paste"))
+        self.btn_paste.connect("clicked", self._on_paste)
+        pick_row.append(self.btn_paste)
+        self.append(pick_row)
 
         self.btn_musicbrainz = Gtk.Button(label=i18n.t("cover.musicbrainz_search"))
         self.btn_musicbrainz.connect("clicked", lambda _b: self.emit("musicbrainz-search-requested"))
@@ -90,6 +96,7 @@ class CoverPanel(Gtk.Box):
         self._tracks = tracks
         enabled = bool(tracks)
         self.btn_select.set_sensitive(enabled)
+        self.btn_paste.set_sensitive(enabled)
         self.btn_musicbrainz.set_sensitive(enabled)
         self.size_row.set_sensitive(enabled)
         self.btn_resize.set_sensitive(enabled)
@@ -169,6 +176,23 @@ class CoverPanel(Gtk.Box):
             return
         data, mime = read_image_file(path)
         self.emit("cover-change-requested", data, mime)
+
+    def _on_paste(self, _button) -> None:
+        if not self._tracks:
+            return
+        clipboard = self.get_clipboard()
+        clipboard.read_texture_async(None, self._on_paste_texture_ready)
+
+    def _on_paste_texture_ready(self, clipboard: Gdk.Clipboard, result) -> None:
+        try:
+            texture = clipboard.read_texture_finish(result)
+        except GLib.Error:
+            texture = None
+        if texture is None:
+            self.info_label.set_text(i18n.t("cover.paste_no_image"))
+            return
+        png_bytes = texture.save_to_png_bytes()
+        self.emit("cover-change-requested", png_bytes.get_data(), "image/png")
 
     def _on_resize(self, _button) -> None:
         if not self._tracks:

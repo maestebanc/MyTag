@@ -11,9 +11,7 @@ from gi.repository import Adw, Gio, Gtk
 
 from . import config
 from .ui.main_window import MainWindow
-from .ui.style import apply_ui_scale, load_extra_css
-
-APP_ID = "com.maestebanc.MyTag"
+from .ui.style import APP_ID, apply_ui_scale, load_extra_css, register_icon_theme
 
 
 class MyTagApplication(Adw.Application):
@@ -30,6 +28,8 @@ class MyTagApplication(Adw.Application):
 
     def _on_activate(self, app: Adw.Application) -> None:
         if self.window is None:
+            register_icon_theme()
+            Gtk.Window.set_default_icon_name(APP_ID)
             load_extra_css()
             apply_ui_scale(config.load_config().get("ui_scale", 100))
             self.window = MainWindow(app)

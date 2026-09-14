@@ -1,0 +1,19 @@
+[Desktop Entry]
+Type=Application
+Name=MyTag
+Name[es]=MyTag
+Name[ca]=MyTag
+GenericName=FLAC Tag Editor
+GenericName[es]=Editor de etiquetas FLAC
+GenericName[ca]=Editor d'etiquetes FLAC
+Comment=Edit tags and cover art on your FLAC music files
+Comment[es]=Edita las etiquetas y la portada de tus archivos de música FLAC
+Comment[ca]=Edita les etiquetes i la portada dels teus fitxers de música FLAC
+Exec=mytag
+Icon=com.maestebanc.MyTag
+Terminal=false
+Categories=Audio;AudioVideo;
+StartupWMClass=com.maestebanc.MyTag
+Keywords=music;tags;flac;metadata;cover;audio;
+Keywords[es]=musica;etiquetas;flac;metadatos;portada;audio;
+Keywords[ca]=musica;etiquetes;flac;metadades;portada;audio;
