@@ -7,11 +7,25 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gio, Gtk
+from gi.repository import Adw, Gdk, Gio, Gtk
 
 from .ui.main_window import MainWindow
 
 APP_ID = "com.maestebanc.MyTag"
+
+# Un pequeño toque de profundidad: los paneles "elevados" (.card, listas en
+# caja) se tiñen con una fracción del color de primer plano del tema activo,
+# en vez de un color fijo. Así se ven ligeramente distintos del fondo tanto
+# en temas claros como oscuros, sin romper la integración con el tema nativo.
+EXTRA_CSS = """
+.card,
+list.boxed-list {
+    background-color: alpha(@window_fg_color, 0.05);
+}
+list.boxed-list > row {
+    background-color: transparent;
+}
+"""
 
 
 class MyTagApplication(Adw.Application):
@@ -28,8 +42,17 @@ class MyTagApplication(Adw.Application):
 
     def _on_activate(self, app: Adw.Application) -> None:
         if self.window is None:
+            self._load_extra_css()
             self.window = MainWindow(app)
         self.window.present()
+
+    @staticmethod
+    def _load_extra_css() -> None:
+        provider = Gtk.CssProvider()
+        provider.load_from_string(EXTRA_CSS)
+        Gtk.StyleContext.add_provider_for_display(
+            Gdk.Display.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
 
 
 def main() -> int:

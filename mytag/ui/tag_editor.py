@@ -30,15 +30,25 @@ class TagEditor(Gtk.Box):
         self._rows: dict[str, Adw.EntryRow] = {}
         self._labels: dict[str, str] = dict(TAG_FIELDS)
 
-        group = Adw.PreferencesGroup()
-        group.set_title("Etiquetas")
+        heading = Gtk.Label(label="Etiquetas")
+        heading.add_css_class("heading")
+        heading.set_xalign(0)
+        self.append(heading)
+
+        # Adw.PreferencesGroup solo aplica el estilo de "lista en caja"
+        # dentro de un Adw.PreferencesPage; aquí lo construimos a mano con un
+        # Gtk.ListBox para tener ese mismo aspecto también fuera de ese
+        # contexto.
+        listbox = Gtk.ListBox()
+        listbox.add_css_class("boxed-list")
+        listbox.set_selection_mode(Gtk.SelectionMode.NONE)
         for key, label in TAG_FIELDS:
             row = Adw.EntryRow()
             row.set_title(label)
             row.connect("changed", self._on_row_changed, key)
             self._rows[key] = row
-            group.add(row)
-        self.append(group)
+            listbox.append(row)
+        self.append(listbox)
 
         self.status_label = Gtk.Label(label="Selecciona uno o varios archivos FLAC en la tabla.")
         self.status_label.add_css_class("dim-label")

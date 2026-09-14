@@ -10,8 +10,9 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Gdk, GdkPixbuf, Gio, GLib, GObject, Gtk
+from gi.repository import Adw, Gdk, GdkPixbuf, Gio, GLib, GObject, Gtk
 
+from ..constants import COVER_SIZE
 from ..cover_utils import read_image_file, resize_image_bytes
 
 PREVIEW_SIZE = 260
@@ -61,7 +62,19 @@ class CoverPanel(Gtk.Box):
         self.btn_musicbrainz.connect("clicked", lambda _b: self.emit("musicbrainz-search-requested"))
         self.append(self.btn_musicbrainz)
 
-        self.btn_resize = Gtk.Button(label="Redimensionar (máx. 500 px)")
+        self.size_row = Adw.SpinRow(
+            title="Tamaño máximo (px)",
+            adjustment=Gtk.Adjustment(value=COVER_SIZE[0], lower=16, upper=4000, step_increment=10, page_increment=100),
+        )
+        self.size_row.set_digits(0)
+        self.size_row.set_numeric(True)
+        size_listbox = Gtk.ListBox()
+        size_listbox.add_css_class("boxed-list")
+        size_listbox.set_selection_mode(Gtk.SelectionMode.NONE)
+        size_listbox.append(self.size_row)
+        self.append(size_listbox)
+
+        self.btn_resize = Gtk.Button(label="Redimensionar")
         self.btn_resize.connect("clicked", self._on_resize)
         self.append(self.btn_resize)
 
@@ -77,6 +90,7 @@ class CoverPanel(Gtk.Box):
         enabled = bool(tracks)
         self.btn_select.set_sensitive(enabled)
         self.btn_musicbrainz.set_sensitive(enabled)
+        self.size_row.set_sensitive(enabled)
         self.btn_resize.set_sensitive(enabled)
         self.btn_remove.set_sensitive(enabled)
         self._refresh_preview()
@@ -166,7 +180,8 @@ class CoverPanel(Gtk.Box):
         if source is None:
             self.info_label.set_text("No hay portada que redimensionar.")
             return
-        data, mime = resize_image_bytes(source)
+        size = int(self.size_row.get_value())
+        data, mime = resize_image_bytes(source, size=(size, size))
         self.emit("cover-change-requested", data, mime)
 
     def _on_remove(self, _button) -> None:

@@ -126,6 +126,10 @@ class MainWindow(Adw.ApplicationWindow):
         paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
         paned.set_wide_handle(True)
         paned.set_position(DEFAULT_WINDOW_WIDTH // 2)
+        paned.set_margin_top(12)
+        paned.set_margin_bottom(12)
+        paned.set_margin_start(12)
+        paned.set_margin_end(12)
 
         self.column_view = Gtk.ColumnView(model=self.selection_model)
         for prop_name, label, width in TRACK_LIST_COLUMNS:
@@ -137,14 +141,16 @@ class MainWindow(Adw.ApplicationWindow):
         scroller.set_child(self.column_view)
         scroller.set_hexpand(True)
         scroller.set_vexpand(True)
+        scroller.add_css_class("card")
+        scroller.set_overflow(Gtk.Overflow.HIDDEN)
         paned.set_start_child(scroller)
         paned.set_resize_start_child(True)
 
-        side_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16)
-        side_box.set_margin_top(16)
-        side_box.set_margin_bottom(16)
-        side_box.set_margin_start(16)
-        side_box.set_margin_end(16)
+        side_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
+        side_box.set_margin_top(20)
+        side_box.set_margin_bottom(20)
+        side_box.set_margin_start(20)
+        side_box.set_margin_end(20)
 
         self.cover_panel = CoverPanel()
         self.cover_panel.connect("cover-change-requested", self._on_cover_change_requested)
