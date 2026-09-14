@@ -6,6 +6,8 @@ build-backend = "setuptools.build_meta"
 name = "mytag"
 version = "0.10.0a0"
 description = "Edit tags and cover art on your FLAC music files"
+readme = "README.md"
+license = "MIT"
 requires-python = ">=3.11"
 dependencies = [
     "mutagen>=1.47",

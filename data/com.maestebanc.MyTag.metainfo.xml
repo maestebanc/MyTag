@@ -6,6 +6,7 @@
   <summary xml:lang="es">Edita las etiquetas y la portada de tus archivos FLAC</summary>
   <summary xml:lang="ca">Edita les etiquetes i la portada dels teus fitxers FLAC</summary>
   <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
   <content_rating type="oars-1.1" />
 
   <description>
@@ -32,33 +33,25 @@
       library management, just a clean way to get your FLAC collection's
       metadata right.
     </p>
-    <p xml:lang="es">
-      MyTag es un editor de etiquetas y portadas para archivos FLAC en
-      Linux, simple y centrado en lo esencial. Carga un archivo o una
-      carpeta entera de álbumes de una vez, revisa todo en una lista clara
-      y edita tantos temas a la vez como quieras — MyTag siempre te avisa
-      cuando los temas seleccionados no coinciden en algún valor, para que
-      nunca sobrescribas algo por error.
-    </p>
-    <p xml:lang="es">Funciones:</p>
-    <ul xml:lang="es">
-      <li>Edita Título, Artista, Álbum, Artista del álbum, Año, Género, Nº de pista y Nº de disco, de uno o varios archivos a la vez</li>
-      <li>Elige una portada de tu equipo, pégala desde el portapapeles, o búscala en internet (MusicBrainz e iTunes) sin salir de la app</li>
-      <li>Redimensiona portadas al tamaño que quieras, manteniendo la proporción original</li>
-      <li>Autonumera pistas rápidamente, o revierte cambios sin guardar al estado del disco</li>
-      <li>Busca y filtra listas grandes de temas cargados</li>
-      <li>Disponible en español, inglés y catalán</li>
-      <li>No se escribe nada en disco hasta que decides guardar</li>
-    </ul>
-    <p xml:lang="es">
-      MyTag se centra únicamente en etiquetas y portadas — sin
-      reproducción, sin gestión de bibliotecas, solo una forma sencilla de
-      dejar bien los metadatos de tu colección FLAC.
-    </p>
   </description>
 
   <launchable type="desktop-id">com.maestebanc.MyTag.desktop</launchable>
   <icon type="stock">com.maestebanc.MyTag</icon>
+  <categories>
+    <category>Audio</category>
+    <category>AudioVideo</category>
+  </categories>
+
+  <screenshots>
+    <screenshot type="default">
+      <caption>Main window: track list, cover art and tags</caption>
+      <image>https://raw.githubusercontent.com/maestebanc/MyTag/master/screenshots/main-window.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Searching for cover art on MusicBrainz and iTunes</caption>
+      <image>https://raw.githubusercontent.com/maestebanc/MyTag/master/screenshots/cover-search.png</image>
+    </screenshot>
+  </screenshots>
 
   <url type="homepage">https://github.com/maestebanc/MyTag</url>
 

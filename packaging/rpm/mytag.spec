@@ -5,7 +5,7 @@ Name:           mytag
 Version:        0.10.0
 Release:        0.1.alpha0%{?dist}
 Summary:        Edit tags and cover art on your FLAC music files
-License:        Proprietary
+License:        MIT
 URL:            https://github.com/maestebanc/MyTag
 BuildArch:      noarch
 
