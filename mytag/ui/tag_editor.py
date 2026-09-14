@@ -11,9 +11,8 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, GObject, Gtk
 
-from ..constants import TAG_FIELDS
-
-MULTIPLE_VALUES_PLACEHOLDER = "‹valores distintos›"
+from .. import i18n
+from ..constants import TAG_KEYS
 
 
 class TagEditor(Gtk.Box):
@@ -28,9 +27,8 @@ class TagEditor(Gtk.Box):
         self._tracks = []
         self._loading = False
         self._rows: dict[str, Adw.EntryRow] = {}
-        self._labels: dict[str, str] = dict(TAG_FIELDS)
 
-        heading = Gtk.Label(label="Etiquetas")
+        heading = Gtk.Label(label=i18n.t("editor.heading"))
         heading.add_css_class("heading")
         heading.set_xalign(0)
         self.append(heading)
@@ -42,15 +40,15 @@ class TagEditor(Gtk.Box):
         listbox = Gtk.ListBox()
         listbox.add_css_class("boxed-list")
         listbox.set_selection_mode(Gtk.SelectionMode.NONE)
-        for key, label in TAG_FIELDS:
+        for key in TAG_KEYS:
             row = Adw.EntryRow()
-            row.set_title(label)
+            row.set_title(i18n.t(f"tag.{key.lower()}"))
             row.connect("changed", self._on_row_changed, key)
             self._rows[key] = row
             listbox.append(row)
         self.append(listbox)
 
-        self.status_label = Gtk.Label(label="Selecciona uno o varios archivos FLAC en la tabla.")
+        self.status_label = Gtk.Label(label=i18n.t("editor.select_prompt"))
         self.status_label.add_css_class("dim-label")
         self.status_label.set_wrap(True)
         self.status_label.set_xalign(0)
@@ -64,7 +62,7 @@ class TagEditor(Gtk.Box):
         enabled = bool(tracks)
         for key, row in self._rows.items():
             row.set_sensitive(enabled)
-            base_label = self._labels[key]
+            base_label = i18n.t(f"tag.{key.lower()}")
             if not tracks:
                 row.set_text("")
                 row.set_title(base_label)
@@ -75,15 +73,15 @@ class TagEditor(Gtk.Box):
                 row.set_title(base_label)
             else:
                 row.set_text("")
-                row.set_title(f"{base_label} · {MULTIPLE_VALUES_PLACEHOLDER}")
+                row.set_title(f"{base_label} · {i18n.t('editor.multiple_values')}")
         self._loading = False
 
         if not tracks:
-            self.status_label.set_text("Selecciona uno o varios archivos FLAC en la tabla.")
+            self.status_label.set_text(i18n.t("editor.select_prompt"))
         elif len(tracks) == 1:
-            self.status_label.set_text(f"Editando: {tracks[0].filename}")
+            self.status_label.set_text(i18n.t("editor.editing_one", filename=tracks[0].filename))
         else:
-            self.status_label.set_text(f"Editando {len(tracks)} temas a la vez")
+            self.status_label.set_text(i18n.t("editor.editing_many", n=len(tracks)))
 
     def _on_row_changed(self, row, key: str) -> None:
         if self._loading or not self._tracks:

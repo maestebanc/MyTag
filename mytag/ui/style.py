@@ -1,0 +1,48 @@
+"""Utilidades de estilo compartidas: CSS extra y escala de interfaz."""
+from __future__ import annotations
+
+import gi
+
+gi.require_version("Gtk", "4.0")
+from gi.repository import Gdk, Gtk
+
+from .. import config
+
+# Un pequeño toque de profundidad: los paneles "elevados" (.card, listas en
+# caja) se tiñen con una fracción del color de primer plano del tema activo,
+# en vez de un color fijo. Así se ven ligeramente distintos del fondo tanto
+# en temas claros como oscuros, sin romper la integración con el tema nativo.
+EXTRA_CSS = """
+.card,
+list.boxed-list {
+    background-color: alpha(@window_fg_color, 0.05);
+}
+list.boxed-list > row {
+    background-color: transparent;
+}
+"""
+
+
+def load_extra_css() -> None:
+    provider = Gtk.CssProvider()
+    provider.load_from_string(EXTRA_CSS)
+    Gtk.StyleContext.add_provider_for_display(
+        Gdk.Display.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+    )
+
+
+def _base_dpi() -> int:
+    """DPI (en 1024os) que corresponde al 100%: el que tenía el sistema la
+    primera vez que se ejecutó MyTag, capturado antes de aplicar ningún
+    ajuste propio. Se guarda para que 100% siga significando siempre lo
+    mismo, aunque cambie el DPI del sistema más adelante."""
+    cfg = config.load_config()
+    if "base_dpi" not in cfg:
+        cfg["base_dpi"] = Gtk.Settings.get_default().get_property("gtk-xft-dpi")
+        config.save_config(cfg)
+    return cfg["base_dpi"]
+
+
+def apply_ui_scale(percent: int) -> None:
+    dpi_1024 = int(_base_dpi() * percent / 100)
+    Gtk.Settings.get_default().set_property("gtk-xft-dpi", dpi_1024)

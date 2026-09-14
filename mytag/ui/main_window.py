@@ -11,9 +11,11 @@ gi.require_version("Gdk", "4.0")
 gi.require_version("Pango", "1.0")
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk, Pango
 
+from .. import i18n
 from ..audio_track import AudioTrack
 from .cover_panel import CoverPanel
 from .cover_search_dialog import CoverSearchDialog
+from .preferences_dialog import PreferencesDialog
 from .tag_editor import TagEditor
 from .track_item import TrackItem
 
@@ -22,11 +24,11 @@ DEFAULT_WINDOW_HEIGHT = 650
 
 # Columnas de la tabla de pistas: solo lo imprescindible para identificar
 # cada tema de un vistazo. La edición completa de tags vive en el panel
-# de la derecha.
+# de la derecha. (prop_name, clave i18n, ancho fijo en px o None si se expande)
 TRACK_LIST_COLUMNS = [
-    ("tracknumber", "Nº", 56),
-    ("title", "Título", None),  # se expande para ocupar el espacio restante
-    ("albumartist", "Artista", 150),
+    ("tracknumber", "column.track", 56),
+    ("title", "column.title", None),
+    ("albumartist", "column.artist", 150),
 ]
 
 
@@ -93,34 +95,44 @@ class MainWindow(Adw.ApplicationWindow):
         self.connect("close-request", self._on_close_request)
         self._force_close = False
 
-        self._toast("Abre archivos o una carpeta con FLAC para empezar.")
+        self._toast(i18n.t("toast.startup"))
 
     # ---------- construcción de la interfaz ----------
 
     def _build_headerbar(self) -> Adw.HeaderBar:
         header = Adw.HeaderBar()
 
-        self.window_title = Adw.WindowTitle(title="MyTag", subtitle="")
+        self.window_title = Adw.WindowTitle(title=i18n.t("app.title"), subtitle="")
         header.set_title_widget(self.window_title)
 
-        btn_open_files = Gtk.Button(label="Abrir archivos…")
+        btn_open_files = Gtk.Button(label=i18n.t("toolbar.open_files"))
         btn_open_files.connect("clicked", lambda _b: self.open_files_dialog())
         header.pack_start(btn_open_files)
 
-        btn_open_folder = Gtk.Button(label="Abrir carpeta…")
+        btn_open_folder = Gtk.Button(label=i18n.t("toolbar.open_folder"))
         btn_open_folder.connect("clicked", lambda _b: self.open_folder_dialog())
         header.pack_start(btn_open_folder)
 
-        btn_remove = Gtk.Button(label="Quitar de la lista")
+        btn_remove = Gtk.Button(label=i18n.t("toolbar.remove"))
         btn_remove.connect("clicked", lambda _b: self.remove_selected_rows())
         header.pack_start(btn_remove)
 
-        btn_save = Gtk.Button(label="Guardar cambios")
+        btn_save = Gtk.Button(label=i18n.t("toolbar.save"))
         btn_save.add_css_class("suggested-action")
         btn_save.connect("clicked", lambda _b: self.save_all())
         header.pack_end(btn_save)
 
+        btn_preferences = Gtk.Button()
+        btn_preferences.set_icon_name("emblem-system-symbolic")
+        btn_preferences.set_tooltip_text(i18n.t("toolbar.preferences"))
+        btn_preferences.connect("clicked", lambda _b: self._open_preferences())
+        header.pack_end(btn_preferences)
+
         return header
+
+    def _open_preferences(self) -> None:
+        dialog = PreferencesDialog()
+        dialog.present(self)
 
     def _build_body(self) -> Gtk.Widget:
         paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
@@ -132,9 +144,9 @@ class MainWindow(Adw.ApplicationWindow):
         paned.set_margin_end(12)
 
         self.column_view = Gtk.ColumnView(model=self.selection_model)
-        for prop_name, label, width in TRACK_LIST_COLUMNS:
+        for prop_name, label_key, width in TRACK_LIST_COLUMNS:
             self.column_view.append_column(
-                _make_column(label, prop_name, expand=width is None, fixed_width=width)
+                _make_column(i18n.t(label_key), prop_name, expand=width is None, fixed_width=width)
             )
 
         scroller = Gtk.ScrolledWindow()
@@ -183,9 +195,9 @@ class MainWindow(Adw.ApplicationWindow):
     # ---------- carga de archivos ----------
 
     def open_files_dialog(self) -> None:
-        dialog = Gtk.FileDialog(title="Abrir archivos FLAC")
+        dialog = Gtk.FileDialog(title=i18n.t("dialog.open_files.title"))
         filter_flac = Gtk.FileFilter()
-        filter_flac.set_name("Archivos FLAC")
+        filter_flac.set_name(i18n.t("dialog.open_files.filter_name"))
         filter_flac.add_pattern("*.flac")
         filters = Gio.ListStore.new(Gtk.FileFilter)
         filters.append(filter_flac)
@@ -203,7 +215,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.add_paths(paths)
 
     def open_folder_dialog(self) -> None:
-        dialog = Gtk.FileDialog(title="Abrir carpeta")
+        dialog = Gtk.FileDialog(title=i18n.t("dialog.open_folder.title"))
         dialog.select_folder(self, None, self._on_open_folder_finished)
 
     def _on_open_folder_finished(self, dialog, result) -> None:
@@ -218,7 +230,7 @@ class MainWindow(Adw.ApplicationWindow):
             return
         found = self._find_flac_files(folder)
         if not found:
-            self._show_message("MyTag", "No se encontraron archivos FLAC en esa carpeta.")
+            self._show_message(i18n.t("app.title"), i18n.t("dialog.no_flac_found"))
             return
         self.add_paths(found)
 
@@ -248,8 +260,8 @@ class MainWindow(Adw.ApplicationWindow):
             added += 1
 
         if errors:
-            self._show_message("Algunos archivos no se pudieron cargar", "\n".join(errors))
-        self._toast(f"{added} archivo(s) añadido(s). Total: {len(self.tracks)}.")
+            self._show_message(i18n.t("dialog.load_errors_title"), "\n".join(errors))
+        self._toast(i18n.t("toast.files_added", added=added, total=len(self.tracks)))
 
         if added and self.selection_model.get_selection().get_size() == 0:
             self.selection_model.select_item(0, True)
@@ -301,18 +313,13 @@ class MainWindow(Adw.ApplicationWindow):
     def _on_musicbrainz_search_requested(self, _panel) -> None:
         tracks = self._selected_tracks()
         if not tracks:
-            self._show_message("MusicBrainz", "Selecciona antes uno o varios temas.")
+            self._show_message(i18n.t("mb.title"), i18n.t("mb.select_tracks_first"))
             return
 
         albums = {t.get_tag("ALBUM").strip() for t in tracks}
         artists = {t.get_tag("ALBUMARTIST").strip() for t in tracks}
         if len(albums) != 1 or len(artists) != 1 or not next(iter(albums)) or not next(iter(artists)):
-            self._show_message(
-                "MusicBrainz",
-                "Todos los temas seleccionados deben compartir el mismo Álbum y el mismo "
-                "Artista del álbum (y ninguno de los dos puede estar vacío) para poder "
-                "buscar la portada.",
-            )
+            self._show_message(i18n.t("mb.title"), i18n.t("mb.need_same_album_artist"))
             return
 
         album = next(iter(albums))
@@ -323,7 +330,7 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _on_musicbrainz_cover_chosen(self, _dialog, data: bytes, mime: str) -> None:
         self._on_cover_change_requested(None, data, mime)
-        self._toast("Portada de MusicBrainz aplicada. Recuerda guardar.")
+        self._toast(i18n.t("toast.cover_mb_applied"))
 
     def remove_selected_rows(self) -> None:
         indexes = sorted(
@@ -333,7 +340,7 @@ class MainWindow(Adw.ApplicationWindow):
         for i in indexes:
             del self.tracks[i]
             self.list_store.remove(i)
-        self._toast(f"Total: {len(self.tracks)} archivo(s) en la lista.")
+        self._toast(i18n.t("toast.total_files", total=len(self.tracks)))
         self._update_title_state()
 
     # ---------- guardar ----------
@@ -341,7 +348,7 @@ class MainWindow(Adw.ApplicationWindow):
     def save_all(self) -> None:
         dirty = [t for t in self.tracks if t.is_dirty]
         if not dirty:
-            self._toast("No hay cambios pendientes de guardar.")
+            self._toast(i18n.t("toast.no_pending_changes"))
             return
         errors = []
         for track in dirty:
@@ -350,8 +357,8 @@ class MainWindow(Adw.ApplicationWindow):
             except Exception as exc:  # noqa: BLE001
                 errors.append(f"{track.filename}: {exc}")
         if errors:
-            self._show_message("Error al guardar", "\n".join(errors))
-        self._toast(f"Guardado completado ({len(dirty) - len(errors)} archivo(s)).")
+            self._show_message(i18n.t("dialog.save_error_title"), "\n".join(errors))
+        self._toast(i18n.t("toast.save_done", saved=len(dirty) - len(errors)))
         self._update_title_state()
 
     def _has_unsaved_changes(self) -> bool:
@@ -360,7 +367,7 @@ class MainWindow(Adw.ApplicationWindow):
     def _update_title_state(self) -> None:
         dirty_count = sum(1 for t in self.tracks if t.is_dirty)
         if dirty_count:
-            self.window_title.set_subtitle(f"{dirty_count} cambio(s) sin guardar")
+            self.window_title.set_subtitle(i18n.t("window.unsaved_changes", n=dirty_count))
         else:
             self.window_title.set_subtitle("")
 
@@ -394,7 +401,7 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _show_message(self, heading: str, body: str) -> None:
         dialog = Adw.AlertDialog(heading=heading, body=body)
-        dialog.add_response("ok", "Vale")
+        dialog.add_response("ok", i18n.t("action.ok"))
         dialog.present(self)
 
     # ---------- cierre ----------
@@ -404,11 +411,11 @@ class MainWindow(Adw.ApplicationWindow):
             return False  # permitir el cierre
 
         dialog = Adw.AlertDialog(
-            heading="Cambios sin guardar",
-            body="Hay cambios sin guardar. ¿Quieres salir sin guardarlos?",
+            heading=i18n.t("dialog.unsaved_title"),
+            body=i18n.t("dialog.unsaved_body"),
         )
-        dialog.add_response("cancel", "Cancelar")
-        dialog.add_response("discard", "Salir sin guardar")
+        dialog.add_response("cancel", i18n.t("action.cancel"))
+        dialog.add_response("discard", i18n.t("action.discard"))
         dialog.set_response_appearance("discard", Adw.ResponseAppearance.DESTRUCTIVE)
         dialog.set_default_response("cancel")
         dialog.set_close_response("cancel")

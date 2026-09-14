@@ -6,6 +6,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+from . import i18n
 from .cover_types import CoverCandidate, CoverSearchError
 
 SEARCH_URL = "https://itunes.apple.com/search"
@@ -25,7 +26,7 @@ def search_itunes_candidates(album: str, albumartist: str) -> list[CoverCandidat
         with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT) as response:
             data = json.loads(response.read().decode("utf-8"))
     except urllib.error.URLError as exc:
-        raise CoverSearchError(f"No se pudo conectar con iTunes: {exc}") from exc
+        raise CoverSearchError(i18n.t("error.itunes_connect", reason=exc)) from exc
 
     candidates = []
     for result in data.get("results", []):

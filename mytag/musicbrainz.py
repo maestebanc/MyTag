@@ -7,6 +7,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+from . import i18n
 from .cover_types import CoverCandidate, CoverSearchError
 
 USER_AGENT = "MyTag/0.1 (https://github.com/maestebanc/MyTag)"
@@ -27,12 +28,10 @@ def _get_json(url: str) -> dict:
             return json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
         if exc.code == 503:
-            raise CoverSearchError(
-                "El servidor de MusicBrainz está ocupado ahora mismo. Inténtalo de nuevo en unos segundos."
-            ) from exc
+            raise CoverSearchError(i18n.t("error.mb_busy")) from exc
         raise
     except urllib.error.URLError as exc:
-        raise CoverSearchError(f"No se pudo conectar con MusicBrainz: {exc.reason}") from exc
+        raise CoverSearchError(i18n.t("error.mb_connect", reason=exc.reason)) from exc
 
 
 def _search_releases(album: str, albumartist: str, limit: int = 15) -> list[dict]:

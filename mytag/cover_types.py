@@ -5,6 +5,8 @@ import urllib.error
 import urllib.request
 from dataclasses import dataclass
 
+from . import i18n
+
 USER_AGENT = "MyTag/0.1 (https://github.com/maestebanc/MyTag)"
 REQUEST_TIMEOUT = 12
 
@@ -25,4 +27,4 @@ def download_bytes(url: str) -> bytes:
         with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT) as response:
             return response.read()
     except urllib.error.URLError as exc:
-        raise CoverSearchError(f"No se pudo descargar la imagen: {exc}") from exc
+        raise CoverSearchError(i18n.t("error.download_image", reason=exc)) from exc

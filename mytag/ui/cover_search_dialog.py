@@ -9,7 +9,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gdk, GdkPixbuf, GLib, GObject, Gtk
 
-from .. import cover_search
+from .. import cover_search, i18n
 from ..cover_types import CoverCandidate, CoverSearchError, download_bytes
 
 
@@ -27,13 +27,13 @@ class CoverSearchDialog(Adw.Dialog):
         self._selected_candidate: CoverCandidate | None = None
         # bytes ya descargados por candidato, para no volver a bajarlos al aceptar
         self._downloaded: dict[int, bytes] = {}
-        self.set_title("Buscar portada")
+        self.set_title(i18n.t("coversearch.title"))
         self.set_content_width(640)
         self.set_content_height(560)
 
         toolbar_view = Adw.ToolbarView()
         header = Adw.HeaderBar()
-        subtitle = Adw.WindowTitle(title="Buscar portada", subtitle=f"{artist} — {album}")
+        subtitle = Adw.WindowTitle(title=i18n.t("coversearch.title"), subtitle=f"{artist} — {album}")
         header.set_title_widget(subtitle)
         toolbar_view.add_top_bar(header)
 
@@ -60,7 +60,7 @@ class CoverSearchDialog(Adw.Dialog):
         spinner.set_size_request(32, 32)
         spinner.start()
         box.append(spinner)
-        self._loading_label = Gtk.Label(label="Buscando portadas…")
+        self._loading_label = Gtk.Label(label=i18n.t("coversearch.loading"))
         box.append(self._loading_label)
         return box
 
@@ -87,11 +87,11 @@ class CoverSearchDialog(Adw.Dialog):
     def _build_action_bar(self) -> Gtk.Widget:
         bar = Gtk.ActionBar()
 
-        btn_cancel = Gtk.Button(label="Cancelar")
+        btn_cancel = Gtk.Button(label=i18n.t("action.cancel"))
         btn_cancel.connect("clicked", lambda _b: self.close())
         bar.pack_start(btn_cancel)
 
-        self.btn_accept = Gtk.Button(label="Aceptar")
+        self.btn_accept = Gtk.Button(label=i18n.t("action.accept"))
         self.btn_accept.add_css_class("suggested-action")
         self.btn_accept.set_sensitive(False)
         self.btn_accept.connect("clicked", self._on_accept_clicked)
@@ -115,12 +115,14 @@ class CoverSearchDialog(Adw.Dialog):
     def _show_results(self, candidates: list[CoverCandidate], errors: list[str]) -> bool:
         if not candidates:
             if errors:
-                self._show_message("dialog-warning-symbolic", "No se pudo buscar", "\n".join(errors))
+                self._show_message(
+                    "dialog-warning-symbolic", i18n.t("coversearch.search_failed_title"), "\n".join(errors)
+                )
             else:
                 self._show_message(
                     "edit-find-symbolic",
-                    "Sin portadas",
-                    "No se encontró ninguna portada para este álbum y artista.",
+                    i18n.t("coversearch.no_results_title"),
+                    i18n.t("coversearch.no_results_desc"),
                 )
             return False
         for candidate in candidates:
@@ -141,7 +143,7 @@ class CoverSearchDialog(Adw.Dialog):
         picture.set_size_request(140, 140)
         box.append(picture)
 
-        size_label = Gtk.Label(label="Cargando…")
+        size_label = Gtk.Label(label=i18n.t("coversearch.loading_item"))
         size_label.add_css_class("dim-label")
         size_label.add_css_class("caption")
         box.append(size_label)
@@ -162,7 +164,7 @@ class CoverSearchDialog(Adw.Dialog):
         try:
             data = download_bytes(candidate.image_url)
         except CoverSearchError:
-            GLib.idle_add(size_label.set_text, "Error al cargar")
+            GLib.idle_add(size_label.set_text, i18n.t("coversearch.load_error"))
             return
         self._downloaded[id(candidate)] = data
         GLib.idle_add(self._set_picture_bytes, picture, size_label, data)
@@ -177,7 +179,7 @@ class CoverSearchDialog(Adw.Dialog):
             picture.set_paintable(texture)
             size_label.set_text(f"{pixbuf.get_width()}×{pixbuf.get_height()}px")
         except GLib.Error:
-            size_label.set_text("Imagen no válida")
+            size_label.set_text(i18n.t("cover.invalid_image"))
         return False
 
     # ---------- elegir portada ----------
@@ -201,7 +203,7 @@ class CoverSearchDialog(Adw.Dialog):
         if cached is not None:
             self._finish(cached)
             return
-        self._loading_label.set_text("Descargando portada…")
+        self._loading_label.set_text(i18n.t("coversearch.downloading"))
         self._stack.set_visible_child_name("loading")
         self.btn_accept.set_sensitive(False)
         threading.Thread(target=self._download_and_finish, args=(candidate,), daemon=True).start()
@@ -210,7 +212,9 @@ class CoverSearchDialog(Adw.Dialog):
         try:
             data = download_bytes(candidate.image_url)
         except CoverSearchError as exc:
-            GLib.idle_add(self._show_message, "dialog-warning-symbolic", "No se pudo descargar", str(exc))
+            GLib.idle_add(
+                self._show_message, "dialog-warning-symbolic", i18n.t("coversearch.download_failed_title"), str(exc)
+            )
             return
         GLib.idle_add(self._finish, data)
 

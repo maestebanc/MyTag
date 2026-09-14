@@ -1,0 +1,270 @@
+"""Internacionalización de MyTag: español, inglés y catalán."""
+from __future__ import annotations
+
+from . import config as _config
+
+SUPPORTED_LANGUAGES = ["es", "en", "ca"]
+
+# El nombre de cada idioma se muestra siempre en sí mismo (autoglotónimo),
+# no se traduce según el idioma activo.
+LANGUAGE_NAMES = {"es": "Español", "en": "English", "ca": "Català"}
+
+FALLBACK_LANGUAGE = "es"
+
+_cfg = _config.load_config()
+_current_language = _cfg.get("language", FALLBACK_LANGUAGE)
+if _current_language not in SUPPORTED_LANGUAGES:
+    _current_language = FALLBACK_LANGUAGE
+
+
+def get_language() -> str:
+    return _current_language
+
+
+def set_language(lang: str) -> None:
+    global _current_language
+    if lang not in SUPPORTED_LANGUAGES:
+        return
+    _current_language = lang
+    cfg = _config.load_config()
+    cfg["language"] = lang
+    _config.save_config(cfg)
+
+
+def t(key: str, **kwargs) -> str:
+    """Traduce `key` al idioma activo, con placeholders opcionales estilo str.format."""
+    entry = STRINGS.get(key)
+    if entry is None:
+        return key
+    text = entry.get(_current_language) or entry.get(FALLBACK_LANGUAGE) or key
+    if kwargs:
+        try:
+            return text.format(**kwargs)
+        except (KeyError, IndexError):
+            return text
+    return text
+
+
+STRINGS: dict[str, dict[str, str]] = {
+    # ---- barra de herramientas / ventana principal ----
+    "toolbar.open_files": {"es": "Abrir archivos…", "en": "Open files…", "ca": "Obre fitxers…"},
+    "toolbar.open_folder": {"es": "Abrir carpeta…", "en": "Open folder…", "ca": "Obre una carpeta…"},
+    "toolbar.remove": {"es": "Quitar de la lista", "en": "Remove from list", "ca": "Treu de la llista"},
+    "toolbar.save": {"es": "Guardar cambios", "en": "Save changes", "ca": "Desa els canvis"},
+    "toolbar.preferences": {"es": "Preferencias", "en": "Preferences", "ca": "Preferències"},
+    "window.unsaved_changes": {
+        "es": "{n} cambio(s) sin guardar",
+        "en": "{n} unsaved change(s)",
+        "ca": "{n} canvi(s) sense desar",
+    },
+    "toast.startup": {
+        "es": "Abre archivos o una carpeta con FLAC para empezar.",
+        "en": "Open files or a folder with FLAC to get started.",
+        "ca": "Obre fitxers o una carpeta amb FLAC per començar.",
+    },
+    # ---- diálogos de archivo ----
+    "dialog.open_files.title": {"es": "Abrir archivos FLAC", "en": "Open FLAC files", "ca": "Obre fitxers FLAC"},
+    "dialog.open_files.filter_name": {"es": "Archivos FLAC", "en": "FLAC files", "ca": "Fitxers FLAC"},
+    "dialog.open_folder.title": {"es": "Abrir carpeta", "en": "Open folder", "ca": "Obre una carpeta"},
+    "dialog.no_flac_found": {
+        "es": "No se encontraron archivos FLAC en esa carpeta.",
+        "en": "No FLAC files were found in that folder.",
+        "ca": "No s'ha trobat cap fitxer FLAC en aquesta carpeta.",
+    },
+    "dialog.load_errors_title": {
+        "es": "Algunos archivos no se pudieron cargar",
+        "en": "Some files could not be loaded",
+        "ca": "Alguns fitxers no s'han pogut carregar",
+    },
+    "dialog.save_error_title": {"es": "Error al guardar", "en": "Error saving", "ca": "Error en desar"},
+    "dialog.unsaved_title": {"es": "Cambios sin guardar", "en": "Unsaved changes", "ca": "Canvis sense desar"},
+    "dialog.unsaved_body": {
+        "es": "Hay cambios sin guardar. ¿Quieres salir sin guardarlos?",
+        "en": "There are unsaved changes. Do you want to quit without saving them?",
+        "ca": "Hi ha canvis sense desar. Vols sortir sense desar-los?",
+    },
+    "app.title": {"es": "MyTag", "en": "MyTag", "ca": "MyTag"},
+    # ---- toasts ----
+    "toast.files_added": {
+        "es": "{added} archivo(s) añadido(s). Total: {total}.",
+        "en": "{added} file(s) added. Total: {total}.",
+        "ca": "{added} fitxer(s) afegit(s). Total: {total}.",
+    },
+    "toast.total_files": {
+        "es": "Total: {total} archivo(s) en la lista.",
+        "en": "Total: {total} file(s) in the list.",
+        "ca": "Total: {total} fitxer(s) a la llista.",
+    },
+    "toast.cover_mb_applied": {
+        "es": "Portada de MusicBrainz aplicada. Recuerda guardar.",
+        "en": "Cover from MusicBrainz applied. Remember to save.",
+        "ca": "Portada de MusicBrainz aplicada. Recorda desar.",
+    },
+    "toast.no_pending_changes": {
+        "es": "No hay cambios pendientes de guardar.",
+        "en": "There are no pending changes to save.",
+        "ca": "No hi ha canvis pendents de desar.",
+    },
+    "toast.save_done": {
+        "es": "Guardado completado ({saved} archivo(s)).",
+        "en": "Save complete ({saved} file(s)).",
+        "ca": "Desat completat ({saved} fitxer(s)).",
+    },
+    # ---- acciones comunes ----
+    "action.cancel": {"es": "Cancelar", "en": "Cancel", "ca": "Cancel·la"},
+    "action.discard": {"es": "Salir sin guardar", "en": "Quit without saving", "ca": "Surt sense desar"},
+    "action.ok": {"es": "Vale", "en": "OK", "ca": "D'acord"},
+    "action.accept": {"es": "Aceptar", "en": "Accept", "ca": "Accepta"},
+    # ---- MusicBrainz (validación) ----
+    "mb.title": {"es": "MusicBrainz", "en": "MusicBrainz", "ca": "MusicBrainz"},
+    "mb.select_tracks_first": {
+        "es": "Selecciona antes uno o varios temas.",
+        "en": "Select one or more tracks first.",
+        "ca": "Selecciona abans un o diversos temes.",
+    },
+    "mb.need_same_album_artist": {
+        "es": "Todos los temas seleccionados deben compartir el mismo Álbum y el mismo "
+        "Artista del álbum (y ninguno de los dos puede estar vacío) para poder "
+        "buscar la portada.",
+        "en": "All selected tracks must share the same Album and the same Album "
+        "Artist (and neither can be empty) to search for a cover.",
+        "ca": "Tots els temes seleccionats han de compartir el mateix Àlbum i el mateix "
+        "Artista de l'àlbum (i cap dels dos pot estar buit) per poder cercar la portada.",
+    },
+    # ---- columnas de la tabla de pistas ----
+    "column.track": {"es": "Nº", "en": "Trk", "ca": "Núm."},
+    "column.title": {"es": "Título", "en": "Title", "ca": "Títol"},
+    "column.artist": {"es": "Artista", "en": "Artist", "ca": "Artista"},
+    # ---- campos de etiqueta ----
+    "tag.title": {"es": "Título", "en": "Title", "ca": "Títol"},
+    "tag.artist": {"es": "Artista", "en": "Artist", "ca": "Artista"},
+    "tag.album": {"es": "Álbum", "en": "Album", "ca": "Àlbum"},
+    "tag.albumartist": {"es": "Artista del álbum", "en": "Album artist", "ca": "Artista de l'àlbum"},
+    "tag.date": {"es": "Año", "en": "Year", "ca": "Any"},
+    "tag.genre": {"es": "Género", "en": "Genre", "ca": "Gènere"},
+    "tag.tracknumber": {"es": "Nº de pista", "en": "Track number", "ca": "Núm. de pista"},
+    "tag.discnumber": {"es": "Nº de disco", "en": "Disc number", "ca": "Núm. de disc"},
+    # ---- editor de etiquetas ----
+    "editor.heading": {"es": "Etiquetas", "en": "Tags", "ca": "Etiquetes"},
+    "editor.select_prompt": {
+        "es": "Selecciona uno o varios archivos FLAC en la tabla.",
+        "en": "Select one or more FLAC files in the table.",
+        "ca": "Selecciona un o diversos fitxers FLAC a la taula.",
+    },
+    "editor.editing_one": {"es": "Editando: {filename}", "en": "Editing: {filename}", "ca": "Editant: {filename}"},
+    "editor.editing_many": {
+        "es": "Editando {n} temas a la vez",
+        "en": "Editing {n} tracks at once",
+        "ca": "Editant {n} temes alhora",
+    },
+    "editor.multiple_values": {
+        "es": "‹valores distintos›",
+        "en": "‹multiple values›",
+        "ca": "‹valors diferents›",
+    },
+    # ---- panel de portada ----
+    "cover.select_image": {"es": "Seleccionar imagen…", "en": "Select image…", "ca": "Selecciona una imatge…"},
+    "cover.musicbrainz_search": {
+        "es": "Buscar en MusicBrainz…",
+        "en": "Search on MusicBrainz…",
+        "ca": "Cerca a MusicBrainz…",
+    },
+    "cover.size_label": {"es": "Tamaño máximo (px)", "en": "Maximum size (px)", "ca": "Mida màxima (px)"},
+    "cover.resize": {"es": "Redimensionar", "en": "Resize", "ca": "Redimensiona"},
+    "cover.remove": {"es": "Quitar portada", "en": "Remove cover", "ca": "Treu la portada"},
+    "cover.no_cover": {"es": "Sin portada", "en": "No cover", "ca": "Sense portada"},
+    "cover.no_tracks_loaded": {"es": "Sin temas cargados", "en": "No tracks loaded", "ca": "Cap tema carregat"},
+    "cover.multiple_covers": {
+        "es": "Varias portadas distintas",
+        "en": "Multiple different covers",
+        "ca": "Diverses portades diferents",
+    },
+    "cover.tracks_selected_count": {
+        "es": "{n} temas seleccionados",
+        "en": "{n} tracks selected",
+        "ca": "{n} temes seleccionats",
+    },
+    "cover.invalid_image": {"es": "Imagen no válida", "en": "Invalid image", "ca": "Imatge no vàlida"},
+    "cover.select_dialog_title": {
+        "es": "Seleccionar portada",
+        "en": "Select cover",
+        "ca": "Selecciona la portada",
+    },
+    "cover.images_filter_name": {"es": "Imágenes", "en": "Images", "ca": "Imatges"},
+    "cover.different_covers_cant_resize": {
+        "es": "Los temas seleccionados tienen portadas distintas.",
+        "en": "The selected tracks have different covers.",
+        "ca": "Els temes seleccionats tenen portades diferents.",
+    },
+    "cover.nothing_to_resize": {
+        "es": "No hay portada que redimensionar.",
+        "en": "There is no cover to resize.",
+        "ca": "No hi ha cap portada per redimensionar.",
+    },
+    # ---- diálogo de búsqueda de portada ----
+    "coversearch.title": {"es": "Buscar portada", "en": "Search for cover", "ca": "Cerca la portada"},
+    "coversearch.loading": {
+        "es": "Buscando portadas…",
+        "en": "Searching for covers…",
+        "ca": "Cercant portades…",
+    },
+    "coversearch.downloading": {
+        "es": "Descargando portada…",
+        "en": "Downloading cover…",
+        "ca": "Descarregant la portada…",
+    },
+    "coversearch.no_results_title": {"es": "Sin portadas", "en": "No covers", "ca": "Sense portades"},
+    "coversearch.no_results_desc": {
+        "es": "No se encontró ninguna portada para este álbum y artista.",
+        "en": "No cover was found for this album and artist.",
+        "ca": "No s'ha trobat cap portada per a aquest àlbum i artista.",
+    },
+    "coversearch.search_failed_title": {
+        "es": "No se pudo buscar",
+        "en": "Search failed",
+        "ca": "No s'ha pogut cercar",
+    },
+    "coversearch.download_failed_title": {
+        "es": "No se pudo descargar",
+        "en": "Download failed",
+        "ca": "No s'ha pogut descarregar",
+    },
+    "coversearch.loading_item": {"es": "Cargando…", "en": "Loading…", "ca": "Carregant…"},
+    "coversearch.load_error": {"es": "Error al cargar", "en": "Error loading", "ca": "Error en carregar"},
+    # ---- errores de red ----
+    "error.mb_busy": {
+        "es": "El servidor de MusicBrainz está ocupado ahora mismo. Inténtalo de nuevo en unos segundos.",
+        "en": "The MusicBrainz server is busy right now. Try again in a few seconds.",
+        "ca": "El servidor de MusicBrainz està ocupat ara mateix. Torna-ho a provar d'aquí a uns segons.",
+    },
+    "error.mb_connect": {
+        "es": "No se pudo conectar con MusicBrainz: {reason}",
+        "en": "Could not connect to MusicBrainz: {reason}",
+        "ca": "No s'ha pogut connectar amb MusicBrainz: {reason}",
+    },
+    "error.itunes_connect": {
+        "es": "No se pudo conectar con iTunes: {reason}",
+        "en": "Could not connect to iTunes: {reason}",
+        "ca": "No s'ha pogut connectar amb iTunes: {reason}",
+    },
+    "error.download_image": {
+        "es": "No se pudo descargar la imagen: {reason}",
+        "en": "Could not download the image: {reason}",
+        "ca": "No s'ha pogut descarregar la imatge: {reason}",
+    },
+    # ---- preferencias ----
+    "prefs.title": {"es": "Preferencias", "en": "Preferences", "ca": "Preferències"},
+    "prefs.general_group": {"es": "General", "en": "General", "ca": "General"},
+    "prefs.language": {"es": "Idioma", "en": "Language", "ca": "Idioma"},
+    "prefs.language_restart_note": {
+        "es": "MyTag debe reiniciarse para aplicar el nuevo idioma.",
+        "en": "MyTag needs to restart to apply the new language.",
+        "ca": "El MyTag s'ha de reiniciar per aplicar el nou idioma.",
+    },
+    "prefs.appearance_group": {"es": "Apariencia", "en": "Appearance", "ca": "Aparença"},
+    "prefs.ui_scale": {
+        "es": "Escala de la interfaz (%)",
+        "en": "Interface scale (%)",
+        "ca": "Escala de la interfície (%)",
+    },
+}

@@ -7,9 +7,9 @@ gi.require_version("GObject", "2.0")
 from gi.repository import GObject
 
 from ..audio_track import AudioTrack
-from ..constants import TAG_FIELDS
+from ..constants import TAG_KEYS
 
-_PROPERTY_NAMES = ["filename"] + [key.lower() for key, _label in TAG_FIELDS]
+_PROPERTY_NAMES = ["filename"] + [key.lower() for key in TAG_KEYS]
 
 
 class TrackItem(GObject.Object):
