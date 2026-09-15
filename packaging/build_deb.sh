@@ -3,7 +3,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VERSION="0.11.0~alpha0-1"
+VERSION="0.20.0~alpha0-1"
 WORK="$REPO_ROOT/packaging/build/deb/mytag"
 OUT_DIR="$REPO_ROOT/packaging/dist"
 
@@ -34,7 +34,7 @@ if __name__ == "__main__":
     sys.exit(main())
 LAUNCHER
 
-cp "$REPO_ROOT/packaging/deb/control.template" "$WORK/DEBIAN/control"
+sed "s/@VERSION@/${VERSION}/" "$REPO_ROOT/packaging/deb/control.template" > "$WORK/DEBIAN/control"
 cp "$REPO_ROOT/packaging/deb/postinst" "$WORK/DEBIAN/postinst"
 
 find "$WORK" -type d -exec chmod 755 {} \;

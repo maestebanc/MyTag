@@ -2,7 +2,7 @@
 %define pysitelib /usr/lib/python3.13/site-packages
 
 Name:           mytag
-Version:        0.11.0
+Version:        0.20.0
 Release:        0.1.alpha0%{?dist}
 Summary:        Edit tags and cover art on your FLAC music files
 License:        MIT
@@ -68,6 +68,11 @@ update-desktop-database -q /usr/share/applications &>/dev/null || :
 gtk-update-icon-cache -q /usr/share/icons/hicolor &>/dev/null || :
 
 %changelog
+* Tue Sep 15 2026 maestebanc - 0.20.0-0.1.alpha0
+- Fix drag & drop from external apps (Nautilus) on Hyprland/wlroots.
+- Fix saving after renaming files from tags.
+- Cover resize: edit width/height directly, proportionally linked.
+- Drop CSV export.
 * Tue Sep 15 2026 maestebanc - 0.11.0-0.1.alpha0
 - Second alpha release: context menus, new icon, light/dark theme
   override, About dialog, keyboard shortcuts, drag & drop for cover

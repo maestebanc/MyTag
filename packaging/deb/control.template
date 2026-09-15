@@ -1,5 +1,5 @@
 Package: mytag
-Version: 0.10.0~alpha0-1
+Version: @VERSION@
 Section: sound
 Priority: optional
 Architecture: all

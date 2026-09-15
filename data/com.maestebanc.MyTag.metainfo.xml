@@ -56,6 +56,16 @@
   <url type="homepage">https://github.com/maestebanc/MyTag</url>
 
   <releases>
+    <release version="0.20.0" date="2026-09-15">
+      <description>
+        <p>
+          Bug-fix release: drag &amp; drop from external file managers now
+          works on Hyprland and other wlroots compositors, saving after
+          renaming files from tags no longer fails, cover resizing is now
+          a directly editable width/height, and CSV export was removed.
+        </p>
+      </description>
+    </release>
     <release version="0.11.0" date="2026-09-15">
       <description>
         <p>
