@@ -22,12 +22,18 @@ Most tag editors on Linux are either ancient, Windows tools running under Wine, 
 ## Features
 
 - Edit Title, Artist, Album, Album Artist, Year, Genre, Track Number and Disc Number, for one file or hundreds at once.
-- Load a folder recursively — drop a whole artist directory on the window and every FLAC underneath gets picked up.
+- Load a folder recursively, or just drag and drop FLAC files (or a whole folder) onto the window.
+- Cover art from disk, clipboard, drag & drop, or an online search (MusicBrainz and iTunes) — with a right-click/context menu for the less-frequent actions.
+- Rename files from their tags, using a configurable pattern.
+- Identify an untagged or mislabeled track by audio fingerprint (AcoustID + Chromaprint).
+- Check FLAC file integrity, and batch-fill missing covers across a whole loaded library.
+- A per-track warning icon flags anything missing a cover, year or genre.
 - Search and filter a long list of loaded tracks.
 - Auto-number a set of tracks (1, 2, 3…) in one click.
 - Revert unsaved changes back to what's actually on disk.
 - Clear the whole list, or just the tracks you've selected.
-- Adjustable interface scale, from the Preferences window.
+- Light, dark, or system-matched theme, and an adjustable interface scale, from the Preferences window.
+- An About dialog and a keyboard shortcuts window, with real accelerators for the everyday actions.
 
 ## Installation
 
@@ -53,7 +59,12 @@ sudo dnf install ./mytag-*.noarch.rpm
 
 ### Arch Linux
 
-No package published yet — building from source (below) works fine in the meantime.
+A `PKGBUILD` is included in this repo, or grab the prebuilt `.pkg.tar.zst` from the [Releases page](https://github.com/maestebanc/MyTag/releases) and install it with `pacman -U`.
+
+```bash
+cd packaging/arch
+makepkg -si
+```
 
 ## Running from source
 

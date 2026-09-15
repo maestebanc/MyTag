@@ -68,16 +68,21 @@ update-desktop-database -q /usr/share/applications &>/dev/null || :
 gtk-update-icon-cache -q /usr/share/icons/hicolor &>/dev/null || :
 
 %changelog
-* Tue Sep 15 2026 maestebanc - 0.20.0-0.1.alpha0
+* Tue Sep 15 2026 Miguel Angel Esteban - 0.20.0-0.1.alpha0
 - Fix drag & drop from external apps (Nautilus) on Hyprland/wlroots.
 - Fix saving after renaming files from tags.
-- Cover resize: edit width/height directly, proportionally linked.
+- Cover resize: edit width/height directly, proportionally linked;
+  selecting tracks with different covers now resizes each one to a
+  matching square instead of refusing.
+- Track list columns reordered (Nº, Artist, Title) and freed from a
+  hidden minimum width that capped how far they could be resized.
+- Cover and tags panels can now be resized against each other.
 - Drop CSV export.
-* Tue Sep 15 2026 maestebanc - 0.11.0-0.1.alpha0
+* Tue Sep 15 2026 Miguel Angel Esteban - 0.11.0-0.1.alpha0
 - Second alpha release: context menus, new icon, light/dark theme
   override, About dialog, keyboard shortcuts, drag & drop for cover
   images, audio fingerprint identification (AcoustID), FLAC
   integrity check, batch cover fill-in, completeness indicator,
   CSV export, and renaming files from tags.
-* Mon Sep 14 2026 maestebanc - 0.10.0-0.1.alpha0
+* Mon Sep 14 2026 Miguel Angel Esteban - 0.10.0-0.1.alpha0
 - First preliminary alpha release.
