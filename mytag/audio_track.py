@@ -21,6 +21,16 @@ class AudioTrack:
     def filename(self) -> str:
         return os.path.basename(self.path)
 
+    def update_path(self, new_path: str) -> None:
+        """Actualiza la ruta tras un renombrado externo (en disco).
+
+        mutagen guarda su propio nombre de archivo interno (self.flac.filename)
+        en el momento de cargarlo; si sólo se actualizara self.path, save()
+        seguiría intentando escribir en la ruta antigua, que ya no existe.
+        """
+        self.path = new_path
+        self.flac.filename = new_path
+
     @property
     def is_dirty(self) -> bool:
         return self.dirty_tags or self.pending_cover is not None

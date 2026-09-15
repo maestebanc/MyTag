@@ -1,7 +1,6 @@
 """Ventana principal de MyTag (GTK4/Adwaita)."""
 from __future__ import annotations
 
-import csv
 import os
 
 import gi
@@ -14,7 +13,6 @@ from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk, Pango
 
 from .. import acoustid, config, i18n, integrity
 from ..audio_track import AudioTrack
-from ..constants import TAG_KEYS
 from .about_dialog import build_about_dialog
 from .cover_panel import CoverPanel
 from .cover_search_dialog import CoverSearchDialog
@@ -289,7 +287,6 @@ class MainWindow(Adw.ApplicationWindow):
         add_item(i18n.t("menu.rename_from_tags"), self.rename_selected_from_tags)
         box.append(Gtk.Separator())
         add_item(i18n.t("menu.fill_missing_covers"), self.fill_missing_covers)
-        add_item(i18n.t("menu.export_csv"), self.export_csv)
 
         popover.set_child(box)
         menu_button.set_popover(popover)
@@ -403,21 +400,32 @@ class MainWindow(Adw.ApplicationWindow):
         return paned
 
     def _setup_drop_target(self) -> None:
-        target = Gtk.DropTarget.new(Gio.File, Gdk.DragAction.COPY)
+        # Se registra en el marco exterior (no en el Gtk.ColumnView) para
+        # que el área de destino cubra todo el panel (incluida la lista
+        # vacía) y no dependa de que el ColumnView ceda el evento.
+        #
+        # Se anuncian COPY y MOVE (no sólo COPY): compositores wlroots como
+        # Hyprland preseleccionan "move" como acción preferida al arrastrar
+        # desde Nautilus, y si el DropTarget sólo admite "copy" GTK rechaza
+        # la negociación entera antes de que el "drop" llegue a nuestro
+        # manejador (nunca movemos ni borramos el origen, así que aceptar
+        # "move" es semánticamente inofensivo).
+        actions = Gdk.DragAction.COPY | Gdk.DragAction.MOVE
+        target = Gtk.DropTarget.new(Gio.File, actions)
         target.connect("drop", self._on_drop)
         target.connect("enter", self._on_track_drop_enter)
         target.connect("leave", self._on_track_drop_leave)
-        self.column_view.add_controller(target)
+        self.track_list_frame.add_controller(target)
 
-        target_files = Gtk.DropTarget.new(Gdk.FileList, Gdk.DragAction.COPY)
+        target_files = Gtk.DropTarget.new(Gdk.FileList, actions)
         target_files.connect("drop", self._on_drop_filelist)
         target_files.connect("enter", self._on_track_drop_enter)
         target_files.connect("leave", self._on_track_drop_leave)
-        self.column_view.add_controller(target_files)
+        self.track_list_frame.add_controller(target_files)
 
     def _on_track_drop_enter(self, *_args) -> int:
         self.track_list_frame.add_css_class("drop-highlight")
-        return Gdk.DragAction.COPY
+        return Gdk.DragAction.COPY | Gdk.DragAction.MOVE
 
     def _on_track_drop_leave(self, *_args) -> None:
         self.track_list_frame.remove_css_class("drop-highlight")
@@ -633,32 +641,6 @@ class MainWindow(Adw.ApplicationWindow):
         self._update_title_state()
         self._toast(i18n.t("fingerprint.applied"))
 
-    def export_csv(self) -> None:
-        if not self.tracks:
-            return
-        dialog = Gtk.FileDialog(title=i18n.t("csv.export_title"))
-        dialog.set_initial_name("mytag-export.csv")
-        dialog.save(self, None, self._on_export_csv_finished)
-
-    def _on_export_csv_finished(self, dialog, result) -> None:
-        try:
-            gfile = dialog.save_finish(result)
-        except GLib.Error:
-            return
-        path = gfile.get_path() if gfile else None
-        if not path:
-            return
-        try:
-            with open(path, "w", newline="", encoding="utf-8") as f:
-                writer = csv.writer(f)
-                writer.writerow(["filename", *TAG_KEYS])
-                for track in self.tracks:
-                    writer.writerow([track.filename, *(track.get_tag(key) for key in TAG_KEYS)])
-        except OSError as exc:
-            self._show_message(i18n.t("csv.export_title"), i18n.t("csv.export_error", reason=exc))
-            return
-        self._toast(i18n.t("csv.export_done", n=len(self.tracks)))
-
     def fill_missing_covers(self) -> None:
         if not self.tracks:
             return
@@ -714,7 +696,7 @@ class MainWindow(Adw.ApplicationWindow):
                 continue
             try:
                 os.rename(track.path, new_path)
-                track.path = new_path
+                track.update_path(new_path)
                 self._refresh_row_for_track(track)
                 renamed += 1
             except OSError as exc:

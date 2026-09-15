@@ -84,11 +84,6 @@ STRINGS: dict[str, dict[str, str]] = {
         "en": "Fill in missing covers…",
         "ca": "Omple les portades que falten…",
     },
-    "menu.export_csv": {
-        "es": "Exportar informe CSV…",
-        "en": "Export CSV report…",
-        "ca": "Exporta un informe CSV…",
-    },
     "list.clear_all": {"es": "Vaciar lista", "en": "Clear list", "ca": "Buida la llista"},
     "list.search_placeholder": {
         "es": "Buscar por título o artista…",
@@ -249,7 +244,6 @@ STRINGS: dict[str, dict[str, str]] = {
         "en": "Search on MusicBrainz…",
         "ca": "Cerca a MusicBrainz…",
     },
-    "cover.size_label": {"es": "Tamaño máximo (px)", "en": "Maximum size (px)", "ca": "Mida màxima (px)"},
     "cover.resize": {"es": "Redimensionar", "en": "Resize", "ca": "Redimensiona"},
     "cover.remove": {"es": "Quitar portada", "en": "Remove cover", "ca": "Treu la portada"},
     "cover.no_cover": {"es": "Sin portada", "en": "No cover", "ca": "Sense portada"},
@@ -415,22 +409,6 @@ STRINGS: dict[str, dict[str, str]] = {
         "es": "{n} archivo(s) verificado(s) sin problemas.",
         "en": "{n} file(s) verified with no problems.",
         "ca": "{n} fitxer(s) verificat(s) sense problemes.",
-    },
-    # ---- exportar CSV ----
-    "csv.export_title": {
-        "es": "Exportar informe CSV",
-        "en": "Export CSV report",
-        "ca": "Exporta un informe CSV",
-    },
-    "csv.export_done": {
-        "es": "Informe exportado ({n} tema(s)).",
-        "en": "Report exported ({n} track(s)).",
-        "ca": "Informe exportat ({n} tema(es)).",
-    },
-    "csv.export_error": {
-        "es": "No se pudo exportar el informe: {reason}",
-        "en": "Could not export the report: {reason}",
-        "ca": "No s'ha pogut exportar l'informe: {reason}",
     },
     # ---- rellenar portadas que faltan ----
     "fillcovers.none_missing": {

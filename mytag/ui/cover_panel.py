@@ -14,7 +14,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gdk, GdkPixbuf, Gio, GLib, GObject, Gtk
+from gi.repository import Gdk, GdkPixbuf, Gio, GLib, GObject, Gtk
 
 from .. import i18n
 from ..constants import COVER_SIZE
@@ -78,21 +78,32 @@ class CoverPanel(Gtk.Box):
         self.info_label.set_justify(Gtk.Justification.CENTER)
         self.append(self.info_label)
 
+        # Ratio de la imagen actualmente cargada (ancho/alto), fijado al
+        # refrescar la vista previa; se usa para recalcular la otra
+        # dimensión cuando el usuario edita el ancho o el alto a mano.
+        self._dims_ratio: float | None = None
+        self._updating_dims = False
+
+        self.dims_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        self.dims_box.set_halign(Gtk.Align.CENTER)
+        self.width_spin = Gtk.SpinButton.new_with_range(16, 10000, 1)
+        self.width_spin.set_numeric(True)
+        self.width_spin.set_value(COVER_SIZE[0])
+        self.width_spin.connect("value-changed", self._on_width_spin_changed)
+        self.height_spin = Gtk.SpinButton.new_with_range(16, 10000, 1)
+        self.height_spin.set_numeric(True)
+        self.height_spin.set_value(COVER_SIZE[1])
+        self.height_spin.connect("value-changed", self._on_height_spin_changed)
+        self.dims_box.append(self.width_spin)
+        self.dims_box.append(Gtk.Label(label="×"))
+        self.dims_box.append(self.height_spin)
+        self.dims_box.append(Gtk.Label(label="px"))
+        self.dims_box.set_visible(False)
+        self.append(self.dims_box)
+
         self.btn_select = Gtk.Button(label=i18n.t("cover.select_image"))
         self.btn_select.connect("clicked", self._on_select_image)
         self.append(self.btn_select)
-
-        self.size_row = Adw.SpinRow(
-            title=i18n.t("cover.size_label"),
-            adjustment=Gtk.Adjustment(value=COVER_SIZE[0], lower=16, upper=4000, step_increment=10, page_increment=100),
-        )
-        self.size_row.set_digits(0)
-        self.size_row.set_numeric(True)
-        size_listbox = Gtk.ListBox()
-        size_listbox.add_css_class("boxed-list")
-        size_listbox.set_selection_mode(Gtk.SelectionMode.NONE)
-        size_listbox.append(self.size_row)
-        self.append(size_listbox)
 
         self.btn_resize = Gtk.Button(label=i18n.t("cover.resize"))
         self.btn_resize.connect("clicked", self._on_resize)
@@ -144,17 +155,40 @@ class CoverPanel(Gtk.Box):
         self._context_popover.popup()
 
     def _setup_drop_target(self) -> None:
-        target = Gtk.DropTarget.new(Gio.File, Gdk.DragAction.COPY)
-        target.set_gtypes([Gio.File, Gdk.Texture])
-        target.connect("drop", self._on_drop)
-        target.connect("enter", self._on_drop_enter)
-        target.connect("leave", self._on_drop_leave)
-        self.frame.add_controller(target)
+        # Se registran controladores separados por tipo (en vez de un único
+        # DropTarget con set_gtypes) porque algunos orígenes externos (p. ej.
+        # gestores de archivos) sólo ofrecen la lista de archivos como
+        # Gdk.FileList (deserializada a partir de text/uri-list), no como
+        # Gio.File suelto; con un único controlador esa negociación de
+        # formato podía fallar silenciosamente y el drop no llegaba nunca.
+        # COPY | MOVE (no sólo COPY): en Hyprland/wlroots, Nautilus
+        # preselecciona "move" como acción de arrastre preferida, y un
+        # DropTarget que sólo admite "copy" hace que GTK rechace la
+        # negociación entera sin llegar nunca a nuestro "drop" (nunca
+        # movemos ni borramos el origen, aceptar "move" no cambia nada).
+        actions = Gdk.DragAction.COPY | Gdk.DragAction.MOVE
+        target_file = Gtk.DropTarget.new(Gio.File, actions)
+        target_file.connect("drop", self._on_drop)
+        target_file.connect("enter", self._on_drop_enter)
+        target_file.connect("leave", self._on_drop_leave)
+        self.frame.add_controller(target_file)
+
+        target_filelist = Gtk.DropTarget.new(Gdk.FileList, actions)
+        target_filelist.connect("drop", self._on_drop)
+        target_filelist.connect("enter", self._on_drop_enter)
+        target_filelist.connect("leave", self._on_drop_leave)
+        self.frame.add_controller(target_filelist)
+
+        target_texture = Gtk.DropTarget.new(Gdk.Texture, actions)
+        target_texture.connect("drop", self._on_drop)
+        target_texture.connect("enter", self._on_drop_enter)
+        target_texture.connect("leave", self._on_drop_leave)
+        self.frame.add_controller(target_texture)
 
     def _on_drop_enter(self, *_args) -> int:
         if self._tracks:
             self.frame.add_css_class("drop-highlight")
-        return Gdk.DragAction.COPY
+        return Gdk.DragAction.COPY | Gdk.DragAction.MOVE
 
     def _on_drop_leave(self, *_args) -> None:
         self.frame.remove_css_class("drop-highlight")
@@ -167,6 +201,15 @@ class CoverPanel(Gtk.Box):
             png_bytes = value.save_to_png_bytes()
             self.emit("cover-change-requested", png_bytes.get_data(), "image/png")
             return True
+        if isinstance(value, Gdk.FileList):
+            files = value.get_files()
+            if files:
+                path = files[0].get_path()
+                if path:
+                    data, mime = read_image_file(path)
+                    self.emit("cover-change-requested", data, mime)
+                    return True
+            return False
         if isinstance(value, Gio.File):
             path = value.get_path()
             if path:
@@ -180,16 +223,23 @@ class CoverPanel(Gtk.Box):
         enabled = bool(tracks)
         self.btn_select.set_sensitive(enabled)
         self.btn_overlay_menu.set_sensitive(enabled)
-        self.size_row.set_sensitive(enabled)
+        self.width_spin.set_sensitive(enabled)
+        self.height_spin.set_sensitive(enabled)
         self.btn_resize.set_sensitive(enabled)
         self._refresh_preview()
 
     # ---------- helpers internos ----------
 
+    def _set_status_text(self, text: str) -> None:
+        self._dims_ratio = None
+        self.dims_box.set_visible(False)
+        self.info_label.set_visible(True)
+        self.info_label.set_text(text)
+
     def _refresh_preview(self) -> None:
         if not self._tracks:
             self._show_placeholder(i18n.t("cover.no_tracks_loaded"))
-            self.info_label.set_text("")
+            self._set_status_text("")
             return
 
         covers = {t.get_cover_bytes() for t in self._tracks}
@@ -197,14 +247,36 @@ class CoverPanel(Gtk.Box):
             data = next(iter(covers))
             if data is None:
                 self._show_placeholder(i18n.t("cover.no_cover"))
-                self.info_label.set_text("")
+                self._set_status_text("")
             else:
                 self._show_bytes(data)
                 w, h = self._pixbuf_size(data)
-                self.info_label.set_text(f"{w}×{h}px")
+                self._dims_ratio = (w / h) if h else None
+                self._updating_dims = True
+                self.width_spin.set_value(w)
+                self.height_spin.set_value(h)
+                self._updating_dims = False
+                self.info_label.set_visible(False)
+                self.dims_box.set_visible(True)
         else:
             self._show_placeholder(i18n.t("cover.multiple_covers"))
-            self.info_label.set_text(i18n.t("cover.tracks_selected_count", n=len(self._tracks)))
+            self._set_status_text(i18n.t("cover.tracks_selected_count", n=len(self._tracks)))
+
+    def _on_width_spin_changed(self, _spin) -> None:
+        if self._updating_dims or not self._dims_ratio:
+            return
+        self._updating_dims = True
+        new_height = round(self.width_spin.get_value() / self._dims_ratio)
+        self.height_spin.set_value(new_height)
+        self._updating_dims = False
+
+    def _on_height_spin_changed(self, _spin) -> None:
+        if self._updating_dims or not self._dims_ratio:
+            return
+        self._updating_dims = True
+        new_width = round(self.height_spin.get_value() * self._dims_ratio)
+        self.width_spin.set_value(new_width)
+        self._updating_dims = False
 
     def _show_placeholder(self, text: str) -> None:
         self.placeholder.set_text(text)
@@ -270,7 +342,7 @@ class CoverPanel(Gtk.Box):
         except GLib.Error:
             texture = None
         if texture is None:
-            self.info_label.set_text(i18n.t("cover.paste_no_image"))
+            self._set_status_text(i18n.t("cover.paste_no_image"))
             return
         png_bytes = texture.save_to_png_bytes()
         self.emit("cover-change-requested", png_bytes.get_data(), "image/png")
@@ -280,14 +352,15 @@ class CoverPanel(Gtk.Box):
             return
         covers = {t.get_cover_bytes() for t in self._tracks}
         if len(covers) != 1:
-            self.info_label.set_text(i18n.t("cover.different_covers_cant_resize"))
+            self._set_status_text(i18n.t("cover.different_covers_cant_resize"))
             return
         source = next(iter(covers))
         if source is None:
-            self.info_label.set_text(i18n.t("cover.nothing_to_resize"))
+            self._set_status_text(i18n.t("cover.nothing_to_resize"))
             return
-        size = int(self.size_row.get_value())
-        data, mime = resize_image_bytes(source, size=(size, size))
+        width = int(self.width_spin.get_value())
+        height = int(self.height_spin.get_value())
+        data, mime = resize_image_bytes(source, size=(width, height))
         self.emit("cover-change-requested", data, mime)
 
     def _on_remove(self, _button) -> None:
