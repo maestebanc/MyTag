@@ -1,19 +1,19 @@
 # Maintainer: Miguel Angel Esteban <maestebanc@gmail.com>
 pkgname=mytag
-pkgver=0.50.0
+pkgver=0.51.0
 pkgrel=1
-pkgdesc="Edit tags and cover art on your FLAC music files"
+pkgdesc="Edit tags and cover art on your FLAC and MP3 music files"
 arch=('any')
 url="https://github.com/maestebanc/MyTag"
 license=('MIT')
 depends=('python' 'python-mutagen' 'python-pillow' 'python-gobject' 'gtk4' 'libadwaita')
 optdepends=('flac: integrity checking (Verify integrity)'
             'chromaprint: audio fingerprint identification (Identify by audio fingerprint)')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/maestebanc/MyTag/archive/refs/tags/v0.50.0.tar.gz")
-sha256sums=('10446595f08e22afdb179774ea6e99fa6e58e775953ff81132ab3f64f89c0ba5')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/maestebanc/MyTag/archive/refs/tags/v0.51.0.tar.gz")
+sha256sums=('SKIP')
 
 package() {
-  cd "$srcdir/MyTag-0.50.0"
+  cd "$srcdir/MyTag-0.51.0"
 
   local site_packages
   site_packages="$(python3 -c 'import sysconfig; print(sysconfig.get_path("purelib"))')"

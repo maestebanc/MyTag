@@ -13,6 +13,7 @@ from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk, Pango
 
 from .. import acoustid, config, i18n, integrity
 from ..audio_track import AudioTrack
+from ..constants import SUPPORTED_EXTENSIONS
 from ..cover_utils import resize_image_bytes_exact
 from .about_dialog import build_about_dialog
 from .cover_panel import CoverPanel
@@ -561,11 +562,17 @@ class MainWindow(Adw.ApplicationWindow):
 
     def open_files_dialog(self) -> None:
         dialog = Gtk.FileDialog(title=i18n.t("dialog.open_files.title"))
-        filter_flac = Gtk.FileFilter()
-        filter_flac.set_name(i18n.t("dialog.open_files.filter_name"))
-        filter_flac.add_pattern("*.flac")
+        filter_audio = Gtk.FileFilter()
+        filter_audio.set_name(i18n.t("dialog.open_files.filter_name"))
+        for ext in SUPPORTED_EXTENSIONS:
+            filter_audio.add_pattern(f"*{ext}")
+            filter_audio.add_pattern(f"*{ext.upper()}")
+        filter_audio.add_mime_type("audio/flac")
+        filter_audio.add_mime_type("audio/x-flac")
+        filter_audio.add_mime_type("audio/mpeg")
+        filter_audio.add_mime_type("audio/mp3")
         filters = Gio.ListStore.new(Gtk.FileFilter)
-        filters.append(filter_flac)
+        filters.append(filter_audio)
         dialog.set_filters(filters)
         dialog.open_multiple(self, None, self._on_open_files_finished)
 
@@ -593,20 +600,22 @@ class MainWindow(Adw.ApplicationWindow):
         folder = gfile.get_path()
         if not folder:
             return
-        found = self._find_flac_files(folder)
+        found = self._find_audio_files(folder)
         if not found:
             self._show_message(i18n.t("app.title"), i18n.t("dialog.no_flac_found"))
             return
         self.add_paths(found)
 
     @staticmethod
-    def _find_flac_files(folder: str) -> list[str]:
+    def _find_audio_files(folder: str) -> list[str]:
         found = []
         for root, _dirs, files in os.walk(folder):
             for name in sorted(files):
-                if name.lower().endswith(".flac"):
+                if name.lower().endswith(SUPPORTED_EXTENSIONS):
                     found.append(os.path.join(root, name))
         return found
+
+    _find_flac_files = _find_audio_files
 
     def add_paths(self, paths: list[str]) -> None:
         existing = {t.path for t in self.tracks}
@@ -979,8 +988,8 @@ class MainWindow(Adw.ApplicationWindow):
             if not local_path:
                 continue
             if os.path.isdir(local_path):
-                paths.extend(self._find_flac_files(local_path))
-            elif local_path.lower().endswith(".flac"):
+                paths.extend(self._find_audio_files(local_path))
+            elif local_path.lower().endswith(SUPPORTED_EXTENSIONS):
                 paths.append(local_path)
         if paths:
             self.add_paths(paths)

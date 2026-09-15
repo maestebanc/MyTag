@@ -2,9 +2,9 @@
 %define pysitelib /usr/lib/python3.13/site-packages
 
 Name:           mytag
-Version:        0.50.0
+Version:        0.51.0
 Release:        1%{?dist}
-Summary:        Edit tags and cover art on your FLAC music files
+Summary:        Edit tags and cover art on your FLAC and MP3 music files
 License:        MIT
 URL:            https://github.com/maestebanc/MyTag
 BuildArch:      noarch
@@ -17,7 +17,7 @@ Requires:       gtk4 >= 4.10
 Requires:       libadwaita >= 1.4
 
 %description
-MyTag is a simple, focused tag and cover art editor for FLAC music
+MyTag is a simple, focused tag and cover art editor for FLAC and MP3 music
 files on Linux. Load a file or a whole folder of albums at once,
 edit as many tracks together as you like, and search for cover art
 online (MusicBrainz and iTunes) without leaving the app.
@@ -68,6 +68,13 @@ update-desktop-database -q /usr/share/applications &>/dev/null || :
 gtk-update-icon-cache -q /usr/share/icons/hicolor &>/dev/null || :
 
 %changelog
+* Wed Sep 16 2026 Miguel Angel Esteban - 0.51.0-1
+- Full MP3 support with ID3v2.4 frames and embedded APIC cover art.
+- Audio stream integrity checks for MP3 and FLAC.
+- AcoustID audio fingerprinting across both formats.
+- Extension-aware filename pattern renaming.
+- Typography refinement aligned with native desktop DPI and Nautilus font metrics.
+
 * Tue Sep 15 2026 Miguel Angel Esteban - 0.50.0-1
 - Major UI modernization with responsive track table layout.
 - Balanced margins, symmetrical layout and composite action buttons.

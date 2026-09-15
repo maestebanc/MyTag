@@ -14,3 +14,5 @@ TAG_KEYS = [
 ]
 
 COVER_SIZE = (500, 500)
+
+SUPPORTED_EXTENSIONS = (".flac", ".mp3")

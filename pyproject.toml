@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mytag"
-version = "0.50.0"
-description = "Edit tags and cover art on your FLAC music files"
+version = "0.51.0"
+description = "Edit tags and cover art on your FLAC and MP3 music files"
 readme = "README.md"
 license = "MIT"
 authors = [{ name = "Miguel Angel Esteban" }]

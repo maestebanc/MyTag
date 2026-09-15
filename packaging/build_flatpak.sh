@@ -12,7 +12,7 @@ BUILD_DIR="$REPO_ROOT/packaging/build/flatpak"
 REPO_DIR="$REPO_ROOT/packaging/build/flatpak-repo"
 OUT_DIR="$REPO_ROOT/packaging/dist"
 APP_ID="com.maestebanc.MyTag"
-VERSION="0.50.0"
+VERSION="0.51.0"
 
 cd "$MANIFEST_DIR"
 flatpak-builder --force-clean --user --repo="$REPO_DIR" "$BUILD_DIR" "$APP_ID.yml"

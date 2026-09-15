@@ -1,6 +1,7 @@
 """Genera nombres de archivo a partir de las etiquetas, según un patrón."""
 from __future__ import annotations
 
+import os
 import re
 
 from .audio_track import AudioTrack
@@ -26,8 +27,9 @@ def _field_value(track: AudioTrack, field: str) -> str:
 
 
 def render_filename(track: AudioTrack, pattern: str) -> str:
+    base, ext = os.path.splitext(track.filename)
     name = _TOKEN_RE.sub(lambda m: _field_value(track, m.group(1).lower()), pattern)
     name = _INVALID_CHARS.sub("_", name).strip()
     if not name:
-        name = track.filename[:-5] if track.filename.lower().endswith(".flac") else track.filename
-    return f"{name}.flac"
+        name = base
+    return f"{name}{ext}"

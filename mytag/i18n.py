@@ -52,9 +52,9 @@ STRINGS: dict[str, dict[str, str]] = {
         "ca": "Edita les etiquetes de la teva música",
     },
     "empty.description": {
-        "es": "Abre archivos FLAC o arrastra carpetas directamente aquí para comenzar.",
-        "en": "Open FLAC files or drag folders directly here to get started.",
-        "ca": "Obre fitxers FLAC o arrossega carpetes directament aquí per començar.",
+        "es": "Abre archivos de audio (FLAC, MP3) o arrastra carpetas directamente aquí para comenzar.",
+        "en": "Open audio files (FLAC, MP3) or drag folders directly here to get started.",
+        "ca": "Obre fitxers d'àudio (FLAC, MP3) o arrossega carpetes directament aquí per començar.",
     },
     "list.status_summary": {
         "es": "{total} tema(s)",
@@ -137,18 +137,18 @@ STRINGS: dict[str, dict[str, str]] = {
         "ca": "{n} canvi(s) sense desar",
     },
     "toast.startup": {
-        "es": "Abre archivos o una carpeta con FLAC para empezar.",
-        "en": "Open files or a folder with FLAC to get started.",
-        "ca": "Obre fitxers o una carpeta amb FLAC per començar.",
+        "es": "Abre archivos o una carpeta con FLAC o MP3 para empezar.",
+        "en": "Open files or a folder with FLAC or MP3 to get started.",
+        "ca": "Obre fitxers o una carpeta amb FLAC o MP3 per començar.",
     },
     # ---- diálogos de archivo ----
-    "dialog.open_files.title": {"es": "Abrir archivos FLAC", "en": "Open FLAC files", "ca": "Obre fitxers FLAC"},
-    "dialog.open_files.filter_name": {"es": "Archivos FLAC", "en": "FLAC files", "ca": "Fitxers FLAC"},
+    "dialog.open_files.title": {"es": "Abrir archivos de audio", "en": "Open audio files", "ca": "Obre fitxers d'àudio"},
+    "dialog.open_files.filter_name": {"es": "Archivos de audio (FLAC, MP3)", "en": "Audio files (FLAC, MP3)", "ca": "Fitxers d'àudio (FLAC, MP3)"},
     "dialog.open_folder.title": {"es": "Abrir carpeta", "en": "Open folder", "ca": "Obre una carpeta"},
     "dialog.no_flac_found": {
-        "es": "No se encontraron archivos FLAC en esa carpeta.",
-        "en": "No FLAC files were found in that folder.",
-        "ca": "No s'ha trobat cap fitxer FLAC en aquesta carpeta.",
+        "es": "No se encontraron archivos de audio (FLAC o MP3) en esa carpeta.",
+        "en": "No audio files (FLAC or MP3) were found in that folder.",
+        "ca": "No s'ha trobat cap fitxer d'àudio (FLAC o MP3) en aquesta carpeta.",
     },
     "dialog.load_errors_title": {
         "es": "Algunos archivos no se pudieron cargar",
@@ -263,9 +263,9 @@ STRINGS: dict[str, dict[str, str]] = {
     # ---- editor de etiquetas ----
     "editor.heading": {"es": "Etiquetas", "en": "Tags", "ca": "Etiquetes"},
     "editor.select_prompt": {
-        "es": "Selecciona uno o varios archivos FLAC en la tabla.",
-        "en": "Select one or more FLAC files in the table.",
-        "ca": "Selecciona un o diversos fitxers FLAC a la taula.",
+        "es": "Selecciona uno o varios archivos en la tabla.",
+        "en": "Select one or more files in the table.",
+        "ca": "Selecciona un o diversos fitxers a la taula.",
     },
     "editor.editing_one": {"es": "Editando: {filename}", "en": "Editing: {filename}", "ca": "Editant: {filename}"},
     "editor.editing_many": {
@@ -414,9 +414,9 @@ STRINGS: dict[str, dict[str, str]] = {
     },
     "menu.about": {"es": "Acerca de MyTag", "en": "About MyTag", "ca": "Quant al MyTag"},
     "about.comments": {
-        "es": "Edita etiquetas y portadas de tus archivos FLAC",
-        "en": "Edit tags and cover art on your FLAC music files",
-        "ca": "Edita etiquetes i portades dels teus fitxers FLAC",
+        "es": "Edita etiquetas y portadas de tus archivos FLAC y MP3",
+        "en": "Edit tags and cover art on your FLAC and MP3 music files",
+        "ca": "Edita etiquetes i portades dels teus fitxers FLAC i MP3",
     },
     "shortcuts.title": {"es": "Atajos de teclado", "en": "Keyboard Shortcuts", "ca": "Dreceres de teclat"},
     "shortcuts.group_general": {"es": "General", "en": "General", "ca": "General"},

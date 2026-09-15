@@ -2,16 +2,16 @@
 <component type="desktop-application">
   <id>com.maestebanc.MyTag</id>
   <name>MyTag</name>
-  <summary>Edit tags and cover art on your FLAC music files</summary>
-  <summary xml:lang="es">Edita las etiquetas y la portada de tus archivos FLAC</summary>
-  <summary xml:lang="ca">Edita les etiquetes i la portada dels teus fitxers FLAC</summary>
+  <summary>Edit tags and cover art on your FLAC and MP3 music files</summary>
+  <summary xml:lang="es">Edita las etiquetas y la portada de tus archivos FLAC y MP3</summary>
+  <summary xml:lang="ca">Edita les etiquetes i la portada dels teus fitxers FLAC i MP3</summary>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT</project_license>
   <content_rating type="oars-1.1" />
 
   <description>
     <p>
-      MyTag is a simple, focused tag and cover art editor for FLAC music
+      MyTag is a simple, focused tag and cover art editor for FLAC and MP3 music
       files on Linux. Load a single file or a whole folder of albums at
       once, see everything in a clean list, and edit as many tracks
       together as you like — MyTag always shows you when the selected
@@ -20,12 +20,12 @@
     </p>
     <p>Features:</p>
     <ul>
-      <li>Edit Title, Artist, Album, Album Artist, Year, Genre, Track Number and Disc Number, for one or many files at once</li>
+      <li>Edit Title, Artist, Album, Album Artist, Year, Genre, Track Number and Disc Number, for one or many files at once (FLAC Vorbis Comments and MP3 ID3v2.4)</li>
       <li>Pick a cover image from your computer, paste one from the clipboard, drag and drop it onto the app, or search for one online (MusicBrainz and iTunes) right from the app</li>
       <li>Resize covers to any size you choose, keeping their original proportions (or matched to a square when the selected tracks have different covers)</li>
-      <li>Rename files from their tags with a configurable pattern</li>
+      <li>Rename files from their tags with a configurable pattern, preserving original file extensions</li>
       <li>Identify an untagged or mislabeled track by audio fingerprint (AcoustID)</li>
-      <li>Check FLAC file integrity, and fill in missing covers across a whole loaded library</li>
+      <li>Check file stream integrity, and fill in missing covers across a whole loaded library</li>
       <li>A per-track indicator flags anything missing a cover, year or genre</li>
       <li>Quickly auto-number a set of tracks, or revert unsaved changes back to what's on disk</li>
       <li>Search and filter a large list of loaded tracks</li>
@@ -35,7 +35,7 @@
     </ul>
     <p>
       MyTag focuses purely on tags and cover art — no playback, no
-      library management, just a clean way to get your FLAC collection's
+      library management, just a clean way to get your audio collection's
       metadata right.
     </p>
   </description>
@@ -61,6 +61,21 @@
   <url type="homepage">https://github.com/maestebanc/MyTag</url>
 
   <releases>
+    <release version="0.51.0" date="2026-09-16">
+      <description>
+        <p>
+          Full MP3 audio support alongside FLAC, and typography refinements:
+        </p>
+        <ul>
+          <li>Native MP3 audio tagging via ID3v2.4 frames (TIT2, TPE1, TALB, TPE2, TDRC, TCON, TRCK, TPOS).</li>
+          <li>Embedded APIC cover art support for MP3 (load, replace, resize, and remove).</li>
+          <li>Audio stream integrity verification for both MP3 and FLAC.</li>
+          <li>Audio fingerprinting (AcoustID) and automatic tag extraction for MP3 and FLAC.</li>
+          <li>Extension-aware pattern renaming preserving original format (.flac or .mp3).</li>
+          <li>Streamlined typography matching native desktop scaling and Nautilus font metrics.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.50.0" date="2026-09-15">
       <description>
         <p>
