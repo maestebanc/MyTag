@@ -34,6 +34,26 @@ def resize_image_bytes(data: bytes, size: tuple[int, int] = COVER_SIZE) -> tuple
     return buf.getvalue(), "image/jpeg"
 
 
+def resize_image_bytes_exact(data: bytes, size: tuple[int, int]) -> tuple[bytes, str]:
+    """Redimensiona una imagen a un tamaño EXACTO, recortando el sobrante
+    centrado si su proporción original no coincide con la del destino (a
+    diferencia de resize_image_bytes, que ajusta sin recortar). Se usa para
+    igualar a un mismo cuadrado varias portadas distintas entre sí, donde no
+    hay un único ratio de partida que preservar."""
+    img = Image.open(io.BytesIO(data))
+    img = img.convert("RGB")
+    target_w, target_h = size
+    ratio = max(target_w / img.width, target_h / img.height)
+    scaled_size = (max(1, round(img.width * ratio)), max(1, round(img.height * ratio)))
+    scaled = img.resize(scaled_size, Image.LANCZOS)
+    left = (scaled_size[0] - target_w) // 2
+    top = (scaled_size[1] - target_h) // 2
+    cropped = scaled.crop((left, top, left + target_w, top + target_h))
+    buf = io.BytesIO()
+    cropped.save(buf, format="JPEG", quality=92)
+    return buf.getvalue(), "image/jpeg"
+
+
 def image_dimensions(data: bytes) -> tuple[int, int]:
     with Image.open(io.BytesIO(data)) as img:
         return img.size

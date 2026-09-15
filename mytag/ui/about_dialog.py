@@ -15,13 +15,13 @@ def build_about_dialog() -> Adw.AboutDialog:
     dialog = Adw.AboutDialog(
         application_name="MyTag",
         application_icon=APP_ID,
-        developer_name="maestebanc",
+        developer_name="Miguel Angel Esteban",
         version=__version__,
         comments=i18n.t("about.comments"),
         website="https://github.com/maestebanc/MyTag",
         issue_url="https://github.com/maestebanc/MyTag/issues",
-        developers=["maestebanc"],
-        copyright="© 2026 maestebanc",
+        developers=["Miguel Angel Esteban"],
+        copyright="© 2026 Miguel Angel Esteban",
         license_type=Gtk.License.MIT_X11,
     )
     return dialog

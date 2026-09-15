@@ -29,6 +29,7 @@ class CoverPanel(Gtk.Box):
 
     __gsignals__ = {
         "cover-change-requested": (GObject.SignalFlags.RUN_FIRST, None, (object, str)),
+        "cover-resize-each-requested": (GObject.SignalFlags.RUN_FIRST, None, (int,)),
         "cover-remove-requested": (GObject.SignalFlags.RUN_FIRST, None, ()),
         "musicbrainz-search-requested": (GObject.SignalFlags.RUN_FIRST, None, ()),
     }
@@ -81,7 +82,12 @@ class CoverPanel(Gtk.Box):
         # Ratio de la imagen actualmente cargada (ancho/alto), fijado al
         # refrescar la vista previa; se usa para recalcular la otra
         # dimensión cuando el usuario edita el ancho o el alto a mano.
+        # Cuando los temas seleccionados tienen portadas distintas entre sí
+        # no hay una única imagen de la que derivar el ratio, así que se fija
+        # a 1:1 (_square_mode) y el redimensionado recorta cada portada por
+        # separado al cuadrado indicado, en vez de reescalar una sola imagen.
         self._dims_ratio: float | None = None
+        self._square_mode = False
         self._updating_dims = False
 
         self.dims_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
@@ -232,6 +238,7 @@ class CoverPanel(Gtk.Box):
 
     def _set_status_text(self, text: str) -> None:
         self._dims_ratio = None
+        self._square_mode = False
         self.dims_box.set_visible(False)
         self.info_label.set_visible(True)
         self.info_label.set_text(text)
@@ -251,6 +258,7 @@ class CoverPanel(Gtk.Box):
             else:
                 self._show_bytes(data)
                 w, h = self._pixbuf_size(data)
+                self._square_mode = False
                 self._dims_ratio = (w / h) if h else None
                 self._updating_dims = True
                 self.width_spin.set_value(w)
@@ -260,7 +268,24 @@ class CoverPanel(Gtk.Box):
                 self.dims_box.set_visible(True)
         else:
             self._show_placeholder(i18n.t("cover.multiple_covers"))
-            self._set_status_text(i18n.t("cover.tracks_selected_count", n=len(self._tracks)))
+            self.info_label.set_visible(True)
+            self.info_label.set_text(i18n.t("cover.tracks_selected_count", n=len(self._tracks)))
+            if any(c is not None for c in covers):
+                # Portadas distintas: no hay un único ratio del que partir,
+                # así que se fuerza 1:1 y "Redimensionar" recorta cada
+                # portada individualmente al cuadrado que se indique aquí.
+                self._square_mode = True
+                self._dims_ratio = 1.0
+                self._updating_dims = True
+                current = self.width_spin.get_value()
+                self.width_spin.set_value(current)
+                self.height_spin.set_value(current)
+                self._updating_dims = False
+                self.dims_box.set_visible(True)
+            else:
+                self._square_mode = False
+                self._dims_ratio = None
+                self.dims_box.set_visible(False)
 
     def _on_width_spin_changed(self, _spin) -> None:
         if self._updating_dims or not self._dims_ratio:
@@ -351,17 +376,22 @@ class CoverPanel(Gtk.Box):
         if not self._tracks:
             return
         covers = {t.get_cover_bytes() for t in self._tracks}
-        if len(covers) != 1:
-            self._set_status_text(i18n.t("cover.different_covers_cant_resize"))
-            return
-        source = next(iter(covers))
-        if source is None:
-            self._set_status_text(i18n.t("cover.nothing_to_resize"))
-            return
         width = int(self.width_spin.get_value())
         height = int(self.height_spin.get_value())
-        data, mime = resize_image_bytes(source, size=(width, height))
-        self.emit("cover-change-requested", data, mime)
+        if len(covers) == 1:
+            source = next(iter(covers))
+            if source is None:
+                self._set_status_text(i18n.t("cover.nothing_to_resize"))
+                return
+            data, mime = resize_image_bytes(source, size=(width, height))
+            self.emit("cover-change-requested", data, mime)
+        elif any(c is not None for c in covers):
+            # Portadas distintas: cada tema conserva su propia imagen, sólo
+            # se recorta y escala al mismo cuadrado (self._square_mode
+            # asegura que width == height aquí).
+            self.emit("cover-resize-each-requested", width)
+        else:
+            self._set_status_text(i18n.t("cover.nothing_to_resize"))
 
     def _on_remove(self, _button) -> None:
         if not self._tracks:

@@ -13,6 +13,7 @@ from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk, Pango
 
 from .. import acoustid, config, i18n, integrity
 from ..audio_track import AudioTrack
+from ..cover_utils import resize_image_bytes_exact
 from .about_dialog import build_about_dialog
 from .cover_panel import CoverPanel
 from .cover_search_dialog import CoverSearchDialog
@@ -28,11 +29,17 @@ DEFAULT_WINDOW_HEIGHT = 650
 
 # Columnas de la tabla de pistas: solo lo imprescindible para identificar
 # cada tema de un vistazo. La edición completa de tags vive en el panel
-# de la derecha. (prop_name, clave i18n, ancho fijo en px o None si se expande)
+# de la derecha. (prop_name, clave i18n, ancho fijo inicial en px)
+#
+# Todas llevan un ancho fijo explícito (ninguna usa expand=True): una
+# columna en modo "expand" reserva un ancho mínimo propio del que no baja
+# aunque se arrastre el borde de la columna vecina, lo que tope el
+# redimensionado de esa vecina mucho antes de lo que cabría esperar. Con
+# ancho fijo en las tres, cada borde se puede arrastrar libremente.
 TRACK_LIST_COLUMNS = [
     ("tracknumber", "column.track", 56),
-    ("title", "column.title", None),
     ("albumartist", "column.artist", 150),
+    ("title", "column.title", 250),
 ]
 
 
@@ -374,25 +381,33 @@ class MainWindow(Adw.ApplicationWindow):
         paned.set_start_child(self._build_track_list_panel())
         paned.set_resize_start_child(True)
 
-        side_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
-        side_box.set_margin_top(20)
-        side_box.set_margin_bottom(20)
-        side_box.set_margin_start(20)
-        side_box.set_margin_end(20)
+        # Un Gtk.Paned (en vez de un Gtk.Box fijo) para que el ancho relativo
+        # de la portada frente a las etiquetas se pueda arrastrar con el
+        # ratón, igual que el divisor entre la lista y este panel.
+        side_paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
+        side_paned.set_wide_handle(True)
+        side_paned.set_position(320)
+        side_paned.set_margin_top(20)
+        side_paned.set_margin_bottom(20)
+        side_paned.set_margin_start(20)
+        side_paned.set_margin_end(20)
 
         self.cover_panel = CoverPanel()
         self.cover_panel.connect("cover-change-requested", self._on_cover_change_requested)
+        self.cover_panel.connect("cover-resize-each-requested", self._on_cover_resize_each_requested)
         self.cover_panel.connect("cover-remove-requested", self._on_cover_remove_requested)
         self.cover_panel.connect("musicbrainz-search-requested", self._on_musicbrainz_search_requested)
-        side_box.append(self.cover_panel)
+        side_paned.set_start_child(self.cover_panel)
+        side_paned.set_resize_start_child(False)
 
         self.tag_editor = TagEditor()
         self.tag_editor.set_hexpand(True)
         self.tag_editor.connect("changes-requested", self._on_tag_changes_requested)
-        side_box.append(self.tag_editor)
+        side_paned.set_end_child(self.tag_editor)
+        side_paned.set_resize_end_child(True)
 
         side_scroller = Gtk.ScrolledWindow()
-        side_scroller.set_child(side_box)
+        side_scroller.set_child(side_paned)
         side_scroller.set_hexpand(True)
         paned.set_end_child(side_scroller)
         paned.set_resize_end_child(True)
@@ -537,6 +552,21 @@ class MainWindow(Adw.ApplicationWindow):
     def _on_cover_change_requested(self, _panel, data: bytes, mime: str) -> None:
         tracks = self._selected_tracks()
         for track in tracks:
+            track.set_cover_bytes(data, mime)
+        self.cover_panel.set_tracks(tracks)
+        self._update_title_state()
+
+    def _on_cover_resize_each_requested(self, _panel, size: int) -> None:
+        # A diferencia de _on_cover_change_requested, aquí cada tema tiene su
+        # propia portada de origen (por eso el panel ofreció este modo en vez
+        # del habitual): se recorta y escala cada una por separado al mismo
+        # cuadrado, en vez de aplicar unos mismos bytes a todos los temas.
+        tracks = self._selected_tracks()
+        for track in tracks:
+            source = track.get_cover_bytes()
+            if source is None:
+                continue
+            data, mime = resize_image_bytes_exact(source, (size, size))
             track.set_cover_bytes(data, mime)
         self.cover_panel.set_tracks(tracks)
         self._update_title_state()

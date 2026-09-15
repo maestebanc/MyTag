@@ -265,11 +265,6 @@ STRINGS: dict[str, dict[str, str]] = {
         "ca": "Selecciona la portada",
     },
     "cover.images_filter_name": {"es": "Imágenes", "en": "Images", "ca": "Imatges"},
-    "cover.different_covers_cant_resize": {
-        "es": "Los temas seleccionados tienen portadas distintas.",
-        "en": "The selected tracks have different covers.",
-        "ca": "Els temes seleccionats tenen portades diferents.",
-    },
     "cover.nothing_to_resize": {
         "es": "No hay portada que redimensionar.",
         "en": "There is no cover to resize.",
