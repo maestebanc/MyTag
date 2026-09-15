@@ -55,6 +55,13 @@ def load_config() -> dict:
     merged = dict(DEFAULTS)
     merged.update(data)
 
+    if "base_dpi" in merged:
+        del merged["base_dpi"]
+
+    if "base_dpi" in data:
+        del data["base_dpi"]
+        save_config(data)
+
     if is_first_run:
         save_config(merged)
 

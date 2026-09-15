@@ -183,6 +183,15 @@ flowboxchild:selected .candidate-card {
     padding: 2px 8px;
     border-radius: 6px;
 }
+
+/* Tabla de pistas compacta y alineada con aplicaciones de escritorio como Nautilus */
+.track-table row {
+    min-height: 32px;
+}
+
+.track-table columnviewcell {
+    padding: 2px 4px;
+}
 """
 
 
@@ -194,18 +203,16 @@ def load_extra_css() -> None:
     )
 
 
-def _base_dpi() -> int:
-    """DPI (en 1024os) que corresponde al 100%: el que tenía el sistema la
-    primera vez que se ejecutó MyTag, capturado antes de aplicar ningún
-    ajuste propio. Se guarda para que 100% siga significando siempre lo
-    mismo, aunque cambie el DPI del sistema más adelante."""
-    cfg = config.load_config()
-    if "base_dpi" not in cfg:
-        cfg["base_dpi"] = Gtk.Settings.get_default().get_property("gtk-xft-dpi")
-        config.save_config(cfg)
-    return cfg["base_dpi"]
+DEFAULT_DPI_1024 = 98304  # 96 DPI * 1024 (estándar de fuentes en X11/Wayland)
 
 
 def apply_ui_scale(percent: int) -> None:
-    dpi_1024 = int(_base_dpi() * percent / 100)
-    Gtk.Settings.get_default().set_property("gtk-xft-dpi", dpi_1024)
+    settings = Gtk.Settings.get_default()
+    if settings is None:
+        return
+    if percent == 100:
+        # -1 delega completamente en la resolución nativa del sistema (Nautilus, GNOME, etc.)
+        settings.set_property("gtk-xft-dpi", -1)
+    else:
+        dpi_1024 = int(DEFAULT_DPI_1024 * percent / 100)
+        settings.set_property("gtk-xft-dpi", dpi_1024)
