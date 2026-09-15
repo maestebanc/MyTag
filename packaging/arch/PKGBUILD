@@ -1,0 +1,44 @@
+# Maintainer: Miguel Angel Esteban <maestebanc@gmail.com>
+pkgname=mytag
+pkgver=0.20.0.alpha0
+pkgrel=1
+pkgdesc="Edit tags and cover art on your FLAC music files"
+arch=('any')
+url="https://github.com/maestebanc/MyTag"
+license=('MIT')
+depends=('python' 'python-mutagen' 'python-pillow' 'python-gobject' 'gtk4' 'libadwaita')
+optdepends=('flac: integrity checking (Verify integrity)'
+            'chromaprint: audio fingerprint identification (Identify by audio fingerprint)')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/maestebanc/MyTag/archive/refs/tags/v0.20.0-alpha.tar.gz")
+sha256sums=('5a9240d72e45e23e53bc205af346e123f4aad352d418dae5cfcfd1f83265d482')
+
+package() {
+  cd "$srcdir/MyTag-0.20.0-alpha"
+
+  local site_packages
+  site_packages="$(python3 -c 'import sysconfig; print(sysconfig.get_path("purelib"))')"
+
+  install -d "$pkgdir$site_packages"
+  cp -r mytag "$pkgdir$site_packages/"
+  find "$pkgdir$site_packages/mytag" -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+
+  install -Dm755 /dev/stdin "$pkgdir/usr/bin/mytag" <<'LAUNCHER'
+#!/usr/bin/python3
+import sys
+from mytag.app import main
+if __name__ == "__main__":
+    sys.exit(main())
+LAUNCHER
+
+  install -Dm644 data/com.maestebanc.MyTag.desktop \
+    "$pkgdir/usr/share/applications/com.maestebanc.MyTag.desktop"
+  install -Dm644 data/com.maestebanc.MyTag.metainfo.xml \
+    "$pkgdir/usr/share/metainfo/com.maestebanc.MyTag.metainfo.xml"
+
+  for size in 16 22 24 32 48 64 128 256 512; do
+    install -Dm644 "data/icons/hicolor/${size}x${size}/apps/com.maestebanc.MyTag.png" \
+      "$pkgdir/usr/share/icons/hicolor/${size}x${size}/apps/com.maestebanc.MyTag.png"
+  done
+  install -Dm644 data/icons/hicolor/scalable/apps/com.maestebanc.MyTag.svg \
+    "$pkgdir/usr/share/icons/hicolor/scalable/apps/com.maestebanc.MyTag.svg"
+}
