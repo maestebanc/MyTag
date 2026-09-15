@@ -64,6 +64,31 @@ STRINGS: dict[str, dict[str, str]] = {
         "en": "Revert changes to selected tracks",
         "ca": "Reverteix els canvis dels temes seleccionats",
     },
+    "menu.identify_fingerprint": {
+        "es": "Identificar por huella de audio…",
+        "en": "Identify by audio fingerprint…",
+        "ca": "Identifica per empremta d'àudio…",
+    },
+    "menu.check_integrity": {
+        "es": "Verificar integridad",
+        "en": "Verify integrity",
+        "ca": "Verifica la integritat",
+    },
+    "menu.rename_from_tags": {
+        "es": "Renombrar según etiquetas…",
+        "en": "Rename from tags…",
+        "ca": "Reanomena segons les etiquetes…",
+    },
+    "menu.fill_missing_covers": {
+        "es": "Rellenar portadas que faltan…",
+        "en": "Fill in missing covers…",
+        "ca": "Omple les portades que falten…",
+    },
+    "menu.export_csv": {
+        "es": "Exportar informe CSV…",
+        "en": "Export CSV report…",
+        "ca": "Exporta un informe CSV…",
+    },
     "list.clear_all": {"es": "Vaciar lista", "en": "Clear list", "ca": "Buida la llista"},
     "list.search_placeholder": {
         "es": "Buscar por título o artista…",
@@ -182,6 +207,14 @@ STRINGS: dict[str, dict[str, str]] = {
     "column.track": {"es": "Nº", "en": "Trk", "ca": "Núm."},
     "column.title": {"es": "Título", "en": "Title", "ca": "Títol"},
     "column.artist": {"es": "Artista", "en": "Artist", "ca": "Artista"},
+    "completeness.cover": {"es": "portada", "en": "cover", "ca": "portada"},
+    "completeness.date": {"es": "año", "en": "year", "ca": "any"},
+    "completeness.genre": {"es": "género", "en": "genre", "ca": "gènere"},
+    "completeness.tooltip": {
+        "es": "Falta: {fields}",
+        "en": "Missing: {fields}",
+        "ca": "Falta: {fields}",
+    },
     # ---- campos de etiqueta ----
     "tag.title": {"es": "Título", "en": "Title", "ca": "Títol"},
     "tag.artist": {"es": "Artista", "en": "Artist", "ca": "Artista"},
@@ -317,4 +350,169 @@ STRINGS: dict[str, dict[str, str]] = {
     "prefs.ui_scale_custom": {"es": "Personalizada (%)", "en": "Custom (%)", "ca": "Personalitzada (%)"},
     "prefs.ui_scale_custom_option": {"es": "Personalizada…", "en": "Custom…", "ca": "Personalitzada…"},
     "prefs.save": {"es": "Guardar", "en": "Save", "ca": "Desa"},
+    "prefs.theme": {"es": "Tema", "en": "Theme", "ca": "Tema"},
+    "prefs.theme_system": {"es": "Del sistema", "en": "System", "ca": "Del sistema"},
+    "prefs.theme_light": {"es": "Claro", "en": "Light", "ca": "Clar"},
+    "prefs.theme_dark": {"es": "Oscuro", "en": "Dark", "ca": "Fosc"},
+    "prefs.acoustid_group": {
+        "es": "AcoustID (identificación por huella de audio)",
+        "en": "AcoustID (audio fingerprint identification)",
+        "ca": "AcoustID (identificació per empremta d'àudio)",
+    },
+    "prefs.acoustid_key": {"es": "Clave de API", "en": "API key", "ca": "Clau d'API"},
+    "prefs.acoustid_key_note": {
+        "es": "Gratis en acoustid.org/api-key. También hace falta tener instalado "
+        "el programa «fpcalc» (paquete chromaprint).",
+        "en": "Free at acoustid.org/api-key. You also need the “fpcalc” tool "
+        "installed (chromaprint package).",
+        "ca": "Gratuïta a acoustid.org/api-key. També cal tenir instal·lat el "
+        "programa «fpcalc» (paquet chromaprint).",
+    },
+    # ---- menú principal / acerca de / atajos ----
+    "menu.primary": {"es": "Menú principal", "en": "Main menu", "ca": "Menú principal"},
+    "menu.preferences": {"es": "Preferencias", "en": "Preferences", "ca": "Preferències"},
+    "menu.keyboard_shortcuts": {
+        "es": "Atajos de teclado",
+        "en": "Keyboard Shortcuts",
+        "ca": "Dreceres de teclat",
+    },
+    "menu.about": {"es": "Acerca de MyTag", "en": "About MyTag", "ca": "Quant al MyTag"},
+    "about.comments": {
+        "es": "Edita etiquetas y portadas de tus archivos FLAC",
+        "en": "Edit tags and cover art on your FLAC music files",
+        "ca": "Edita etiquetes i portades dels teus fitxers FLAC",
+    },
+    "shortcuts.title": {"es": "Atajos de teclado", "en": "Keyboard Shortcuts", "ca": "Dreceres de teclat"},
+    "shortcuts.group_general": {"es": "General", "en": "General", "ca": "General"},
+    "shortcuts.open_files": {"es": "Abrir archivos", "en": "Open files", "ca": "Obre fitxers"},
+    "shortcuts.save": {"es": "Guardar cambios", "en": "Save changes", "ca": "Desa els canvis"},
+    "shortcuts.toggle_search": {"es": "Buscar en la lista", "en": "Search the list", "ca": "Cerca a la llista"},
+    "shortcuts.remove_selected": {
+        "es": "Quitar temas seleccionados",
+        "en": "Remove selected tracks",
+        "ca": "Treu els temes seleccionats",
+    },
+    "shortcuts.preferences": {"es": "Preferencias", "en": "Preferences", "ca": "Preferències"},
+    "shortcuts.shortcuts_window": {
+        "es": "Mostrar esta ventana",
+        "en": "Show this window",
+        "ca": "Mostra aquesta finestra",
+    },
+    "shortcuts.quit": {"es": "Salir de MyTag", "en": "Quit MyTag", "ca": "Surt del MyTag"},
+    # ---- verificación de integridad ----
+    "integrity.title": {"es": "Verificar integridad", "en": "Verify integrity", "ca": "Verifica la integritat"},
+    "integrity.flac_not_found": {
+        "es": "No se encontró el programa «flac» en el sistema, necesario para esta comprobación.",
+        "en": "The “flac” tool was not found on this system; it's required for this check.",
+        "ca": "No s'ha trobat el programa «flac» al sistema, necessari per a aquesta comprovació.",
+    },
+    "integrity.problems_title": {
+        "es": "Problemas de integridad encontrados",
+        "en": "Integrity problems found",
+        "ca": "S'han trobat problemes d'integritat",
+    },
+    "integrity.all_ok": {
+        "es": "{n} archivo(s) verificado(s) sin problemas.",
+        "en": "{n} file(s) verified with no problems.",
+        "ca": "{n} fitxer(s) verificat(s) sense problemes.",
+    },
+    # ---- exportar CSV ----
+    "csv.export_title": {
+        "es": "Exportar informe CSV",
+        "en": "Export CSV report",
+        "ca": "Exporta un informe CSV",
+    },
+    "csv.export_done": {
+        "es": "Informe exportado ({n} tema(s)).",
+        "en": "Report exported ({n} track(s)).",
+        "ca": "Informe exportat ({n} tema(es)).",
+    },
+    "csv.export_error": {
+        "es": "No se pudo exportar el informe: {reason}",
+        "en": "Could not export the report: {reason}",
+        "ca": "No s'ha pogut exportar l'informe: {reason}",
+    },
+    # ---- rellenar portadas que faltan ----
+    "fillcovers.none_missing": {
+        "es": "Ningún álbum cargado tiene la portada sin poner.",
+        "en": "No loaded album is missing a cover.",
+        "ca": "Cap àlbum carregat li falta la portada.",
+    },
+    "fillcovers.done": {
+        "es": "Revisión de portadas completada.",
+        "en": "Cover review complete.",
+        "ca": "Revisió de portades completada.",
+    },
+    # ---- renombrar según etiquetas ----
+    "rename.title": {"es": "Renombrar según etiquetas", "en": "Rename from tags", "ca": "Reanomena segons les etiquetes"},
+    "rename.pattern": {"es": "Patrón", "en": "Pattern", "ca": "Patró"},
+    "rename.tokens_hint": {
+        "es": "Campos disponibles: %title% %artist% %album% %albumartist% %date% "
+        "%genre% %tracknumber% %discnumber%. El número de pista y de disco se "
+        "rellenan a 2 dígitos en el nombre de archivo.",
+        "en": "Available fields: %title% %artist% %album% %albumartist% %date% "
+        "%genre% %tracknumber% %discnumber%. Track and disc numbers are "
+        "zero-padded to 2 digits in the filename.",
+        "ca": "Camps disponibles: %title% %artist% %album% %albumartist% %date% "
+        "%genre% %tracknumber% %discnumber%. El número de pista i de disc "
+        "s'omplen a 2 dígits en el nom de fitxer.",
+    },
+    "rename.unchanged": {"es": "(sin cambios)", "en": "(unchanged)", "ca": "(sense canvis)"},
+    "rename.confirm": {"es": "Renombrar", "en": "Rename", "ca": "Reanomena"},
+    "rename.done": {
+        "es": "{n} archivo(s) renombrado(s).",
+        "en": "{n} file(s) renamed.",
+        "ca": "{n} fitxer(s) reanomenat(s).",
+    },
+    "rename.errors_title": {
+        "es": "Algunos archivos no se pudieron renombrar",
+        "en": "Some files could not be renamed",
+        "ca": "Alguns fitxers no s'han pogut reanomenar",
+    },
+    "rename.collision": {
+        "es": "Ya existe un archivo llamado «{name}»",
+        "en": "A file named “{name}” already exists",
+        "ca": "Ja existeix un fitxer anomenat «{name}»",
+    },
+    # ---- identificación por huella de audio ----
+    "fingerprint.title": {
+        "es": "Identificar por huella de audio",
+        "en": "Identify by audio fingerprint",
+        "ca": "Identifica per empremta d'àudio",
+    },
+    "fingerprint.no_api_key": {
+        "es": "Configura tu clave de API de AcoustID en Preferencias antes de usar esto.",
+        "en": "Set your AcoustID API key in Preferences before using this.",
+        "ca": "Configura la teva clau d'API d'AcoustID a Preferències abans d'utilitzar-ho.",
+    },
+    "fingerprint.fpcalc_missing": {
+        "es": "No se encontró el programa «fpcalc» (paquete chromaprint) en el sistema.",
+        "en": "The “fpcalc” tool (chromaprint package) was not found on this system.",
+        "ca": "No s'ha trobat el programa «fpcalc» (paquet chromaprint) al sistema.",
+    },
+    "fingerprint.loading": {
+        "es": "Calculando huella de audio…",
+        "en": "Calculating audio fingerprint…",
+        "ca": "Calculant l'empremta d'àudio…",
+    },
+    "fingerprint.no_matches_title": {
+        "es": "Sin coincidencias",
+        "en": "No matches",
+        "ca": "Sense coincidències",
+    },
+    "fingerprint.no_matches_desc": {
+        "es": "No se encontró ninguna coincidencia para este tema.",
+        "en": "No match was found for this track.",
+        "ca": "No s'ha trobat cap coincidència per a aquest tema.",
+    },
+    "fingerprint.error_title": {
+        "es": "No se pudo identificar",
+        "en": "Could not identify",
+        "ca": "No s'ha pogut identificar",
+    },
+    "fingerprint.applied": {
+        "es": "Etiquetas aplicadas desde la identificación.",
+        "en": "Tags applied from the identification.",
+        "ca": "Etiquetes aplicades des de la identificació.",
+    },
 }

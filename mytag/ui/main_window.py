@@ -1,6 +1,7 @@
 """Ventana principal de MyTag (GTK4/Adwaita)."""
 from __future__ import annotations
 
+import csv
 import os
 
 import gi
@@ -11,11 +12,16 @@ gi.require_version("Gdk", "4.0")
 gi.require_version("Pango", "1.0")
 from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk, Pango
 
-from .. import i18n
+from .. import acoustid, config, i18n, integrity
 from ..audio_track import AudioTrack
+from ..constants import TAG_KEYS
+from .about_dialog import build_about_dialog
 from .cover_panel import CoverPanel
 from .cover_search_dialog import CoverSearchDialog
+from .fingerprint_dialog import FingerprintDialog
 from .preferences_dialog import PreferencesDialog
+from .rename_dialog import RenameDialog
+from .shortcuts_dialog import ShortcutsDialog
 from .tag_editor import TagEditor
 from .track_item import TrackItem
 
@@ -74,6 +80,50 @@ def _make_column(
     return column
 
 
+def _make_status_column() -> Gtk.ColumnViewColumn:
+    """Columna estrecha con un icono de aviso si al tema le falta portada,
+    año o género (indicador de "completitud" de un vistazo)."""
+    factory = Gtk.SignalListItemFactory()
+
+    def on_setup(_factory, list_item: Gtk.ListItem) -> None:
+        image = Gtk.Image()
+        image.set_pixel_size(14)
+        list_item.set_child(image)
+
+    def on_bind(_factory, list_item: Gtk.ListItem) -> None:
+        image = list_item.get_child()
+        item = list_item.get_item()
+
+        def update(*_args) -> None:
+            missing = item.get_property("missing-fields")
+            if missing:
+                fields = ", ".join(i18n.t(f"completeness.{code}") for code in missing.split(","))
+                image.set_from_icon_name("dialog-warning-symbolic")
+                image.set_tooltip_text(i18n.t("completeness.tooltip", fields=fields))
+            else:
+                image.clear()
+                image.set_tooltip_text("")
+
+        update()
+        list_item.mytag_handler_id = item.connect("notify::missing-fields", update)
+        list_item.mytag_handler_item = item
+
+    def on_unbind(_factory, list_item: Gtk.ListItem) -> None:
+        item = getattr(list_item, "mytag_handler_item", None)
+        handler_id = getattr(list_item, "mytag_handler_id", None)
+        if item is not None and handler_id is not None:
+            item.disconnect(handler_id)
+
+    factory.connect("setup", on_setup)
+    factory.connect("bind", on_bind)
+    factory.connect("unbind", on_unbind)
+
+    column = Gtk.ColumnViewColumn(title="", factory=factory)
+    column.set_fixed_width(32)
+    column.set_resizable(False)
+    return column
+
+
 class MainWindow(Adw.ApplicationWindow):
     def __init__(self, app: Adw.Application):
         super().__init__(application=app, title="MyTag")
@@ -95,10 +145,37 @@ class MainWindow(Adw.ApplicationWindow):
         self.set_content(self.toast_overlay)
 
         self._setup_drop_target()
+        self._setup_actions(app)
         self.connect("close-request", self._on_close_request)
         self._force_close = False
 
         self._toast(i18n.t("toast.startup"))
+
+    def _setup_actions(self, app: Adw.Application) -> None:
+        actions = {
+            "open-files": lambda *_: self.open_files_dialog(),
+            "save": lambda *_: self.save_all(),
+            "toggle-search": lambda *_: self.btn_search_toggle.set_active(
+                not self.btn_search_toggle.get_active()
+            ),
+            "remove-selected": lambda *_: self.remove_selected_rows(),
+            "preferences": lambda *_: self._open_preferences(),
+            "shortcuts": lambda *_: self._open_shortcuts(),
+        }
+        accels = {
+            "open-files": ["<Control>o"],
+            "save": ["<Control>s"],
+            "toggle-search": ["<Control>f"],
+            "remove-selected": ["Delete"],
+            "preferences": ["<Control>comma"],
+            "shortcuts": ["<Control>question"],
+        }
+        for name, callback in actions.items():
+            action = Gio.SimpleAction.new(name, None)
+            action.connect("activate", callback)
+            self.add_action(action)
+            app.set_accels_for_action(f"win.{name}", accels[name])
+        app.set_accels_for_action("app.quit", ["<Control>q"])
 
     # ---------- construcción de la interfaz ----------
 
@@ -122,13 +199,43 @@ class MainWindow(Adw.ApplicationWindow):
         btn_save.connect("clicked", lambda _b: self.save_all())
         header.pack_end(btn_save)
 
-        btn_preferences = Gtk.Button()
-        btn_preferences.set_icon_name("emblem-system-symbolic")
-        btn_preferences.set_tooltip_text(i18n.t("toolbar.preferences"))
-        btn_preferences.connect("clicked", lambda _b: self._open_preferences())
-        header.pack_end(btn_preferences)
+        header.pack_end(self._build_primary_menu_button())
 
         return header
+
+    def _build_primary_menu_button(self) -> Gtk.MenuButton:
+        menu_button = Gtk.MenuButton()
+        menu_button.set_icon_name("open-menu-symbolic")
+        menu_button.set_tooltip_text(i18n.t("menu.primary"))
+
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        box.set_margin_top(6)
+        box.set_margin_bottom(6)
+        box.set_margin_start(6)
+        box.set_margin_end(6)
+
+        popover = Gtk.Popover()
+
+        def add_item(label: str, callback) -> None:
+            btn = Gtk.Button(label=label)
+            btn.add_css_class("flat")
+            btn.get_child().set_halign(Gtk.Align.START)
+            btn.connect("clicked", lambda _b: (callback(), popover.popdown()))
+            box.append(btn)
+
+        add_item(i18n.t("menu.preferences"), self._open_preferences)
+        add_item(i18n.t("menu.keyboard_shortcuts"), self._open_shortcuts)
+        add_item(i18n.t("menu.about"), self._open_about)
+
+        popover.set_child(box)
+        menu_button.set_popover(popover)
+        return menu_button
+
+    def _open_shortcuts(self) -> None:
+        ShortcutsDialog().present(self)
+
+    def _open_about(self) -> None:
+        build_about_dialog().present(self)
 
     def _build_open_menu_button(self) -> Gtk.MenuButton:
         menu_button = Gtk.MenuButton(label=i18n.t("toolbar.open"))
@@ -177,6 +284,12 @@ class MainWindow(Adw.ApplicationWindow):
 
         add_item(i18n.t("menu.autonumber"), self.autonumber_selected)
         add_item(i18n.t("menu.revert_selected"), self.revert_selected)
+        add_item(i18n.t("menu.identify_fingerprint"), self.identify_selected_by_fingerprint)
+        add_item(i18n.t("menu.check_integrity"), self.check_integrity_selected)
+        add_item(i18n.t("menu.rename_from_tags"), self.rename_selected_from_tags)
+        box.append(Gtk.Separator())
+        add_item(i18n.t("menu.fill_missing_covers"), self.fill_missing_covers)
+        add_item(i18n.t("menu.export_csv"), self.export_csv)
 
         popover.set_child(box)
         menu_button.set_popover(popover)
@@ -202,6 +315,7 @@ class MainWindow(Adw.ApplicationWindow):
         )
 
         self.column_view = Gtk.ColumnView(model=self.selection_model)
+        self.column_view.append_column(_make_status_column())
         for prop_name, label_key, width in TRACK_LIST_COLUMNS:
             self.column_view.append_column(
                 _make_column(i18n.t(label_key), prop_name, expand=width is None, fixed_width=width)
@@ -235,11 +349,11 @@ class MainWindow(Adw.ApplicationWindow):
         left_box.append(Gtk.Separator())
         left_box.append(bottom_bar)
 
-        left_frame = Gtk.Frame()
-        left_frame.add_css_class("card")
-        left_frame.set_overflow(Gtk.Overflow.HIDDEN)
-        left_frame.set_child(left_box)
-        return left_frame
+        self.track_list_frame = Gtk.Frame()
+        self.track_list_frame.add_css_class("card")
+        self.track_list_frame.set_overflow(Gtk.Overflow.HIDDEN)
+        self.track_list_frame.set_child(left_box)
+        return self.track_list_frame
 
     def _track_matches_search(self, item: TrackItem, _user_data=None) -> bool:
         if not self._search_query:
@@ -291,11 +405,22 @@ class MainWindow(Adw.ApplicationWindow):
     def _setup_drop_target(self) -> None:
         target = Gtk.DropTarget.new(Gio.File, Gdk.DragAction.COPY)
         target.connect("drop", self._on_drop)
+        target.connect("enter", self._on_track_drop_enter)
+        target.connect("leave", self._on_track_drop_leave)
         self.column_view.add_controller(target)
 
         target_files = Gtk.DropTarget.new(Gdk.FileList, Gdk.DragAction.COPY)
         target_files.connect("drop", self._on_drop_filelist)
+        target_files.connect("enter", self._on_track_drop_enter)
+        target_files.connect("leave", self._on_track_drop_leave)
         self.column_view.add_controller(target_files)
+
+    def _on_track_drop_enter(self, *_args) -> int:
+        self.track_list_frame.add_css_class("drop-highlight")
+        return Gdk.DragAction.COPY
+
+    def _on_track_drop_leave(self, *_args) -> None:
+        self.track_list_frame.remove_css_class("drop-highlight")
 
     # ---------- carga de archivos ----------
 
@@ -462,6 +587,143 @@ class MainWindow(Adw.ApplicationWindow):
         self._update_title_state()
         self._toast(i18n.t("toast.reverted", n=len(tracks)))
 
+    def check_integrity_selected(self) -> None:
+        tracks = self._selected_tracks()
+        if not tracks:
+            return
+        if not integrity.is_available():
+            self._show_message(i18n.t("integrity.title"), i18n.t("integrity.flac_not_found"))
+            return
+        problems = []
+        for track in tracks:
+            ok, message = integrity.check_integrity(track.path)
+            if not ok:
+                problems.append(f"{track.filename}: {message}")
+        if problems:
+            self._show_message(i18n.t("integrity.problems_title"), "\n".join(problems))
+        else:
+            self._toast(i18n.t("integrity.all_ok", n=len(tracks)))
+
+    def identify_selected_by_fingerprint(self) -> None:
+        tracks = self._selected_tracks()
+        if not tracks:
+            return
+        api_key = config.load_config().get("acoustid_api_key", "")
+        if not api_key:
+            self._show_message(i18n.t("fingerprint.title"), i18n.t("fingerprint.no_api_key"))
+            return
+        if not acoustid.fpcalc_available():
+            self._show_message(i18n.t("fingerprint.title"), i18n.t("fingerprint.fpcalc_missing"))
+            return
+
+        track = tracks[0]
+        dialog = FingerprintDialog(track.path, api_key)
+        dialog.connect("match-chosen", self._on_fingerprint_match_chosen, track)
+        dialog.present(self)
+
+    def _on_fingerprint_match_chosen(self, _dialog, match: dict, track: AudioTrack) -> None:
+        if match.get("title"):
+            track.set_tag("TITLE", match["title"])
+        if match.get("artist"):
+            track.set_tag("ARTIST", match["artist"])
+        if match.get("album"):
+            track.set_tag("ALBUM", match["album"])
+        self._refresh_row_for_track(track)
+        self.tag_editor.set_tracks(self._selected_tracks())
+        self._update_title_state()
+        self._toast(i18n.t("fingerprint.applied"))
+
+    def export_csv(self) -> None:
+        if not self.tracks:
+            return
+        dialog = Gtk.FileDialog(title=i18n.t("csv.export_title"))
+        dialog.set_initial_name("mytag-export.csv")
+        dialog.save(self, None, self._on_export_csv_finished)
+
+    def _on_export_csv_finished(self, dialog, result) -> None:
+        try:
+            gfile = dialog.save_finish(result)
+        except GLib.Error:
+            return
+        path = gfile.get_path() if gfile else None
+        if not path:
+            return
+        try:
+            with open(path, "w", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f)
+                writer.writerow(["filename", *TAG_KEYS])
+                for track in self.tracks:
+                    writer.writerow([track.filename, *(track.get_tag(key) for key in TAG_KEYS)])
+        except OSError as exc:
+            self._show_message(i18n.t("csv.export_title"), i18n.t("csv.export_error", reason=exc))
+            return
+        self._toast(i18n.t("csv.export_done", n=len(self.tracks)))
+
+    def fill_missing_covers(self) -> None:
+        if not self.tracks:
+            return
+        groups: dict[tuple[str, str], list[AudioTrack]] = {}
+        for track in self.tracks:
+            album = track.get_tag("ALBUM").strip()
+            artist = track.get_tag("ALBUMARTIST").strip()
+            if not album or not artist:
+                continue
+            groups.setdefault((album, artist), []).append(track)
+
+        self._fill_covers_groups = groups
+        self._fill_covers_queue = [key for key, tracks in groups.items() if not any(t.get_cover_bytes() for t in tracks)]
+
+        if not self._fill_covers_queue:
+            self._toast(i18n.t("fillcovers.none_missing"))
+            return
+        self._process_next_missing_cover()
+
+    def _process_next_missing_cover(self) -> None:
+        if not self._fill_covers_queue:
+            self._toast(i18n.t("fillcovers.done"))
+            return
+        album, artist = self._fill_covers_queue.pop(0)
+        dialog = CoverSearchDialog(album, artist)
+        dialog.connect("cover-chosen", self._on_fill_cover_chosen, (album, artist))
+        dialog.connect("closed", lambda _d: self._process_next_missing_cover())
+        dialog.present(self)
+
+    def _on_fill_cover_chosen(self, _dialog, data: bytes, mime: str, key: tuple[str, str]) -> None:
+        for track in self._fill_covers_groups.get(key, []):
+            track.set_cover_bytes(data, mime)
+            self._refresh_row_for_track(track)
+        self.cover_panel.set_tracks(self._selected_tracks())
+        self._update_title_state()
+
+    def rename_selected_from_tags(self) -> None:
+        tracks = self._selected_tracks()
+        if not tracks:
+            return
+        dialog = RenameDialog(tracks)
+        dialog.connect("rename-confirmed", self._on_rename_confirmed)
+        dialog.present(self)
+
+    def _on_rename_confirmed(self, _dialog, planned: dict) -> None:
+        renamed = 0
+        errors = []
+        for track, new_path in planned.items():
+            if new_path == track.path:
+                continue
+            if os.path.exists(new_path):
+                errors.append(i18n.t("rename.collision", name=os.path.basename(new_path)))
+                continue
+            try:
+                os.rename(track.path, new_path)
+                track.path = new_path
+                self._refresh_row_for_track(track)
+                renamed += 1
+            except OSError as exc:
+                errors.append(f"{track.filename}: {exc}")
+        if errors:
+            self._show_message(i18n.t("rename.errors_title"), "\n".join(errors))
+        self.tag_editor.set_tracks(self._selected_tracks())
+        self._toast(i18n.t("rename.done", n=renamed))
+
     def remove_selected_rows(self) -> None:
         tracks = self._selected_tracks()
         if not tracks:
@@ -542,9 +804,11 @@ class MainWindow(Adw.ApplicationWindow):
     # ---------- arrastrar y soltar ----------
 
     def _on_drop(self, _target, gfile: Gio.File, _x, _y) -> bool:
+        self.track_list_frame.remove_css_class("drop-highlight")
         return self._handle_dropped_paths([gfile.get_path()] if gfile.get_path() else [])
 
     def _on_drop_filelist(self, _target, file_list, _x, _y) -> bool:
+        self.track_list_frame.remove_css_class("drop-highlight")
         paths = [f.get_path() for f in file_list.get_files() if f.get_path()]
         return self._handle_dropped_paths(paths)
 

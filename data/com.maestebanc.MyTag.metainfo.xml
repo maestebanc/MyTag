@@ -56,6 +56,19 @@
   <url type="homepage">https://github.com/maestebanc/MyTag</url>
 
   <releases>
+    <release version="0.11.0" date="2026-09-15">
+      <description>
+        <p>
+          Context menus on the cover art, a new app icon, a light/dark
+          theme override, an About dialog, a keyboard shortcuts window,
+          drag &amp; drop for cover images, audio fingerprint
+          identification (AcoustID), FLAC integrity checking, batch
+          cover fill-in across an album collection, a per-track
+          completeness indicator, CSV export, and renaming files from
+          tags.
+        </p>
+      </description>
+    </release>
     <release version="0.10.0" date="2026-09-14">
       <description>
         <p>First preliminary alpha release.</p>

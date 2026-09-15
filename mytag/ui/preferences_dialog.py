@@ -12,7 +12,9 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, Gtk
 
 from .. import config, i18n
-from .style import apply_ui_scale
+from .style import apply_theme, apply_ui_scale
+
+THEME_CODES = ["system", "light", "dark"]
 
 SCALE_PRESETS = [75, 90, 100, 110, 125, 150, 175, 200]
 MIN_SCALE = 25
@@ -33,12 +35,15 @@ class PreferencesDialog(Adw.Dialog):
     def __init__(self):
         super().__init__()
         self.set_title(i18n.t("prefs.title"))
-        self.set_content_width(620)
-        self.set_content_height(520)
+        self.set_content_width(640)
+        self.set_content_height(680)
 
-        saved_scale = config.load_config().get("ui_scale", 100)
+        saved_config = config.load_config()
+        saved_scale = saved_config.get("ui_scale", 100)
         self._pending_language = i18n.get_language()
         self._pending_scale = saved_scale
+        self._pending_theme = saved_config.get("theme", "system")
+        self._pending_acoustid_key = saved_config.get("acoustid_api_key", "")
 
         toolbar_view = Adw.ToolbarView()
         header = Adw.HeaderBar()
@@ -53,15 +58,49 @@ class PreferencesDialog(Adw.Dialog):
         page.add(general_group)
 
         appearance_group = Adw.PreferencesGroup(title=i18n.t("prefs.appearance_group"))
+        appearance_group.add(self._build_theme_row())
         scale_row, custom_row, revealer = self._build_scale_rows(saved_scale)
         appearance_group.add(scale_row)
         appearance_group.add(revealer)
         page.add(appearance_group)
 
+        acoustid_group = Adw.PreferencesGroup(
+            title=i18n.t("prefs.acoustid_group"), description=i18n.t("prefs.acoustid_key_note")
+        )
+        acoustid_group.add(self._build_acoustid_row())
+        page.add(acoustid_group)
+
         toolbar_view.set_content(page)
         toolbar_view.add_bottom_bar(self._build_action_bar())
 
         self.set_child(toolbar_view)
+
+    def _build_theme_row(self) -> Adw.ComboRow:
+        names = Gtk.StringList.new(
+            [i18n.t("prefs.theme_system"), i18n.t("prefs.theme_light"), i18n.t("prefs.theme_dark")]
+        )
+        row = Adw.ComboRow(title=i18n.t("prefs.theme"), model=names)
+        current = self._pending_theme
+        row.set_selected(THEME_CODES.index(current) if current in THEME_CODES else 0)
+
+        def on_changed(row: Adw.ComboRow, _pspec) -> None:
+            index = row.get_selected()
+            if 0 <= index < len(THEME_CODES):
+                self._pending_theme = THEME_CODES[index]
+
+        row.connect("notify::selected", on_changed)
+        return row
+
+    def _build_acoustid_row(self) -> Adw.EntryRow:
+        row = Adw.EntryRow(title=i18n.t("prefs.acoustid_key"))
+        row.set_text(self._pending_acoustid_key)
+        row.add_css_class("caption")
+
+        def on_changed(entry: Adw.EntryRow) -> None:
+            self._pending_acoustid_key = entry.get_text().strip()
+
+        row.connect("changed", on_changed)
+        return row
 
     def _build_language_row(self) -> Adw.ComboRow:
         codes = i18n.SUPPORTED_LANGUAGES
@@ -133,6 +172,9 @@ class PreferencesDialog(Adw.Dialog):
         i18n.set_language(self._pending_language)
         cfg = config.load_config()
         cfg["ui_scale"] = self._pending_scale
+        cfg["theme"] = self._pending_theme
+        cfg["acoustid_api_key"] = self._pending_acoustid_key
         config.save_config(cfg)
         apply_ui_scale(self._pending_scale)
+        apply_theme(self._pending_theme)
         self.close()

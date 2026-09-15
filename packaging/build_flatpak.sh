@@ -12,10 +12,11 @@ BUILD_DIR="$REPO_ROOT/packaging/build/flatpak"
 REPO_DIR="$REPO_ROOT/packaging/build/flatpak-repo"
 OUT_DIR="$REPO_ROOT/packaging/dist"
 APP_ID="com.maestebanc.MyTag"
+VERSION="0.11.0-alpha0"
 
 cd "$MANIFEST_DIR"
 flatpak-builder --force-clean --user --repo="$REPO_DIR" "$BUILD_DIR" "$APP_ID.yml"
 
 mkdir -p "$OUT_DIR"
-flatpak build-bundle "$REPO_DIR" "$OUT_DIR/mytag-0.10.0-alpha0.flatpak" "$APP_ID"
-echo "Listo: $OUT_DIR/mytag-0.10.0-alpha0.flatpak"
+flatpak build-bundle "$REPO_DIR" "$OUT_DIR/mytag-${VERSION}.flatpak" "$APP_ID"
+echo "Listo: $OUT_DIR/mytag-${VERSION}.flatpak"

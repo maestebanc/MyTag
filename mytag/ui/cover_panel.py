@@ -3,6 +3,10 @@
 Cada acción (elegir imagen, redimensionar, quitar) se aplica de inmediato a
 los temas seleccionados (en memoria); "Guardar cambios" en la ventana
 principal es lo único que escribe a disco.
+
+Las acciones menos frecuentes (pegar, buscar en MusicBrainz, quitar) viven
+en un menú contextual sobre la propia portada (clic derecho, o el botón
+"⋮" superpuesto para quien no piense en el clic derecho).
 """
 from __future__ import annotations
 
@@ -17,6 +21,7 @@ from ..constants import COVER_SIZE
 from ..cover_utils import read_image_file, resize_image_bytes
 
 PREVIEW_SIZE = 260
+IMAGE_MIME_TYPES = ("image/png", "image/jpeg", "image/bmp", "image/webp")
 
 
 class CoverPanel(Gtk.Box):
@@ -32,9 +37,9 @@ class CoverPanel(Gtk.Box):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         self._tracks = []
 
-        frame = Gtk.Frame()
-        frame.add_css_class("card")
-        frame.set_halign(Gtk.Align.CENTER)
+        self.frame = Gtk.Frame()
+        self.frame.add_css_class("card")
+        self.frame.set_halign(Gtk.Align.CENTER)
         self.picture = Gtk.Picture()
         self.picture.set_content_fit(Gtk.ContentFit.COVER)
         self.picture.set_size_request(PREVIEW_SIZE, PREVIEW_SIZE)
@@ -45,8 +50,26 @@ class CoverPanel(Gtk.Box):
         self._stack.add_named(self.placeholder, "placeholder")
         self._stack.add_named(self.picture, "picture")
         self._stack.set_size_request(PREVIEW_SIZE, PREVIEW_SIZE)
-        frame.set_child(self._stack)
-        self.append(frame)
+        self.frame.set_child(self._stack)
+
+        overlay = Gtk.Overlay()
+        overlay.set_child(self.frame)
+        overlay.set_halign(Gtk.Align.CENTER)
+
+        self.btn_overlay_menu = Gtk.MenuButton()
+        self.btn_overlay_menu.set_icon_name("view-more-symbolic")
+        self.btn_overlay_menu.add_css_class("osd")
+        self.btn_overlay_menu.add_css_class("circular")
+        self.btn_overlay_menu.set_halign(Gtk.Align.END)
+        self.btn_overlay_menu.set_valign(Gtk.Align.START)
+        self.btn_overlay_menu.set_margin_top(6)
+        self.btn_overlay_menu.set_margin_end(6)
+        self.btn_overlay_menu.set_popover(self._build_actions_popover())
+        overlay.add_overlay(self.btn_overlay_menu)
+        self.append(overlay)
+
+        self._setup_context_menu()
+        self._setup_drop_target()
 
         self.info_label = Gtk.Label(label="")
         self.info_label.add_css_class("dim-label")
@@ -55,19 +78,9 @@ class CoverPanel(Gtk.Box):
         self.info_label.set_justify(Gtk.Justification.CENTER)
         self.append(self.info_label)
 
-        pick_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8, homogeneous=True)
         self.btn_select = Gtk.Button(label=i18n.t("cover.select_image"))
         self.btn_select.connect("clicked", self._on_select_image)
-        pick_row.append(self.btn_select)
-
-        self.btn_paste = Gtk.Button(label=i18n.t("cover.paste"))
-        self.btn_paste.connect("clicked", self._on_paste)
-        pick_row.append(self.btn_paste)
-        self.append(pick_row)
-
-        self.btn_musicbrainz = Gtk.Button(label=i18n.t("cover.musicbrainz_search"))
-        self.btn_musicbrainz.connect("clicked", lambda _b: self.emit("musicbrainz-search-requested"))
-        self.append(self.btn_musicbrainz)
+        self.append(self.btn_select)
 
         self.size_row = Adw.SpinRow(
             title=i18n.t("cover.size_label"),
@@ -85,22 +98,90 @@ class CoverPanel(Gtk.Box):
         self.btn_resize.connect("clicked", self._on_resize)
         self.append(self.btn_resize)
 
-        self.btn_remove = Gtk.Button(label=i18n.t("cover.remove"))
-        self.btn_remove.add_css_class("destructive-action")
-        self.btn_remove.connect("clicked", self._on_remove)
-        self.append(self.btn_remove)
-
         self.set_tracks([])
+
+    def _build_actions_popover(self) -> Gtk.Popover:
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        box.set_margin_top(6)
+        box.set_margin_bottom(6)
+        box.set_margin_start(6)
+        box.set_margin_end(6)
+
+        popover = Gtk.Popover()
+
+        def add_item(label: str, callback, destructive: bool = False) -> None:
+            btn = Gtk.Button(label=label)
+            btn.add_css_class("flat")
+            if destructive:
+                btn.add_css_class("destructive-action")
+            btn.get_child().set_halign(Gtk.Align.START)
+            btn.connect("clicked", lambda _b: (callback(), popover.popdown()))
+            box.append(btn)
+
+        add_item(i18n.t("cover.paste"), lambda: self._on_paste(None))
+        add_item(i18n.t("cover.musicbrainz_search"), lambda: self.emit("musicbrainz-search-requested"))
+        add_item(i18n.t("cover.remove"), lambda: self._on_remove(None), destructive=True)
+
+        popover.set_child(box)
+        return popover
+
+    def _setup_context_menu(self) -> None:
+        self._context_popover = self._build_actions_popover()
+        self._context_popover.set_parent(self.frame)
+        self._context_popover.set_has_arrow(False)
+
+        gesture = Gtk.GestureClick()
+        gesture.set_button(Gdk.BUTTON_SECONDARY)
+        gesture.connect("pressed", self._on_secondary_click)
+        self.frame.add_controller(gesture)
+
+    def _on_secondary_click(self, _gesture, _n_press, x: float, y: float) -> None:
+        if not self._tracks:
+            return
+        rect = Gdk.Rectangle()
+        rect.x, rect.y, rect.width, rect.height = int(x), int(y), 1, 1
+        self._context_popover.set_pointing_to(rect)
+        self._context_popover.popup()
+
+    def _setup_drop_target(self) -> None:
+        target = Gtk.DropTarget.new(Gio.File, Gdk.DragAction.COPY)
+        target.set_gtypes([Gio.File, Gdk.Texture])
+        target.connect("drop", self._on_drop)
+        target.connect("enter", self._on_drop_enter)
+        target.connect("leave", self._on_drop_leave)
+        self.frame.add_controller(target)
+
+    def _on_drop_enter(self, *_args) -> int:
+        if self._tracks:
+            self.frame.add_css_class("drop-highlight")
+        return Gdk.DragAction.COPY
+
+    def _on_drop_leave(self, *_args) -> None:
+        self.frame.remove_css_class("drop-highlight")
+
+    def _on_drop(self, _target, value, _x, _y) -> bool:
+        self.frame.remove_css_class("drop-highlight")
+        if not self._tracks:
+            return False
+        if isinstance(value, Gdk.Texture):
+            png_bytes = value.save_to_png_bytes()
+            self.emit("cover-change-requested", png_bytes.get_data(), "image/png")
+            return True
+        if isinstance(value, Gio.File):
+            path = value.get_path()
+            if path:
+                data, mime = read_image_file(path)
+                self.emit("cover-change-requested", data, mime)
+                return True
+        return False
 
     def set_tracks(self, tracks) -> None:
         self._tracks = tracks
         enabled = bool(tracks)
         self.btn_select.set_sensitive(enabled)
-        self.btn_paste.set_sensitive(enabled)
-        self.btn_musicbrainz.set_sensitive(enabled)
+        self.btn_overlay_menu.set_sensitive(enabled)
         self.size_row.set_sensitive(enabled)
         self.btn_resize.set_sensitive(enabled)
-        self.btn_remove.set_sensitive(enabled)
         self._refresh_preview()
 
     # ---------- helpers internos ----------

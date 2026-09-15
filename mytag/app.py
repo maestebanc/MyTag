@@ -11,7 +11,7 @@ from gi.repository import Adw, Gio, Gtk
 
 from . import config
 from .ui.main_window import MainWindow
-from .ui.style import APP_ID, apply_ui_scale, load_extra_css, register_icon_theme
+from .ui.style import APP_ID, apply_theme, apply_ui_scale, load_extra_css, register_icon_theme
 
 
 class MyTagApplication(Adw.Application):
@@ -26,12 +26,18 @@ class MyTagApplication(Adw.Application):
         self.window: MainWindow | None = None
         self.connect("activate", self._on_activate)
 
+        quit_action = Gio.SimpleAction.new("quit", None)
+        quit_action.connect("activate", lambda *_: self.quit())
+        self.add_action(quit_action)
+
     def _on_activate(self, app: Adw.Application) -> None:
         if self.window is None:
             register_icon_theme()
             Gtk.Window.set_default_icon_name(APP_ID)
             load_extra_css()
-            apply_ui_scale(config.load_config().get("ui_scale", 100))
+            cfg = config.load_config()
+            apply_ui_scale(cfg.get("ui_scale", 100))
+            apply_theme(cfg.get("theme", "system"))
             self.window = MainWindow(app)
         self.window.present()
 

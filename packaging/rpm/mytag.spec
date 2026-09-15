@@ -2,7 +2,7 @@
 %define pysitelib /usr/lib/python3.13/site-packages
 
 Name:           mytag
-Version:        0.10.0
+Version:        0.11.0
 Release:        0.1.alpha0%{?dist}
 Summary:        Edit tags and cover art on your FLAC music files
 License:        MIT
@@ -52,6 +52,8 @@ for size in 16 22 24 32 48 64 128 256 512; do
   mkdir -p %{buildroot}/usr/share/icons/hicolor/${size}x${size}/apps
   cp %{srcdir}/data/icons/hicolor/${size}x${size}/apps/com.maestebanc.MyTag.png %{buildroot}/usr/share/icons/hicolor/${size}x${size}/apps/
 done
+mkdir -p %{buildroot}/usr/share/icons/hicolor/scalable/apps
+cp %{srcdir}/data/icons/hicolor/scalable/apps/com.maestebanc.MyTag.svg %{buildroot}/usr/share/icons/hicolor/scalable/apps/
 
 %files
 %{pysitelib}/mytag
@@ -59,11 +61,18 @@ done
 /usr/share/applications/com.maestebanc.MyTag.desktop
 /usr/share/metainfo/com.maestebanc.MyTag.metainfo.xml
 /usr/share/icons/hicolor/*/apps/com.maestebanc.MyTag.png
+/usr/share/icons/hicolor/*/apps/com.maestebanc.MyTag.svg
 
 %post
 update-desktop-database -q /usr/share/applications &>/dev/null || :
 gtk-update-icon-cache -q /usr/share/icons/hicolor &>/dev/null || :
 
 %changelog
+* Tue Sep 15 2026 maestebanc - 0.11.0-0.1.alpha0
+- Second alpha release: context menus, new icon, light/dark theme
+  override, About dialog, keyboard shortcuts, drag & drop for cover
+  images, audio fingerprint identification (AcoustID), FLAC
+  integrity check, batch cover fill-in, completeness indicator,
+  CSV export, and renaming files from tags.
 * Mon Sep 14 2026 maestebanc - 0.10.0-0.1.alpha0
 - First preliminary alpha release.

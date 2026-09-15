@@ -15,6 +15,8 @@ DEFAULT_LANGUAGE_FALLBACK = "en"
 
 DEFAULTS = {
     "ui_scale": 100,
+    "theme": "system",  # "system", "light" o "dark"
+    "acoustid_api_key": "",
 }
 
 

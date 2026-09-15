@@ -9,7 +9,7 @@ from gi.repository import GObject
 from ..audio_track import AudioTrack
 from ..constants import TAG_KEYS
 
-_PROPERTY_NAMES = ["filename"] + [key.lower() for key in TAG_KEYS]
+_PROPERTY_NAMES = ["filename", "missing-fields"] + [key.lower() for key in TAG_KEYS]
 
 
 class TrackItem(GObject.Object):
@@ -54,6 +54,19 @@ class TrackItem(GObject.Object):
     @GObject.Property(type=str)
     def discnumber(self) -> str:
         return self.track.get_tag("DISCNUMBER")
+
+    @GObject.Property(type=str)
+    def missing_fields(self) -> str:
+        """Campos "deseables" que faltan, separados por coma (para la
+        columna de completitud). Cadena vacía si no falta nada."""
+        missing = []
+        if not self.track.get_cover_bytes():
+            missing.append("cover")
+        if not self.track.get_tag("DATE"):
+            missing.append("date")
+        if not self.track.get_tag("GENRE"):
+            missing.append("genre")
+        return ",".join(missing)
 
     def refresh(self) -> None:
         """Notifica a las vistas ligadas que los valores han cambiado."""

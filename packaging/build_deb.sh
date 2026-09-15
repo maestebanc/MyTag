@@ -3,7 +3,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VERSION="0.10.0~alpha0-1"
+VERSION="0.11.0~alpha0-1"
 WORK="$REPO_ROOT/packaging/build/deb/mytag"
 OUT_DIR="$REPO_ROOT/packaging/dist"
 
@@ -22,6 +22,9 @@ for size in 16 22 24 32 48 64 128 256 512; do
   cp "$REPO_ROOT/data/icons/hicolor/${size}x${size}/apps/com.maestebanc.MyTag.png" \
      "$WORK/usr/share/icons/hicolor/${size}x${size}/apps/"
 done
+mkdir -p "$WORK/usr/share/icons/hicolor/scalable/apps"
+cp "$REPO_ROOT/data/icons/hicolor/scalable/apps/com.maestebanc.MyTag.svg" \
+   "$WORK/usr/share/icons/hicolor/scalable/apps/"
 
 cat > "$WORK/usr/bin/mytag" <<'LAUNCHER'
 #!/usr/bin/python3

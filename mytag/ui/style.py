@@ -6,9 +6,21 @@ import os
 import gi
 
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gdk, Gtk
+gi.require_version("Adw", "1")
+from gi.repository import Adw, Gdk, Gtk
 
 from .. import config
+
+THEMES = {
+    "system": Adw.ColorScheme.DEFAULT,
+    "light": Adw.ColorScheme.FORCE_LIGHT,
+    "dark": Adw.ColorScheme.FORCE_DARK,
+}
+
+
+def apply_theme(theme: str) -> None:
+    scheme = THEMES.get(theme, Adw.ColorScheme.DEFAULT)
+    Adw.StyleManager.get_default().set_color_scheme(scheme)
 
 APP_ID = "com.maestebanc.MyTag"
 
@@ -36,6 +48,11 @@ list.boxed-list {
 }
 list.boxed-list > row {
     background-color: transparent;
+}
+.drop-highlight {
+    outline: 3px solid @accent_bg_color;
+    outline-offset: -3px;
+    border-radius: 8px;
 }
 """
 
