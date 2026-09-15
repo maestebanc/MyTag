@@ -80,6 +80,9 @@ class PreferencesDialog(Adw.Dialog):
             [i18n.t("prefs.theme_system"), i18n.t("prefs.theme_light"), i18n.t("prefs.theme_dark")]
         )
         row = Adw.ComboRow(title=i18n.t("prefs.theme"), model=names)
+        icon = Gtk.Image.new_from_icon_name("weather-clear-night-symbolic")
+        icon.add_css_class("dim-label")
+        row.add_prefix(icon)
         current = self._pending_theme
         row.set_selected(THEME_CODES.index(current) if current in THEME_CODES else 0)
 
@@ -93,6 +96,9 @@ class PreferencesDialog(Adw.Dialog):
 
     def _build_acoustid_row(self) -> Adw.EntryRow:
         row = Adw.EntryRow(title=i18n.t("prefs.acoustid_key"))
+        icon = Gtk.Image.new_from_icon_name("dialog-password-symbolic")
+        icon.add_css_class("dim-label")
+        row.add_prefix(icon)
         row.set_text(self._pending_acoustid_key)
         row.add_css_class("caption")
 
@@ -106,6 +112,9 @@ class PreferencesDialog(Adw.Dialog):
         codes = i18n.SUPPORTED_LANGUAGES
         names = Gtk.StringList.new([i18n.LANGUAGE_NAMES[code] for code in codes])
         row = Adw.ComboRow(title=i18n.t("prefs.language"), model=names)
+        icon = Gtk.Image.new_from_icon_name("preferences-desktop-locale-symbolic")
+        icon.add_css_class("dim-label")
+        row.add_prefix(icon)
         row.set_subtitle(i18n.t("prefs.language_restart_note"))
         current = i18n.get_language()
         row.set_selected(codes.index(current) if current in codes else 0)
@@ -122,6 +131,9 @@ class PreferencesDialog(Adw.Dialog):
         options = [f"{p}%" for p in SCALE_PRESETS] + [i18n.t("prefs.ui_scale_custom_option")]
         model = Gtk.StringList.new(options)
         combo = Adw.ComboRow(title=i18n.t("prefs.ui_scale"), model=model)
+        icon = Gtk.Image.new_from_icon_name("zoom-original-symbolic")
+        icon.add_css_class("dim-label")
+        combo.add_prefix(icon)
 
         # Adw.EntryRow en vez de un SpinRow: es un campo de texto sin
         # botones +/-, tal y como se pidió; solo se puede escribir el número
@@ -161,7 +173,11 @@ class PreferencesDialog(Adw.Dialog):
         btn_cancel.connect("clicked", lambda _b: self.close())
         bar.pack_start(btn_cancel)
 
-        btn_save = Gtk.Button(label=i18n.t("prefs.save"))
+        btn_save = Gtk.Button()
+        save_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        save_box.append(Gtk.Image.new_from_icon_name("emblem-ok-symbolic"))
+        save_box.append(Gtk.Label(label=i18n.t("prefs.save")))
+        btn_save.set_child(save_box)
         btn_save.add_css_class("suggested-action")
         btn_save.connect("clicked", self._on_save_clicked)
         bar.pack_end(btn_save)

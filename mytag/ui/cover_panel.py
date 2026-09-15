@@ -40,15 +40,38 @@ class CoverPanel(Gtk.Box):
 
         self.frame = Gtk.Frame()
         self.frame.add_css_class("card")
+        self.frame.add_css_class("album-cover-frame")
+        self.frame.set_overflow(Gtk.Overflow.HIDDEN)
         self.frame.set_halign(Gtk.Align.CENTER)
         self.picture = Gtk.Picture()
         self.picture.set_content_fit(Gtk.ContentFit.COVER)
         self.picture.set_size_request(PREVIEW_SIZE, PREVIEW_SIZE)
-        self.placeholder = Gtk.Label(label=i18n.t("cover.no_cover"))
-        self.placeholder.add_css_class("dim-label")
+
+        self.placeholder_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        self.placeholder_box.add_css_class("album-cover-placeholder")
+        self.placeholder_box.set_halign(Gtk.Align.CENTER)
+        self.placeholder_box.set_valign(Gtk.Align.CENTER)
+        self.placeholder_box.set_size_request(PREVIEW_SIZE - 24, PREVIEW_SIZE - 24)
+
+        self.placeholder_icon = Gtk.Image.new_from_icon_name("media-optical-cd-symbolic")
+        self.placeholder_icon.set_pixel_size(56)
+        self.placeholder_icon.add_css_class("dim-label")
+        self.placeholder_box.append(self.placeholder_icon)
+
+        self.placeholder_label = Gtk.Label(label=i18n.t("cover.no_cover"))
+        self.placeholder_label.add_css_class("dim-label")
+        self.placeholder_label.add_css_class("heading")
+        self.placeholder_box.append(self.placeholder_label)
+
+        self.placeholder_sublabel = Gtk.Label(label=i18n.t("cover.drag_hint"))
+        self.placeholder_sublabel.add_css_class("dim-label")
+        self.placeholder_sublabel.add_css_class("caption")
+        self.placeholder_sublabel.set_wrap(True)
+        self.placeholder_sublabel.set_justify(Gtk.Justification.CENTER)
+        self.placeholder_box.append(self.placeholder_sublabel)
 
         self._stack = Gtk.Stack()
-        self._stack.add_named(self.placeholder, "placeholder")
+        self._stack.add_named(self.placeholder_box, "placeholder")
         self._stack.add_named(self.picture, "picture")
         self._stack.set_size_request(PREVIEW_SIZE, PREVIEW_SIZE)
         self.frame.set_child(self._stack)
@@ -61,10 +84,11 @@ class CoverPanel(Gtk.Box):
         self.btn_overlay_menu.set_icon_name("view-more-symbolic")
         self.btn_overlay_menu.add_css_class("osd")
         self.btn_overlay_menu.add_css_class("circular")
+        self.btn_overlay_menu.add_css_class("cover-overlay-btn")
         self.btn_overlay_menu.set_halign(Gtk.Align.END)
         self.btn_overlay_menu.set_valign(Gtk.Align.START)
-        self.btn_overlay_menu.set_margin_top(6)
-        self.btn_overlay_menu.set_margin_end(6)
+        self.btn_overlay_menu.set_margin_top(8)
+        self.btn_overlay_menu.set_margin_end(8)
         self.btn_overlay_menu.set_popover(self._build_actions_popover())
         overlay.add_overlay(self.btn_overlay_menu)
         self.append(overlay)
@@ -82,22 +106,24 @@ class CoverPanel(Gtk.Box):
         # Ratio de la imagen actualmente cargada (ancho/alto), fijado al
         # refrescar la vista previa; se usa para recalcular la otra
         # dimensión cuando el usuario edita el ancho o el alto a mano.
-        # Cuando los temas seleccionados tienen portadas distintas entre sí
-        # no hay una única imagen de la que derivar el ratio, así que se fija
-        # a 1:1 (_square_mode) y el redimensionado recorta cada portada por
-        # separado al cuadrado indicado, en vez de reescalar una sola imagen.
         self._dims_ratio: float | None = None
         self._square_mode = False
         self._updating_dims = False
 
-        self.dims_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        self.dims_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
         self.dims_box.set_halign(Gtk.Align.CENTER)
+        self.dims_box.add_css_class("dims-pill")
+
         self.width_spin = Gtk.SpinButton.new_with_range(16, 10000, 1)
         self.width_spin.set_numeric(True)
+        self.width_spin.set_width_chars(4)
+        self.width_spin.set_max_width_chars(5)
         self.width_spin.set_value(COVER_SIZE[0])
         self.width_spin.connect("value-changed", self._on_width_spin_changed)
         self.height_spin = Gtk.SpinButton.new_with_range(16, 10000, 1)
         self.height_spin.set_numeric(True)
+        self.height_spin.set_width_chars(4)
+        self.height_spin.set_max_width_chars(5)
         self.height_spin.set_value(COVER_SIZE[1])
         self.height_spin.connect("value-changed", self._on_height_spin_changed)
         self.dims_box.append(self.width_spin)
@@ -107,13 +133,33 @@ class CoverPanel(Gtk.Box):
         self.dims_box.set_visible(False)
         self.append(self.dims_box)
 
-        self.btn_select = Gtk.Button(label=i18n.t("cover.select_image"))
-        self.btn_select.connect("clicked", self._on_select_image)
-        self.append(self.btn_select)
+        def make_action_button(label: str, icon_name: str) -> Gtk.Button:
+            btn = Gtk.Button()
+            box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+            box.set_halign(Gtk.Align.CENTER)
+            box.append(Gtk.Image.new_from_icon_name(icon_name))
+            box.append(Gtk.Label(label=label))
+            btn.set_child(box)
+            return btn
 
-        self.btn_resize = Gtk.Button(label=i18n.t("cover.resize"))
+        # Botones de acción principales
+        actions_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        actions_box.set_halign(Gtk.Align.CENTER)
+        actions_box.set_size_request(PREVIEW_SIZE, -1)
+
+        self.btn_select = make_action_button(i18n.t("cover.select_image"), "document-open-symbolic")
+        self.btn_select.connect("clicked", self._on_select_image)
+        actions_box.append(self.btn_select)
+
+        self.btn_search = make_action_button(i18n.t("cover.search_button"), "system-search-symbolic")
+        self.btn_search.connect("clicked", lambda _b: self.emit("musicbrainz-search-requested"))
+        actions_box.append(self.btn_search)
+
+        self.btn_resize = make_action_button(i18n.t("cover.resize"), "image-crop-symbolic")
         self.btn_resize.connect("clicked", self._on_resize)
-        self.append(self.btn_resize)
+        actions_box.append(self.btn_resize)
+
+        self.append(actions_box)
 
         self.set_tracks([])
 
@@ -126,18 +172,29 @@ class CoverPanel(Gtk.Box):
 
         popover = Gtk.Popover()
 
-        def add_item(label: str, callback, destructive: bool = False) -> None:
-            btn = Gtk.Button(label=label)
+        def add_item(label: str, icon_name: str, callback, destructive: bool = False) -> None:
+            btn = Gtk.Button()
             btn.add_css_class("flat")
             if destructive:
                 btn.add_css_class("destructive-action")
-            btn.get_child().set_halign(Gtk.Align.START)
+            ibox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+            ibox.set_margin_start(4)
+            ibox.set_margin_end(4)
+            ibox.set_margin_top(2)
+            ibox.set_margin_bottom(2)
+            icon = Gtk.Image.new_from_icon_name(icon_name)
+            icon.add_css_class("dim-label")
+            lbl = Gtk.Label(label=label, xalign=0)
+            lbl.set_hexpand(True)
+            ibox.append(icon)
+            ibox.append(lbl)
+            btn.set_child(ibox)
             btn.connect("clicked", lambda _b: (callback(), popover.popdown()))
             box.append(btn)
 
-        add_item(i18n.t("cover.paste"), lambda: self._on_paste(None))
-        add_item(i18n.t("cover.musicbrainz_search"), lambda: self.emit("musicbrainz-search-requested"))
-        add_item(i18n.t("cover.remove"), lambda: self._on_remove(None), destructive=True)
+        add_item(i18n.t("cover.paste"), "edit-paste-symbolic", lambda: self._on_paste(None))
+        add_item(i18n.t("cover.musicbrainz_search"), "system-search-symbolic", lambda: self.emit("musicbrainz-search-requested"))
+        add_item(i18n.t("cover.remove"), "user-trash-symbolic", lambda: self._on_remove(None), destructive=True)
 
         popover.set_child(box)
         return popover
@@ -228,6 +285,7 @@ class CoverPanel(Gtk.Box):
         self._tracks = tracks
         enabled = bool(tracks)
         self.btn_select.set_sensitive(enabled)
+        self.btn_search.set_sensitive(enabled)
         self.btn_overlay_menu.set_sensitive(enabled)
         self.width_spin.set_sensitive(enabled)
         self.height_spin.set_sensitive(enabled)
@@ -304,7 +362,7 @@ class CoverPanel(Gtk.Box):
         self._updating_dims = False
 
     def _show_placeholder(self, text: str) -> None:
-        self.placeholder.set_text(text)
+        self.placeholder_label.set_text(text)
         self._stack.set_visible_child_name("placeholder")
 
     def _show_bytes(self, data: bytes) -> None:

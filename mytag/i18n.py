@@ -45,6 +45,47 @@ def t(key: str, **kwargs) -> str:
 
 
 STRINGS: dict[str, dict[str, str]] = {
+    # ---- pantalla de bienvenida / estado vacío ----
+    "empty.title": {
+        "es": "Edita las etiquetas de tu música",
+        "en": "Edit your music tags",
+        "ca": "Edita les etiquetes de la teva música",
+    },
+    "empty.description": {
+        "es": "Abre archivos FLAC o arrastra carpetas directamente aquí para comenzar.",
+        "en": "Open FLAC files or drag folders directly here to get started.",
+        "ca": "Obre fitxers FLAC o arrossega carpetes directament aquí per començar.",
+    },
+    "list.status_summary": {
+        "es": "{total} tema(s)",
+        "en": "{total} track(s)",
+        "ca": "{total} tema(es)",
+    },
+    "list.status_selected": {
+        "es": "{total} tema(s) · {selected} seleccionado(s)",
+        "en": "{total} track(s) · {selected} selected",
+        "ca": "{total} tema(es) · {selected} seleccionat(s)",
+    },
+    "cover.search_button": {
+        "es": "Buscar portada…",
+        "en": "Search cover…",
+        "ca": "Cerca portada…",
+    },
+    "cover.drag_hint": {
+        "es": "Arrastra una imagen o busca en línea",
+        "en": "Drag an image or search online",
+        "ca": "Arrossega una imatge o cerca en línia",
+    },
+    "editor.badge_one": {
+        "es": "1 tema",
+        "en": "1 track",
+        "ca": "1 tema",
+    },
+    "editor.badge_many": {
+        "es": "{n} temas",
+        "en": "{n} tracks",
+        "ca": "{n} temes",
+    },
     # ---- barra de herramientas / ventana principal ----
     "toolbar.open": {"es": "Abrir", "en": "Open", "ca": "Obre"},
     "toolbar.open_files": {"es": "Abrir archivos…", "en": "Open files…", "ca": "Obre fitxers…"},
@@ -350,12 +391,18 @@ STRINGS: dict[str, dict[str, str]] = {
     },
     "prefs.acoustid_key": {"es": "Clave de API", "en": "API key", "ca": "Clau d'API"},
     "prefs.acoustid_key_note": {
-        "es": "Gratis en acoustid.org/api-key. También hace falta tener instalado "
+        "es": "Regístrate como aplicación (gratis) en acoustid.org/new-application "
+        "para conseguirla — la clave personal de acoustid.org/api-key no sirve "
+        "aquí, da error de «clave inválida». También hace falta tener instalado "
         "el programa «fpcalc» (paquete chromaprint).",
-        "en": "Free at acoustid.org/api-key. You also need the “fpcalc” tool "
-        "installed (chromaprint package).",
-        "ca": "Gratuïta a acoustid.org/api-key. També cal tenir instal·lat el "
-        "programa «fpcalc» (paquet chromaprint).",
+        "en": "Register a free application at acoustid.org/new-application to "
+        "get one — the personal key from acoustid.org/api-key will not work "
+        "here and gives an “invalid API key” error. You also need the "
+        "“fpcalc” tool installed (chromaprint package).",
+        "ca": "Registra't com a aplicació (gratis) a acoustid.org/new-application "
+        "per aconseguir-la — la clau personal d'acoustid.org/api-key no "
+        "funciona aquí, dona error de «clau no vàlida». També cal tenir "
+        "instal·lat el programa «fpcalc» (paquet chromaprint).",
     },
     # ---- menú principal / acerca de / atajos ----
     "menu.primary": {"es": "Menú principal", "en": "Main menu", "ca": "Menú principal"},

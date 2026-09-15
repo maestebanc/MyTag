@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 from . import i18n
 
-USER_AGENT = "MyTag/0.1 (https://github.com/maestebanc/MyTag)"
+USER_AGENT = "MyTag/0.50.0 (https://github.com/maestebanc/MyTag)"
 REQUEST_TIMEOUT = 12
 
 

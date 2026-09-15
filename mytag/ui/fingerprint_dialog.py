@@ -80,7 +80,11 @@ class FingerprintDialog(Adw.Dialog):
         btn_cancel.connect("clicked", lambda _b: self.close())
         bar.pack_start(btn_cancel)
 
-        self.btn_accept = Gtk.Button(label=i18n.t("action.accept"))
+        self.btn_accept = Gtk.Button()
+        accept_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        accept_box.append(Gtk.Image.new_from_icon_name("object-select-symbolic"))
+        accept_box.append(Gtk.Label(label=i18n.t("action.accept")))
+        self.btn_accept.set_child(accept_box)
         self.btn_accept.add_css_class("suggested-action")
         self.btn_accept.set_sensitive(False)
         self.btn_accept.connect("clicked", self._on_accept)
@@ -116,6 +120,9 @@ class FingerprintDialog(Adw.Dialog):
         for match in matches[:15]:
             subtitle = " · ".join(part for part in (match.get("artist"), match.get("album")) if part)
             row = Adw.ActionRow(title=match["title"], subtitle=subtitle)
+            icon = Gtk.Image.new_from_icon_name("audio-x-generic-symbolic")
+            icon.add_css_class("dim-label")
+            row.add_prefix(icon)
             row.mytag_match = match
             self._results_list.append(row)
 

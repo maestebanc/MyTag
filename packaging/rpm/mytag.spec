@@ -2,8 +2,8 @@
 %define pysitelib /usr/lib/python3.13/site-packages
 
 Name:           mytag
-Version:        0.20.0
-Release:        0.1.alpha0%{?dist}
+Version:        0.50.0
+Release:        1%{?dist}
 Summary:        Edit tags and cover art on your FLAC music files
 License:        MIT
 URL:            https://github.com/maestebanc/MyTag
@@ -68,6 +68,12 @@ update-desktop-database -q /usr/share/applications &>/dev/null || :
 gtk-update-icon-cache -q /usr/share/icons/hicolor &>/dev/null || :
 
 %changelog
+* Tue Sep 15 2026 Miguel Angel Esteban - 0.50.0-1
+- Major UI modernization with responsive track table layout.
+- Balanced margins, symmetrical layout and composite action buttons.
+- Robust AcoustID fingerprinting decoding 24-bit/multi-channel FLACs.
+- Updated documentation and screenshots.
+
 * Tue Sep 15 2026 Miguel Angel Esteban - 0.20.0-0.1.alpha0
 - Fix drag & drop from external apps (Nautilus) on Hyprland/wlroots.
 - Fix saving after renaming files from tags.

@@ -61,6 +61,21 @@
   <url type="homepage">https://github.com/maestebanc/MyTag</url>
 
   <releases>
+    <release version="0.50.0" date="2026-09-15">
+      <description>
+        <p>
+          Major release featuring comprehensive visual modernization and
+          packaging overhaul:
+        </p>
+        <ul>
+          <li>Responsive track table layout with a fixed track number column and auto-expanding artist and title columns occupying full panel width.</li>
+          <li>Pixel-perfect UI alignment with balanced margins, centered cover action buttons, and cohesive visual hierarchy across light and dark themes.</li>
+          <li>Enhanced dialogs with clear icon-and-label action buttons.</li>
+          <li>Robust audio fingerprinting pipeline with full 24-bit and multi-channel FLAC decoding via Chromaprint / fpcalc.</li>
+          <li>Official binary packages for Flatpak, Debian/Ubuntu (.deb), Fedora/RHEL (.rpm), and Arch Linux (.pkg.tar.zst).</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.20.0" date="2026-09-15">
       <description>
         <p>

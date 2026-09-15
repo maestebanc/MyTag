@@ -91,7 +91,11 @@ class CoverSearchDialog(Adw.Dialog):
         btn_cancel.connect("clicked", lambda _b: self.close())
         bar.pack_start(btn_cancel)
 
-        self.btn_accept = Gtk.Button(label=i18n.t("action.accept"))
+        self.btn_accept = Gtk.Button()
+        accept_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        accept_box.append(Gtk.Image.new_from_icon_name("object-select-symbolic"))
+        accept_box.append(Gtk.Label(label=i18n.t("action.accept")))
+        self.btn_accept.set_child(accept_box)
         self.btn_accept.add_css_class("suggested-action")
         self.btn_accept.set_sensitive(False)
         self.btn_accept.connect("clicked", self._on_accept_clicked)
@@ -131,30 +135,36 @@ class CoverSearchDialog(Adw.Dialog):
         return False
 
     def _build_candidate_widget(self, candidate: CoverCandidate) -> Gtk.FlowBoxChild:
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        box.set_size_request(150, 150)
-        box.set_margin_top(6)
-        box.set_margin_bottom(6)
-        box.set_margin_start(6)
-        box.set_margin_end(6)
+        card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        card.add_css_class("candidate-card")
+        card.set_size_request(160, 216)
 
+        thumb_frame = Gtk.Frame()
+        thumb_frame.add_css_class("candidate-thumb")
+        thumb_frame.set_overflow(Gtk.Overflow.HIDDEN)
         picture = Gtk.Picture()
         picture.set_content_fit(Gtk.ContentFit.COVER)
-        picture.set_size_request(140, 140)
-        box.append(picture)
+        picture.set_size_request(144, 144)
+        thumb_frame.set_child(picture)
+        card.append(thumb_frame)
+
+        meta_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        meta_box.set_halign(Gtk.Align.CENTER)
 
         size_label = Gtk.Label(label=i18n.t("coversearch.loading_item"))
         size_label.add_css_class("dim-label")
         size_label.add_css_class("caption")
-        box.append(size_label)
+        meta_box.append(size_label)
 
-        source_label = Gtk.Label(label=candidate.source)
-        source_label.add_css_class("dim-label")
-        source_label.add_css_class("caption")
-        box.append(source_label)
+        source_badge = Gtk.Label(label=candidate.source)
+        source_badge.add_css_class("pill-badge")
+        source_badge.add_css_class("dim")
+        meta_box.append(source_badge)
+
+        card.append(meta_box)
 
         child = Gtk.FlowBoxChild()
-        child.set_child(box)
+        child.set_child(card)
         child.mytag_candidate = candidate
 
         threading.Thread(target=self._load_image, args=(candidate, picture, size_label), daemon=True).start()

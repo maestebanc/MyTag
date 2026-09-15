@@ -58,6 +58,21 @@ class RenameDialog(Adw.Dialog):
         hint.set_xalign(0)
         outer.append(hint)
 
+        tokens_flow = Gtk.FlowBox()
+        tokens_flow.set_selection_mode(Gtk.SelectionMode.NONE)
+        tokens_flow.set_max_children_per_line(7)
+        tokens_flow.set_min_children_per_line(3)
+        tokens_flow.set_row_spacing(4)
+        tokens_flow.set_column_spacing(4)
+        for token in ("%track%", "%title%", "%artist%", "%album%", "%year%", "%genre%", "%disc%"):
+            btn = Gtk.Button(label=token)
+            btn.add_css_class("flat")
+            btn.add_css_class("token-button")
+            btn.set_tooltip_text(f"Insertar {token}")
+            btn.connect("clicked", lambda _b, t=token: self._insert_token(t))
+            tokens_flow.append(btn)
+        outer.append(tokens_flow)
+
         self.preview_list = Gtk.ListBox()
         self.preview_list.add_css_class("boxed-list")
         self.preview_list.set_selection_mode(Gtk.SelectionMode.NONE)
@@ -71,6 +86,10 @@ class RenameDialog(Adw.Dialog):
         self.set_child(toolbar_view)
 
         self._refresh_preview()
+
+    def _insert_token(self, token: str) -> None:
+        current = self.pattern_row.get_text()
+        self.pattern_row.set_text(current + token)
 
     def _refresh_preview(self) -> None:
         row = self.preview_list.get_row_at_index(0)
@@ -86,6 +105,9 @@ class RenameDialog(Adw.Dialog):
             self._planned[track] = new_path
 
             action_row = Adw.ActionRow(title=track.filename)
+            icon = Gtk.Image.new_from_icon_name("audio-x-generic-symbolic")
+            icon.add_css_class("dim-label")
+            action_row.add_prefix(icon)
             if new_path != track.path:
                 action_row.set_subtitle(f"→ {new_name}")
             else:
@@ -99,7 +121,11 @@ class RenameDialog(Adw.Dialog):
         btn_cancel.connect("clicked", lambda _b: self.close())
         bar.pack_start(btn_cancel)
 
-        btn_rename = Gtk.Button(label=i18n.t("rename.confirm"))
+        btn_rename = Gtk.Button()
+        ren_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        ren_box.append(Gtk.Image.new_from_icon_name("document-edit-symbolic"))
+        ren_box.append(Gtk.Label(label=i18n.t("rename.confirm")))
+        btn_rename.set_child(ren_box)
         btn_rename.add_css_class("suggested-action")
         btn_rename.connect("clicked", self._on_confirm)
         bar.pack_end(btn_rename)

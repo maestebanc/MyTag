@@ -35,24 +35,34 @@ DEFAULT_WINDOW_HEIGHT = 650
 # columna en modo "expand" reserva un ancho mínimo propio del que no baja
 # aunque se arrastre el borde de la columna vecina, lo que tope el
 # redimensionado de esa vecina mucho antes de lo que cabría esperar. Con
-# ancho fijo en las tres, cada borde se puede arrastrar libremente.
 TRACK_LIST_COLUMNS = [
-    ("tracknumber", "column.track", 56),
-    ("albumartist", "column.artist", 150),
-    ("title", "column.title", 250),
+    # (prop_name, label_key, fixed_width, expand, resizable)
+    ("tracknumber", "column.track", 76, False, False),
+    ("albumartist", "column.artist", None, True, True),
+    ("title", "column.title", None, True, True),
 ]
 
 
 def _make_column(
-    title: str, prop_name: str, expand: bool = False, fixed_width: int | None = None
+    title: str,
+    prop_name: str,
+    expand: bool = False,
+    fixed_width: int | None = None,
+    resizable: bool = True,
 ) -> Gtk.ColumnViewColumn:
     factory = Gtk.SignalListItemFactory()
 
     def on_setup(_factory, list_item: Gtk.ListItem) -> None:
         label = Gtk.Label(xalign=0)
         label.set_ellipsize(Pango.EllipsizeMode.END)
-        label.set_margin_start(6)
-        label.set_margin_end(6)
+        if prop_name == "tracknumber":
+            label.add_css_class("track-number-label")
+            label.set_xalign(0.5)
+            label.set_margin_start(4)
+            label.set_margin_end(4)
+        else:
+            label.set_margin_start(8)
+            label.set_margin_end(8)
         list_item.set_child(label)
 
     def on_bind(_factory, list_item: Gtk.ListItem) -> None:
@@ -81,7 +91,7 @@ def _make_column(
         column.set_expand(True)
     if fixed_width is not None:
         column.set_fixed_width(fixed_width)
-    column.set_resizable(True)
+    column.set_resizable(resizable)
     return column
 
 
@@ -93,6 +103,7 @@ def _make_status_column() -> Gtk.ColumnViewColumn:
     def on_setup(_factory, list_item: Gtk.ListItem) -> None:
         image = Gtk.Image()
         image.set_pixel_size(14)
+        image.add_css_class("track-warning-icon")
         list_item.set_child(image)
 
     def on_bind(_factory, list_item: Gtk.ListItem) -> None:
@@ -145,7 +156,13 @@ class MainWindow(Adw.ApplicationWindow):
         self.toast_overlay = Adw.ToastOverlay()
         toolbar_view = Adw.ToolbarView()
         toolbar_view.add_top_bar(self._build_headerbar())
-        toolbar_view.set_content(self._build_body())
+
+        self.main_stack = Adw.ViewStack()
+        self.main_stack.add_named(self._build_empty_state(), "empty")
+        self.main_stack.add_named(self._build_body(), "editor")
+        self.main_stack.set_visible_child_name("empty")
+
+        toolbar_view.set_content(self.main_stack)
         self.toast_overlay.set_child(toolbar_view)
         self.set_content(self.toast_overlay)
 
@@ -154,7 +171,8 @@ class MainWindow(Adw.ApplicationWindow):
         self.connect("close-request", self._on_close_request)
         self._force_close = False
 
-        self._toast(i18n.t("toast.startup"))
+        self._update_list_status()
+        self._update_title_state()
 
     def _setup_actions(self, app: Adw.Application) -> None:
         actions = {
@@ -184,6 +202,46 @@ class MainWindow(Adw.ApplicationWindow):
 
     # ---------- construcción de la interfaz ----------
 
+    def _build_empty_state(self) -> Gtk.Widget:
+        status_page = Adw.StatusPage()
+        status_page.set_icon_name("folder-music-symbolic")
+        status_page.set_title(i18n.t("empty.title"))
+        status_page.set_description(i18n.t("empty.description"))
+
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        box.set_halign(Gtk.Align.CENTER)
+
+        btn_files = Gtk.Button()
+        btn_files.add_css_class("suggested-action")
+        btn_files.add_css_class("pill")
+        bf_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        bf_box.set_margin_start(16)
+        bf_box.set_margin_end(16)
+        bf_box.set_margin_top(8)
+        bf_box.set_margin_bottom(8)
+        bf_box.append(Gtk.Image.new_from_icon_name("document-open-symbolic"))
+        bf_box.append(Gtk.Label(label=i18n.t("toolbar.open_files")))
+        btn_files.set_child(bf_box)
+        btn_files.connect("clicked", lambda _b: self.open_files_dialog())
+        box.append(btn_files)
+
+        btn_folder = Gtk.Button()
+        btn_folder.add_css_class("pill")
+        bfo_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        bfo_box.set_margin_start(16)
+        bfo_box.set_margin_end(16)
+        bfo_box.set_margin_top(8)
+        bfo_box.set_margin_bottom(8)
+        bfo_box.append(Gtk.Image.new_from_icon_name("folder-open-symbolic"))
+        bfo_box.append(Gtk.Label(label=i18n.t("toolbar.open_folder")))
+        btn_folder.set_child(bfo_box)
+        btn_folder.connect("clicked", lambda _b: self.open_folder_dialog())
+        box.append(btn_folder)
+
+        status_page.set_child(box)
+        self.empty_page = status_page
+        return status_page
+
     def _build_headerbar(self) -> Adw.HeaderBar:
         header = Adw.HeaderBar()
 
@@ -199,10 +257,17 @@ class MainWindow(Adw.ApplicationWindow):
 
         header.pack_start(self._build_more_menu_button())
 
-        btn_save = Gtk.Button(label=i18n.t("toolbar.save"))
-        btn_save.add_css_class("suggested-action")
-        btn_save.connect("clicked", lambda _b: self.save_all())
-        header.pack_end(btn_save)
+        self.btn_save = Gtk.Button()
+        save_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        save_icon = Gtk.Image.new_from_icon_name("document-save-symbolic")
+        save_lbl = Gtk.Label(label=i18n.t("toolbar.save"))
+        save_box.append(save_icon)
+        save_box.append(save_lbl)
+        self.btn_save.set_child(save_box)
+        self.btn_save.add_css_class("suggested-action")
+        self.btn_save.set_sensitive(False)
+        self.btn_save.connect("clicked", lambda _b: self.save_all())
+        header.pack_end(self.btn_save)
 
         header.pack_end(self._build_primary_menu_button())
 
@@ -221,16 +286,27 @@ class MainWindow(Adw.ApplicationWindow):
 
         popover = Gtk.Popover()
 
-        def add_item(label: str, callback) -> None:
-            btn = Gtk.Button(label=label)
+        def add_item(label: str, icon_name: str, callback) -> None:
+            btn = Gtk.Button()
             btn.add_css_class("flat")
-            btn.get_child().set_halign(Gtk.Align.START)
+            ibox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+            ibox.set_margin_start(4)
+            ibox.set_margin_end(4)
+            ibox.set_margin_top(2)
+            ibox.set_margin_bottom(2)
+            img = Gtk.Image.new_from_icon_name(icon_name)
+            img.add_css_class("dim-label")
+            text = Gtk.Label(label=label, xalign=0)
+            text.set_hexpand(True)
+            ibox.append(img)
+            ibox.append(text)
+            btn.set_child(ibox)
             btn.connect("clicked", lambda _b: (callback(), popover.popdown()))
             box.append(btn)
 
-        add_item(i18n.t("menu.preferences"), self._open_preferences)
-        add_item(i18n.t("menu.keyboard_shortcuts"), self._open_shortcuts)
-        add_item(i18n.t("menu.about"), self._open_about)
+        add_item(i18n.t("menu.preferences"), "preferences-system-symbolic", self._open_preferences)
+        add_item(i18n.t("menu.keyboard_shortcuts"), "input-keyboard-symbolic", self._open_shortcuts)
+        add_item(i18n.t("menu.about"), "help-about-symbolic", self._open_about)
 
         popover.set_child(box)
         menu_button.set_popover(popover)
@@ -243,27 +319,44 @@ class MainWindow(Adw.ApplicationWindow):
         build_about_dialog().present(self)
 
     def _build_open_menu_button(self) -> Gtk.MenuButton:
-        menu_button = Gtk.MenuButton(label=i18n.t("toolbar.open"))
+        menu_button = Gtk.MenuButton()
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        icon = Gtk.Image.new_from_icon_name("document-open-symbolic")
+        lbl = Gtk.Label(label=i18n.t("toolbar.open"))
+        box.append(icon)
+        box.append(lbl)
+        menu_button.set_child(box)
 
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
-        box.set_margin_top(6)
-        box.set_margin_bottom(6)
-        box.set_margin_start(6)
-        box.set_margin_end(6)
+        pbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        pbox.set_margin_top(6)
+        pbox.set_margin_bottom(6)
+        pbox.set_margin_start(6)
+        pbox.set_margin_end(6)
 
         popover = Gtk.Popover()
 
-        def add_item(label: str, callback) -> None:
-            btn = Gtk.Button(label=label)
+        def add_item(label: str, icon_name: str, callback) -> None:
+            btn = Gtk.Button()
             btn.add_css_class("flat")
-            btn.get_child().set_halign(Gtk.Align.START)
+            ibox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+            ibox.set_margin_start(4)
+            ibox.set_margin_end(4)
+            ibox.set_margin_top(2)
+            ibox.set_margin_bottom(2)
+            img = Gtk.Image.new_from_icon_name(icon_name)
+            img.add_css_class("dim-label")
+            text = Gtk.Label(label=label, xalign=0)
+            text.set_hexpand(True)
+            ibox.append(img)
+            ibox.append(text)
+            btn.set_child(ibox)
             btn.connect("clicked", lambda _b: (callback(), popover.popdown()))
-            box.append(btn)
+            pbox.append(btn)
 
-        add_item(i18n.t("toolbar.open_files"), self.open_files_dialog)
-        add_item(i18n.t("toolbar.open_folder"), self.open_folder_dialog)
+        add_item(i18n.t("toolbar.open_files"), "document-open-symbolic", self.open_files_dialog)
+        add_item(i18n.t("toolbar.open_folder"), "folder-open-symbolic", self.open_folder_dialog)
 
-        popover.set_child(box)
+        popover.set_child(pbox)
         menu_button.set_popover(popover)
         return menu_button
 
@@ -280,20 +373,31 @@ class MainWindow(Adw.ApplicationWindow):
 
         popover = Gtk.Popover()
 
-        def add_item(label: str, callback) -> None:
-            btn = Gtk.Button(label=label)
+        def add_item(label: str, icon_name: str, callback) -> None:
+            btn = Gtk.Button()
             btn.add_css_class("flat")
-            btn.get_child().set_halign(Gtk.Align.START)
+            ibox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+            ibox.set_margin_start(4)
+            ibox.set_margin_end(4)
+            ibox.set_margin_top(2)
+            ibox.set_margin_bottom(2)
+            img = Gtk.Image.new_from_icon_name(icon_name)
+            img.add_css_class("dim-label")
+            text = Gtk.Label(label=label, xalign=0)
+            text.set_hexpand(True)
+            ibox.append(img)
+            ibox.append(text)
+            btn.set_child(ibox)
             btn.connect("clicked", lambda _b: (callback(), popover.popdown()))
             box.append(btn)
 
-        add_item(i18n.t("menu.autonumber"), self.autonumber_selected)
-        add_item(i18n.t("menu.revert_selected"), self.revert_selected)
-        add_item(i18n.t("menu.identify_fingerprint"), self.identify_selected_by_fingerprint)
-        add_item(i18n.t("menu.check_integrity"), self.check_integrity_selected)
-        add_item(i18n.t("menu.rename_from_tags"), self.rename_selected_from_tags)
+        add_item(i18n.t("menu.autonumber"), "view-list-ordered-symbolic", self.autonumber_selected)
+        add_item(i18n.t("menu.revert_selected"), "document-revert-symbolic", self.revert_selected)
+        add_item(i18n.t("menu.identify_fingerprint"), "audio-card-symbolic", self.identify_selected_by_fingerprint)
+        add_item(i18n.t("menu.check_integrity"), "emblem-ok-symbolic", self.check_integrity_selected)
+        add_item(i18n.t("menu.rename_from_tags"), "document-edit-symbolic", self.rename_selected_from_tags)
         box.append(Gtk.Separator())
-        add_item(i18n.t("menu.fill_missing_covers"), self.fill_missing_covers)
+        add_item(i18n.t("menu.fill_missing_covers"), "image-x-generic-symbolic", self.fill_missing_covers)
 
         popover.set_child(box)
         menu_button.set_popover(popover)
@@ -319,10 +423,17 @@ class MainWindow(Adw.ApplicationWindow):
         )
 
         self.column_view = Gtk.ColumnView(model=self.selection_model)
+        self.column_view.add_css_class("track-table")
         self.column_view.append_column(_make_status_column())
-        for prop_name, label_key, width in TRACK_LIST_COLUMNS:
+        for prop_name, label_key, width, expand, resizable in TRACK_LIST_COLUMNS:
             self.column_view.append_column(
-                _make_column(i18n.t(label_key), prop_name, expand=width is None, fixed_width=width)
+                _make_column(
+                    i18n.t(label_key),
+                    prop_name,
+                    expand=expand,
+                    fixed_width=width,
+                    resizable=resizable,
+                )
             )
 
         scroller = Gtk.ScrolledWindow()
@@ -331,26 +442,33 @@ class MainWindow(Adw.ApplicationWindow):
         scroller.set_vexpand(True)
 
         bottom_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        bottom_bar.set_margin_top(8)
-        bottom_bar.set_margin_bottom(8)
-        bottom_bar.set_margin_start(8)
-        bottom_bar.set_margin_end(8)
+        bottom_bar.add_css_class("track-list-footer")
 
-        btn_remove_selected = Gtk.Button(label=i18n.t("toolbar.remove"))
-        btn_remove_selected.set_hexpand(True)
-        btn_remove_selected.connect("clicked", lambda _b: self.remove_selected_rows())
-        bottom_bar.append(btn_remove_selected)
+        self.list_status_label = Gtk.Label(label="")
+        self.list_status_label.add_css_class("dim-label")
+        self.list_status_label.add_css_class("caption")
+        self.list_status_label.set_hexpand(True)
+        self.list_status_label.set_xalign(0)
+        bottom_bar.append(self.list_status_label)
 
-        btn_clear_all = Gtk.Button(label=i18n.t("list.clear_all"))
-        btn_clear_all.set_hexpand(True)
-        btn_clear_all.add_css_class("destructive-action")
-        btn_clear_all.connect("clicked", lambda _b: self.clear_all_tracks())
-        bottom_bar.append(btn_clear_all)
+        self.btn_remove_selected = Gtk.Button()
+        self.btn_remove_selected.set_icon_name("list-remove-symbolic")
+        self.btn_remove_selected.set_tooltip_text(i18n.t("toolbar.remove"))
+        self.btn_remove_selected.add_css_class("flat")
+        self.btn_remove_selected.connect("clicked", lambda _b: self.remove_selected_rows())
+        bottom_bar.append(self.btn_remove_selected)
+
+        self.btn_clear_all = Gtk.Button()
+        self.btn_clear_all.set_icon_name("user-trash-symbolic")
+        self.btn_clear_all.set_tooltip_text(i18n.t("list.clear_all"))
+        self.btn_clear_all.add_css_class("flat")
+        self.btn_clear_all.add_css_class("destructive-action")
+        self.btn_clear_all.connect("clicked", lambda _b: self.clear_all_tracks())
+        bottom_bar.append(self.btn_clear_all)
 
         left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         left_box.append(self.search_bar)
         left_box.append(scroller)
-        left_box.append(Gtk.Separator())
         left_box.append(bottom_bar)
 
         self.track_list_frame = Gtk.Frame()
@@ -370,29 +488,29 @@ class MainWindow(Adw.ApplicationWindow):
         self.search_filter.changed(Gtk.FilterChange.DIFFERENT)
 
     def _build_body(self) -> Gtk.Widget:
-        paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
-        paned.set_wide_handle(True)
-        paned.set_position(DEFAULT_WINDOW_WIDTH // 2)
-        paned.set_margin_top(12)
-        paned.set_margin_bottom(12)
-        paned.set_margin_start(12)
-        paned.set_margin_end(12)
+        self.paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
+        self.paned.set_wide_handle(True)
+        self.paned.set_position(DEFAULT_WINDOW_WIDTH // 2)
+        self.paned.set_margin_top(12)
+        self.paned.set_margin_bottom(12)
+        self.paned.set_margin_start(12)
+        self.paned.set_margin_end(12)
 
-        paned.set_start_child(self._build_track_list_panel())
-        paned.set_resize_start_child(True)
+        self.paned.set_start_child(self._build_track_list_panel())
+        self.paned.set_resize_start_child(True)
 
         # Un Gtk.Paned (en vez de un Gtk.Box fijo) para que el ancho relativo
         # de la portada frente a las etiquetas se pueda arrastrar con el
         # ratón, igual que el divisor entre la lista y este panel.
         side_paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
         side_paned.set_wide_handle(True)
-        side_paned.set_position(320)
-        side_paned.set_margin_top(20)
-        side_paned.set_margin_bottom(20)
-        side_paned.set_margin_start(20)
-        side_paned.set_margin_end(20)
+        side_paned.set_position(310)
+        side_paned.set_margin_top(16)
+        side_paned.set_margin_bottom(16)
 
         self.cover_panel = CoverPanel()
+        self.cover_panel.set_margin_start(16)
+        self.cover_panel.set_margin_end(16)
         self.cover_panel.connect("cover-change-requested", self._on_cover_change_requested)
         self.cover_panel.connect("cover-resize-each-requested", self._on_cover_resize_each_requested)
         self.cover_panel.connect("cover-remove-requested", self._on_cover_remove_requested)
@@ -401,6 +519,8 @@ class MainWindow(Adw.ApplicationWindow):
         side_paned.set_resize_start_child(False)
 
         self.tag_editor = TagEditor()
+        self.tag_editor.set_margin_start(16)
+        self.tag_editor.set_margin_end(16)
         self.tag_editor.set_hexpand(True)
         self.tag_editor.connect("changes-requested", self._on_tag_changes_requested)
         side_paned.set_end_child(self.tag_editor)
@@ -409,41 +529,33 @@ class MainWindow(Adw.ApplicationWindow):
         side_scroller = Gtk.ScrolledWindow()
         side_scroller.set_child(side_paned)
         side_scroller.set_hexpand(True)
-        paned.set_end_child(side_scroller)
-        paned.set_resize_end_child(True)
+        self.paned.set_end_child(side_scroller)
+        self.paned.set_resize_end_child(True)
 
-        return paned
+        return self.paned
 
     def _setup_drop_target(self) -> None:
-        # Se registra en el marco exterior (no en el Gtk.ColumnView) para
-        # que el área de destino cubra todo el panel (incluida la lista
-        # vacía) y no dependa de que el ColumnView ceda el evento.
-        #
-        # Se anuncian COPY y MOVE (no sólo COPY): compositores wlroots como
-        # Hyprland preseleccionan "move" como acción preferida al arrastrar
-        # desde Nautilus, y si el DropTarget sólo admite "copy" GTK rechaza
-        # la negociación entera antes de que el "drop" llegue a nuestro
-        # manejador (nunca movemos ni borramos el origen, así que aceptar
-        # "move" es semánticamente inofensivo).
         actions = Gdk.DragAction.COPY | Gdk.DragAction.MOVE
-        target = Gtk.DropTarget.new(Gio.File, actions)
-        target.connect("drop", self._on_drop)
-        target.connect("enter", self._on_track_drop_enter)
-        target.connect("leave", self._on_track_drop_leave)
-        self.track_list_frame.add_controller(target)
 
-        target_files = Gtk.DropTarget.new(Gdk.FileList, actions)
-        target_files.connect("drop", self._on_drop_filelist)
-        target_files.connect("enter", self._on_track_drop_enter)
-        target_files.connect("leave", self._on_track_drop_leave)
-        self.track_list_frame.add_controller(target_files)
+        for target_widget in (self.track_list_frame, self.empty_page):
+            target = Gtk.DropTarget.new(Gio.File, actions)
+            target.connect("drop", self._on_drop)
+            target.connect("enter", lambda *_, w=target_widget: self._on_track_drop_enter(w))
+            target.connect("leave", lambda *_, w=target_widget: self._on_track_drop_leave(w))
+            target_widget.add_controller(target)
 
-    def _on_track_drop_enter(self, *_args) -> int:
-        self.track_list_frame.add_css_class("drop-highlight")
+            target_files = Gtk.DropTarget.new(Gdk.FileList, actions)
+            target_files.connect("drop", self._on_drop_filelist)
+            target_files.connect("enter", lambda *_, w=target_widget: self._on_track_drop_enter(w))
+            target_files.connect("leave", lambda *_, w=target_widget: self._on_track_drop_leave(w))
+            target_widget.add_controller(target_files)
+
+    def _on_track_drop_enter(self, widget: Gtk.Widget, *_args) -> int:
+        widget.add_css_class("drop-highlight")
         return Gdk.DragAction.COPY | Gdk.DragAction.MOVE
 
-    def _on_track_drop_leave(self, *_args) -> None:
-        self.track_list_frame.remove_css_class("drop-highlight")
+    def _on_track_drop_leave(self, widget: Gtk.Widget, *_args) -> None:
+        widget.remove_css_class("drop-highlight")
 
     # ---------- carga de archivos ----------
 
@@ -519,6 +631,11 @@ class MainWindow(Adw.ApplicationWindow):
         if added and self.selection_model.get_selection().get_size() == 0:
             self.selection_model.select_item(0, True)
 
+        if self.tracks:
+            self.main_stack.set_visible_child_name("editor")
+        self._update_list_status()
+        self._update_title_state()
+
     def _refresh_row_for_track(self, track: AudioTrack) -> None:
         index = self.tracks.index(track)
         item = self.list_store.get_item(index)
@@ -538,6 +655,8 @@ class MainWindow(Adw.ApplicationWindow):
         tracks = self._selected_tracks()
         self.tag_editor.set_tracks(tracks)
         self.cover_panel.set_tracks(tracks)
+        self._update_list_status()
+        self._update_title_state()
 
     # ---------- aplicar cambios (en memoria, en vivo) ----------
 
@@ -743,7 +862,10 @@ class MainWindow(Adw.ApplicationWindow):
 
         def do_remove() -> None:
             self._remove_tracks({id(t) for t in tracks})
+            if not self.tracks:
+                self.main_stack.set_visible_child_name("empty")
             self._toast(i18n.t("toast.total_files", total=len(self.tracks)))
+            self._update_list_status()
             self._update_title_state()
 
         self._confirm_discard_unsaved(tracks, do_remove)
@@ -756,7 +878,9 @@ class MainWindow(Adw.ApplicationWindow):
         def do_clear() -> None:
             self.list_store.remove_all()
             self.tracks = []
+            self.main_stack.set_visible_child_name("empty")
             self._toast(i18n.t("toast.total_files", total=0))
+            self._update_list_status()
             self._update_title_state()
 
         self._confirm_discard_unsaved(tracks, do_clear)
@@ -806,21 +930,46 @@ class MainWindow(Adw.ApplicationWindow):
     def _has_unsaved_changes(self) -> bool:
         return any(t.is_dirty for t in self.tracks)
 
+    def _update_list_status(self) -> None:
+        total = len(self.tracks)
+        selected = len(self._selected_tracks())
+        if not total:
+            self.list_status_label.set_text("")
+            self.btn_remove_selected.set_sensitive(False)
+            self.btn_clear_all.set_sensitive(False)
+        elif selected:
+            self.list_status_label.set_text(
+                i18n.t("list.status_selected", total=total, selected=selected)
+            )
+            self.btn_remove_selected.set_sensitive(True)
+            self.btn_clear_all.set_sensitive(True)
+        else:
+            self.list_status_label.set_text(i18n.t("list.status_summary", total=total))
+            self.btn_remove_selected.set_sensitive(False)
+            self.btn_clear_all.set_sensitive(True)
+
     def _update_title_state(self) -> None:
         dirty_count = sum(1 for t in self.tracks if t.is_dirty)
         if dirty_count:
             self.window_title.set_subtitle(i18n.t("window.unsaved_changes", n=dirty_count))
+            self.btn_save.set_sensitive(True)
         else:
-            self.window_title.set_subtitle("")
+            if self.tracks:
+                self.window_title.set_subtitle(i18n.t("list.status_summary", total=len(self.tracks)))
+            else:
+                self.window_title.set_subtitle("")
+            self.btn_save.set_sensitive(False)
 
     # ---------- arrastrar y soltar ----------
 
     def _on_drop(self, _target, gfile: Gio.File, _x, _y) -> bool:
         self.track_list_frame.remove_css_class("drop-highlight")
+        self.empty_page.remove_css_class("drop-highlight")
         return self._handle_dropped_paths([gfile.get_path()] if gfile.get_path() else [])
 
     def _on_drop_filelist(self, _target, file_list, _x, _y) -> bool:
         self.track_list_frame.remove_css_class("drop-highlight")
+        self.empty_page.remove_css_class("drop-highlight")
         paths = [f.get_path() for f in file_list.get_files() if f.get_path()]
         return self._handle_dropped_paths(paths)
 

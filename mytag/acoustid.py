@@ -59,6 +59,17 @@ def identify(path: str, api_key: str) -> list[dict]:
     try:
         with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT) as response:
             data = json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        # AcoustID devuelve un cuerpo JSON con el motivo real (p. ej. "invalid
+        # API key") incluso en respuestas 4xx; sin esto sólo se veía el
+        # genérico "HTTP Error 400: Bad Request" de urllib, sin pista de qué
+        # falló de verdad.
+        try:
+            body = json.loads(exc.read().decode("utf-8"))
+            message = body.get("error", {}).get("message")
+        except (json.JSONDecodeError, UnicodeDecodeError, AttributeError):
+            message = None
+        raise AcoustIDError(message or str(exc)) from exc
     except urllib.error.URLError as exc:
         raise AcoustIDError(str(exc)) from exc
 

@@ -1,3 +1,3 @@
 """MyTag: editor gráfico de etiquetas y portadas para archivos FLAC."""
 
-__version__ = "0.20.0"
+__version__ = "0.50.0"
