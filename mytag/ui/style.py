@@ -99,6 +99,13 @@ list.boxed-list > row {
     border-color: @accent_bg_color;
 }
 
+/* Etiqueta discreta de tamaño bajo la portada */
+.cover-size-label {
+    font-size: 0.78em;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.75;
+}
+
 /* Badges / Píldoras de estado y contador */
 .pill-badge {
     border-radius: 9999px;

@@ -305,6 +305,51 @@ STRINGS: dict[str, dict[str, str]] = {
         "ca": "Cerca a MusicBrainz…",
     },
     "cover.resize": {"es": "Redimensionar", "en": "Resize", "ca": "Redimensiona"},
+    "cover.resize_action": {
+        "es": "Redimensionar portada…",
+        "en": "Resize cover…",
+        "ca": "Redimensiona la portada…",
+    },
+    "cover.resize_dialog_title": {
+        "es": "Redimensionar portada",
+        "en": "Resize cover",
+        "ca": "Redimensiona la portada",
+    },
+    "cover.current_size": {
+        "es": "Tamaño actual: {w} × {h} px",
+        "en": "Current size: {w} × {h} px",
+        "ca": "Mida actual: {w} × {h} px",
+    },
+    "cover.different_sizes": {
+        "es": "Múltiples portadas (se ajustarán a un cuadrado)",
+        "en": "Multiple covers (will be cropped to a square)",
+        "ca": "Múltiples portades (s'ajustaran a un quadrat)",
+    },
+    "cover.target_dimensions": {
+        "es": "Dimensiones deseadas",
+        "en": "Target dimensions",
+        "ca": "Dimensions desitjades",
+    },
+    "cover.width_label": {
+        "es": "Ancho (px)",
+        "en": "Width (px)",
+        "ca": "Amplada (px)",
+    },
+    "cover.height_label": {
+        "es": "Alto (px)",
+        "en": "Height (px)",
+        "ca": "Alçada (px)",
+    },
+    "cover.proportional_switch": {
+        "es": "Mantener proporciones",
+        "en": "Keep aspect ratio",
+        "ca": "Mantenir proporcions",
+    },
+    "cover.apply_resize": {
+        "es": "Redimensionar",
+        "en": "Resize",
+        "ca": "Redimensiona",
+    },
     "cover.remove": {"es": "Quitar portada", "en": "Remove cover", "ca": "Treu la portada"},
     "cover.no_cover": {"es": "Sin portada", "en": "No cover", "ca": "Sense portada"},
     "cover.no_tracks_loaded": {"es": "Sin temas cargados", "en": "No tracks loaded", "ca": "Cap tema carregat"},
