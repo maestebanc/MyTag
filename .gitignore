@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.DS_Store
+build/
+dist/
+packaging/build/
+packaging/dist/
+packaging/flatpak/.flatpak-builder/
+packaging/flatpak/build/
+packaging/arch/src/
+packaging/arch/pkg/
+packaging/arch/*.tar.gz
+packaging/arch/*.pkg.tar.zst
+packaging/arch/pkgtest/

@@ -1,0 +1,48 @@
+app-id: com.maestebanc.MyTag
+runtime: org.gnome.Platform
+runtime-version: "50"
+sdk: org.gnome.Sdk
+command: mytag
+
+finish-args:
+  - --share=network
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  - --filesystem=xdg-music
+  - --filesystem=host
+
+modules:
+  - name: chromaprint
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+      - -DBUILD_TOOLS=ON
+      - -DBUILD_TESTS=OFF
+    sources:
+      - type: archive
+        url: https://github.com/acoustid/chromaprint/releases/download/v1.6.1/chromaprint-1.6.1.tar.gz
+        sha256: 3368805af0ee47b9df74df10b5001a44569e01df2844dab520031720dde9ad23
+
+  - name: mytag
+    buildsystem: simple
+    build-options:
+      build-args:
+        - --share=network
+    build-commands:
+      - pip3 install --prefix=/app --no-cache-dir mutagen Pillow .
+      - install -Dm644 data/com.maestebanc.MyTag.desktop /app/share/applications/com.maestebanc.MyTag.desktop
+      - install -Dm644 data/com.maestebanc.MyTag.metainfo.xml /app/share/metainfo/com.maestebanc.MyTag.metainfo.xml
+      - install -Dm644 data/icons/hicolor/16x16/apps/com.maestebanc.MyTag.png /app/share/icons/hicolor/16x16/apps/com.maestebanc.MyTag.png
+      - install -Dm644 data/icons/hicolor/22x22/apps/com.maestebanc.MyTag.png /app/share/icons/hicolor/22x22/apps/com.maestebanc.MyTag.png
+      - install -Dm644 data/icons/hicolor/24x24/apps/com.maestebanc.MyTag.png /app/share/icons/hicolor/24x24/apps/com.maestebanc.MyTag.png
+      - install -Dm644 data/icons/hicolor/32x32/apps/com.maestebanc.MyTag.png /app/share/icons/hicolor/32x32/apps/com.maestebanc.MyTag.png
+      - install -Dm644 data/icons/hicolor/48x48/apps/com.maestebanc.MyTag.png /app/share/icons/hicolor/48x48/apps/com.maestebanc.MyTag.png
+      - install -Dm644 data/icons/hicolor/64x64/apps/com.maestebanc.MyTag.png /app/share/icons/hicolor/64x64/apps/com.maestebanc.MyTag.png
+      - install -Dm644 data/icons/hicolor/128x128/apps/com.maestebanc.MyTag.png /app/share/icons/hicolor/128x128/apps/com.maestebanc.MyTag.png
+      - install -Dm644 data/icons/hicolor/256x256/apps/com.maestebanc.MyTag.png /app/share/icons/hicolor/256x256/apps/com.maestebanc.MyTag.png
+      - install -Dm644 data/icons/hicolor/512x512/apps/com.maestebanc.MyTag.png /app/share/icons/hicolor/512x512/apps/com.maestebanc.MyTag.png
+      - install -Dm644 data/icons/hicolor/scalable/apps/com.maestebanc.MyTag.svg /app/share/icons/hicolor/scalable/apps/com.maestebanc.MyTag.svg
+    sources:
+      - type: dir
+        path: ../..

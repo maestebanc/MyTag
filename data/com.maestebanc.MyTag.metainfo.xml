@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.maestebanc.MyTag</id>
+  <name>MyTag</name>
+  <summary>Edit tags and cover art on your FLAC and MP3 music files</summary>
+  <summary xml:lang="es">Edita las etiquetas y la portada de tus archivos FLAC y MP3</summary>
+  <summary xml:lang="ca">Edita les etiquetes i la portada dels teus fitxers FLAC i MP3</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <content_rating type="oars-1.1" />
+
+  <description>
+    <p>
+      MyTag is a simple, focused tag and cover art editor for FLAC and MP3 music
+      files on Linux. Load a single file or a whole folder of albums at
+      once, see everything in a clean list, and edit as many tracks
+      together as you like — MyTag always shows you when the selected
+      tracks disagree on a value, so you never overwrite something by
+      accident.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>Edit Title, Artist, Album, Album Artist, Year, Genre, Track Number and Disc Number, for one or many files at once (FLAC Vorbis Comments and MP3 ID3v2.4)</li>
+      <li>Pick a cover image from your computer, paste one from the clipboard, drag and drop it onto the app, or search for one online (MusicBrainz and iTunes) right from the app</li>
+      <li>Resize covers to any size you choose, keeping their original proportions (or matched to a square when the selected tracks have different covers)</li>
+      <li>Rename files from their tags with a configurable pattern, preserving original file extensions</li>
+      <li>Identify an untagged or mislabeled track by audio fingerprint (AcoustID)</li>
+      <li>Check file stream integrity, and fill in missing covers across a whole loaded library</li>
+      <li>A per-track indicator flags anything missing a cover, year or genre</li>
+      <li>Quickly auto-number a set of tracks, or revert unsaved changes back to what's on disk</li>
+      <li>Search and filter a large list of loaded tracks</li>
+      <li>Light, dark, or system-matched theme, and an adjustable interface scale</li>
+      <li>Available in Spanish, English and Catalan</li>
+      <li>Nothing is written to disk until you choose to save</li>
+    </ul>
+    <p>
+      MyTag focuses purely on tags and cover art — no playback, no
+      library management, just a clean way to get your audio collection's
+      metadata right.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">com.maestebanc.MyTag.desktop</launchable>
+  <icon type="stock">com.maestebanc.MyTag</icon>
+  <categories>
+    <category>Audio</category>
+    <category>AudioVideo</category>
+  </categories>
+
+  <screenshots>
+    <screenshot type="default">
+      <caption>Main window: track list, cover art and tags</caption>
+      <image>https://raw.githubusercontent.com/maestebanc/MyTag/master/screenshots/main-window.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Searching for cover art on MusicBrainz and iTunes</caption>
+      <image>https://raw.githubusercontent.com/maestebanc/MyTag/master/screenshots/cover-search.png</image>
+    </screenshot>
+  </screenshots>
+
+  <url type="homepage">https://github.com/maestebanc/MyTag</url>
+
+  <releases>
+    <release version="0.60.0" date="2026-09-16">
+      <description>
+        <p>
+          Major UI modernization, context menu, unified inspector, and Flatpak fpcalc support:
+        </p>
+        <ul>
+          <li>Unified two-pane layout: merged tag and cover inspector on the right, giving more than 70% window space to the track list.</li>
+          <li>New Album column in track list with proportional column widths and integrated search filtering.</li>
+          <li>Right-click context menu on track table rows providing immediate access to all track operations.</li>
+          <li>Dedicated Revert changes toolbar button replacing the secondary more menu.</li>
+          <li>Built-in AcoustID client key with zero-configuration fingerprinting.</li>
+          <li>Flatpak includes chromaprint (fpcalc) and host music library access out of the box.</li>
+          <li>Cleaner cover dimensions entry fields without stepper buttons.</li>
+          <li>Focused completeness warnings checking only essential fields (Title, Artist, and Cover).</li>
+          <li>Feature Guide dialog structured with detailed cards for all features and workflows.</li>
+          <li>Configurable track number zero-padding and renaming pattern in Preferences.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.52.0" date="2026-09-16">
+      <description>
+        <p>
+          Batch audio fingerprinting and multi-track value picker:
+        </p>
+        <ul>
+          <li>Batch AcoustID fingerprinting: scan and identify multiple audio tracks at once with progress reporting and alternative release candidate selection.</li>
+          <li>Multi-track value picker: view all existing distinct tag values across a selection and apply any value to all selected tracks with a single click.</li>
+          <li>Fixed AcoustID metadata resolution and smart prioritization for original studio album releases.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.51.0" date="2026-09-16">
+      <description>
+        <p>
+          Full MP3 audio support alongside FLAC, and typography refinements:
+        </p>
+        <ul>
+          <li>Native MP3 audio tagging via ID3v2.4 frames (TIT2, TPE1, TALB, TPE2, TDRC, TCON, TRCK, TPOS).</li>
+          <li>Embedded APIC cover art support for MP3 (load, replace, resize, and remove).</li>
+          <li>Audio stream integrity verification for both MP3 and FLAC.</li>
+          <li>Audio fingerprinting (AcoustID) and automatic tag extraction for MP3 and FLAC.</li>
+          <li>Extension-aware pattern renaming preserving original format (.flac or .mp3).</li>
+          <li>Streamlined typography matching native desktop scaling and Nautilus font metrics.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.50.0" date="2026-09-15">
+      <description>
+        <p>
+          Major release featuring comprehensive visual modernization and
+          packaging overhaul:
+        </p>
+        <ul>
+          <li>Responsive track table layout with a fixed track number column and auto-expanding artist and title columns occupying full panel width.</li>
+          <li>Pixel-perfect UI alignment with balanced margins, centered cover action buttons, and cohesive visual hierarchy across light and dark themes.</li>
+          <li>Enhanced dialogs with clear icon-and-label action buttons.</li>
+          <li>Robust audio fingerprinting pipeline with full 24-bit and multi-channel FLAC decoding via Chromaprint / fpcalc.</li>
+          <li>Official binary packages for Flatpak, Debian/Ubuntu (.deb), Fedora/RHEL (.rpm), and Arch Linux (.pkg.tar.zst).</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.20.0" date="2026-09-15">
+      <description>
+        <p>
+          Bug-fix release, plus a first Arch Linux package: drag &amp; drop
+          from external file managers now works on Hyprland and other
+          wlroots compositors, saving after renaming files from tags no
+          longer fails, track list columns can be resized freely and are
+          reordered (Nº, Artist, Title), cover resizing is a directly
+          editable width/height (including a square crop when the
+          selected tracks have different covers), and CSV export was
+          removed.
+        </p>
+      </description>
+    </release>
+    <release version="0.11.0" date="2026-09-15">
+      <description>
+        <p>
+          Context menus on the cover art, a new app icon, a light/dark
+          theme override, an About dialog, a keyboard shortcuts window,
+          drag &amp; drop for cover images, audio fingerprint
+          identification (AcoustID), FLAC integrity checking, batch
+          cover fill-in across an album collection, a per-track
+          completeness indicator, CSV export, and renaming files from
+          tags.
+        </p>
+      </description>
+    </release>
+    <release version="0.10.0" date="2026-09-14">
+      <description>
+        <p>First preliminary alpha release.</p>
+      </description>
+    </release>
+  </releases>
+
+  <developer id="com.maestebanc">
+    <name>Miguel Angel Esteban</name>
+  </developer>
+</component>

@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mytag"
+version = "0.60.0"
+description = "Edit tags and cover art on your FLAC and MP3 music files"
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Miguel Angel Esteban" }]
+requires-python = ">=3.11"
+dependencies = [
+    "mutagen>=1.47",
+    "Pillow>=10.0",
+]
+
+[project.scripts]
+mytag = "mytag.app:main"
+
+[tool.setuptools]
+packages = ["mytag", "mytag.ui"]
