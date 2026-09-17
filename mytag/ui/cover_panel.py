@@ -23,8 +23,54 @@ from ..constants import COVER_SIZE
 from ..cover_utils import read_image_file, resize_image_bytes
 from .resize_cover_dialog import ResizeCoverDialog
 
-PREVIEW_SIZE = 130
+MAX_PREVIEW_TEXTURE_SIZE = 1000
 IMAGE_MIME_TYPES = ("image/png", "image/jpeg", "image/bmp", "image/webp")
+
+
+class AspectRatioBox(Gtk.Widget):
+    """Contenedor que mantiene a su hijo en proporción cuadrada 1:1
+
+    adaptándose al ancho completo de la columna.
+    """
+    __gtype_name__ = "MyTagAspectRatioBox"
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._child: Gtk.Widget | None = None
+
+    def set_child(self, child: Gtk.Widget | None) -> None:
+        if self._child:
+            self._child.unparent()
+        self._child = child
+        if child:
+            child.set_parent(self)
+
+    def get_child(self) -> Gtk.Widget | None:
+        return self._child
+
+    def do_dispose(self) -> None:
+        if self._child:
+            self._child.unparent()
+            self._child = None
+        Gtk.Widget.do_dispose(self)
+
+    def do_get_request_mode(self) -> Gtk.SizeRequestMode:
+        return Gtk.SizeRequestMode.HEIGHT_FOR_WIDTH
+
+    def do_measure(self, orientation: Gtk.Orientation, for_size: int) -> tuple[int, int, int, int]:
+        if orientation == Gtk.Orientation.HORIZONTAL:
+            if self._child:
+                c_min, c_nat, _, _ = self._child.measure(orientation, for_size)
+                return max(80, c_min), max(260, c_nat), -1, -1
+            return 80, 260, -1, -1
+        else:
+            if for_size > 0:
+                return for_size, for_size, -1, -1
+            return 260, 260, -1, -1
+
+    def do_size_allocate(self, width: int, height: int, baseline: int) -> None:
+        if self._child:
+            self._child.allocate(width, width, baseline, None)
 
 
 class CoverPanel(Gtk.Box):
@@ -40,6 +86,7 @@ class CoverPanel(Gtk.Box):
     def __init__(self):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=4)
         self.set_valign(Gtk.Align.START)
+        self.set_hexpand(True)
         self._tracks = []
         self._current_width = 0
         self._current_height = 0
@@ -47,42 +94,63 @@ class CoverPanel(Gtk.Box):
         self._has_different_covers = False
         self._context_popover: Gtk.Popover | None = None
 
+        self.aspect_box = AspectRatioBox()
+        self.aspect_box.set_hexpand(True)
+
+        overlay = Gtk.Overlay()
+        overlay.set_hexpand(True)
+        overlay.set_vexpand(True)
+        self.aspect_box.set_child(overlay)
+
         self.frame = Gtk.Frame()
         self.frame.add_css_class("card")
         self.frame.add_css_class("album-cover-frame")
         self.frame.set_overflow(Gtk.Overflow.HIDDEN)
-        self.frame.set_halign(Gtk.Align.CENTER)
-        self.frame.set_size_request(PREVIEW_SIZE, PREVIEW_SIZE)
+        self.frame.set_hexpand(True)
+        self.frame.set_vexpand(True)
+        overlay.set_child(self.frame)
 
         self.picture = Gtk.Picture()
         self.picture.set_can_shrink(True)
         self.picture.set_content_fit(Gtk.ContentFit.COVER)
-        self.picture.set_size_request(PREVIEW_SIZE, PREVIEW_SIZE)
+        self.picture.set_hexpand(True)
+        self.picture.set_vexpand(True)
 
         self.placeholder_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
         self.placeholder_box.add_css_class("album-cover-placeholder")
-        self.placeholder_box.set_halign(Gtk.Align.CENTER)
-        self.placeholder_box.set_valign(Gtk.Align.CENTER)
-        self.placeholder_box.set_size_request(PREVIEW_SIZE - 16, PREVIEW_SIZE - 16)
+        self.placeholder_box.set_hexpand(True)
+        self.placeholder_box.set_vexpand(True)
+        self.placeholder_box.set_margin_start(8)
+        self.placeholder_box.set_margin_end(8)
+        self.placeholder_box.set_margin_top(8)
+        self.placeholder_box.set_margin_bottom(8)
+
+        placeholder_inner = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        placeholder_inner.set_valign(Gtk.Align.CENTER)
+        placeholder_inner.set_halign(Gtk.Align.CENTER)
+        placeholder_inner.set_vexpand(True)
+        placeholder_inner.set_hexpand(True)
 
         self.placeholder_icon = Gtk.Image.new_from_icon_name("media-optical-cd-symbolic")
-        self.placeholder_icon.set_pixel_size(36)
+        self.placeholder_icon.set_pixel_size(44)
         self.placeholder_icon.add_css_class("dim-label")
-        self.placeholder_box.append(self.placeholder_icon)
+        placeholder_inner.append(self.placeholder_icon)
 
         self.placeholder_label = Gtk.Label(label=i18n.t("cover.no_cover"))
         self.placeholder_label.add_css_class("dim-label")
         self.placeholder_label.add_css_class("caption")
-        self.placeholder_box.append(self.placeholder_label)
+        placeholder_inner.append(self.placeholder_label)
 
         self.placeholder_sublabel = Gtk.Label(label=i18n.t("cover.drag_hint"))
         self.placeholder_sublabel.add_css_class("dim-label")
         self.placeholder_sublabel.add_css_class("caption")
         self.placeholder_sublabel.set_wrap(True)
         self.placeholder_sublabel.set_wrap_mode(Pango.WrapMode.WORD_CHAR)
-        self.placeholder_sublabel.set_max_width_chars(15)
+        self.placeholder_sublabel.set_max_width_chars(20)
         self.placeholder_sublabel.set_justify(Gtk.Justification.CENTER)
-        self.placeholder_box.append(self.placeholder_sublabel)
+        placeholder_inner.append(self.placeholder_sublabel)
+
+        self.placeholder_box.append(placeholder_inner)
 
         # Clic principal en el placeholder abre el selector de imagen
         placeholder_click = Gtk.GestureClick()
@@ -91,16 +159,11 @@ class CoverPanel(Gtk.Box):
         self.placeholder_box.add_controller(placeholder_click)
 
         self._stack = Gtk.Stack()
+        self._stack.set_hexpand(True)
+        self._stack.set_vexpand(True)
         self._stack.add_named(self.placeholder_box, "placeholder")
         self._stack.add_named(self.picture, "picture")
-        self._stack.set_size_request(PREVIEW_SIZE, PREVIEW_SIZE)
         self.frame.set_child(self._stack)
-
-        overlay = Gtk.Overlay()
-        overlay.set_child(self.frame)
-        overlay.set_halign(Gtk.Align.CENTER)
-        overlay.set_valign(Gtk.Align.CENTER)
-        overlay.set_size_request(PREVIEW_SIZE, PREVIEW_SIZE)
 
         self.btn_overlay_menu = Gtk.MenuButton()
         self.btn_overlay_menu.set_icon_name("view-more-symbolic")
@@ -109,11 +172,11 @@ class CoverPanel(Gtk.Box):
         self.btn_overlay_menu.add_css_class("cover-overlay-btn")
         self.btn_overlay_menu.set_halign(Gtk.Align.END)
         self.btn_overlay_menu.set_valign(Gtk.Align.START)
-        self.btn_overlay_menu.set_margin_top(4)
-        self.btn_overlay_menu.set_margin_end(4)
+        self.btn_overlay_menu.set_margin_top(6)
+        self.btn_overlay_menu.set_margin_end(6)
         self.btn_overlay_menu.set_popover(self._build_actions_popover())
         overlay.add_overlay(self.btn_overlay_menu)
-        self.append(overlay)
+        self.append(self.aspect_box)
 
         self._setup_context_menu()
         self._setup_drop_target()
@@ -391,8 +454,8 @@ class CoverPanel(Gtk.Box):
             pixbuf = loader.get_pixbuf()
             w = pixbuf.get_width()
             h = pixbuf.get_height()
-            if w > 0 and h > 0:
-                scale = min(PREVIEW_SIZE / w, PREVIEW_SIZE / h)
+            if w > 0 and h > 0 and max(w, h) > MAX_PREVIEW_TEXTURE_SIZE:
+                scale = MAX_PREVIEW_TEXTURE_SIZE / max(w, h)
                 nw = max(1, int(w * scale))
                 nh = max(1, int(h * scale))
                 scaled = pixbuf.scale_simple(nw, nh, GdkPixbuf.InterpType.BILINEAR)
