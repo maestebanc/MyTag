@@ -128,6 +128,19 @@ list.boxed-list > row {
     background-color: alpha(@window_fg_color, 0.03);
 }
 
+/* Editor de etiquetas compacto (sin necesidad de scroll en ventana estándar) */
+.tag-editor-list > row {
+    min-height: 38px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+
+.tag-editor-list > row > box.header {
+    min-height: 38px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
 /* Pie de la lista de pistas (barra de estado compacta) */
 .track-list-footer {
     padding: 6px 10px;

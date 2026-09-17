@@ -38,19 +38,27 @@ class TagEditor(Gtk.Box):
     }
 
     def __init__(self):
-        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         self._tracks = []
         self._loading = False
         self._rows: dict[str, Adw.EntryRow] = {}
         self._value_pickers: dict[str, Gtk.MenuButton] = {}
 
-        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         header_box.set_hexpand(True)
+        header_box.add_css_class("editor-status-banner")
 
-        heading = Gtk.Label(label=i18n.t("editor.heading"))
-        heading.add_css_class("heading")
-        heading.set_xalign(0)
-        header_box.append(heading)
+        self.status_icon = Gtk.Image.new_from_icon_name("dialog-information-symbolic")
+        self.status_icon.add_css_class("dim-label")
+        header_box.append(self.status_icon)
+
+        self.status_label = Gtk.Label(label=i18n.t("editor.select_prompt"))
+        self.status_label.add_css_class("dim-label")
+        self.status_label.add_css_class("caption")
+        self.status_label.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
+        self.status_label.set_hexpand(True)
+        self.status_label.set_xalign(0)
+        header_box.append(self.status_label)
 
         self.count_badge = Gtk.Label()
         self.count_badge.add_css_class("pill-badge")
@@ -59,12 +67,10 @@ class TagEditor(Gtk.Box):
 
         self.append(header_box)
 
-        # Adw.PreferencesGroup solo aplica el estilo de "lista en caja"
-        # dentro de un Adw.PreferencesPage; aquí lo construimos a mano con un
-        # Gtk.ListBox para tener ese mismo aspecto también fuera de ese
-        # contexto.
+        # Lista en caja compacta de etiquetas
         listbox = Gtk.ListBox()
         listbox.add_css_class("boxed-list")
+        listbox.add_css_class("tag-editor-list")
         listbox.set_selection_mode(Gtk.SelectionMode.NONE)
         for key in TAG_KEYS:
             row = Adw.EntryRow()
@@ -88,22 +94,6 @@ class TagEditor(Gtk.Box):
             self._rows[key] = row
             listbox.append(row)
         self.append(listbox)
-
-        self.status_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        self.status_box.add_css_class("editor-status-banner")
-
-        self.status_icon = Gtk.Image.new_from_icon_name("dialog-information-symbolic")
-        self.status_icon.add_css_class("dim-label")
-        self.status_box.append(self.status_icon)
-
-        self.status_label = Gtk.Label(label=i18n.t("editor.select_prompt"))
-        self.status_label.add_css_class("dim-label")
-        self.status_label.add_css_class("caption")
-        self.status_label.set_wrap(True)
-        self.status_label.set_xalign(0)
-        self.status_box.append(self.status_label)
-
-        self.append(self.status_box)
 
         self.set_tracks([])
 

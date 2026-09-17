@@ -546,21 +546,12 @@ class MainWindow(Adw.ApplicationWindow):
         self.paned.set_start_child(self._build_track_list_panel())
         self.paned.set_resize_start_child(True)
 
-        # Panel lateral unificado: tags arriba, carátula abajo con scroll vertical
-        side_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
-        side_box.set_margin_top(8)
-        side_box.set_margin_bottom(16)
+        # Panel lateral unificado: carátula arriba (ancla visual), editor de tags abajo
+        side_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        side_box.set_margin_top(4)
+        side_box.set_margin_bottom(8)
         side_box.set_margin_start(8)
         side_box.set_margin_end(8)
-
-        self.tag_editor = TagEditor()
-        self.tag_editor.connect("changes-requested", self._on_tag_changes_requested)
-        side_box.append(self.tag_editor)
-
-        separator = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
-        separator.set_margin_top(4)
-        separator.set_margin_bottom(4)
-        side_box.append(separator)
 
         self.cover_panel = CoverPanel()
         self.cover_panel.connect("cover-change-requested", self._on_cover_change_requested)
@@ -568,6 +559,15 @@ class MainWindow(Adw.ApplicationWindow):
         self.cover_panel.connect("cover-remove-requested", self._on_cover_remove_requested)
         self.cover_panel.connect("musicbrainz-search-requested", self._on_musicbrainz_search_requested)
         side_box.append(self.cover_panel)
+
+        self.tag_editor = TagEditor()
+        self.tag_editor.connect("changes-requested", self._on_tag_changes_requested)
+        side_box.append(self.tag_editor)
+
+        # Espaciador para absorber el exceso vertical en pantallas altas y evitar estiramientos
+        spacer = Gtk.Box()
+        spacer.set_vexpand(True)
+        side_box.append(spacer)
 
         side_scroller = Gtk.ScrolledWindow()
         side_scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
@@ -691,6 +691,7 @@ class MainWindow(Adw.ApplicationWindow):
 
         if self.tracks:
             self.main_stack.set_visible_child_name("editor")
+            GLib.idle_add(self._adjust_initial_paned_position)
         self._update_list_status()
         self._update_title_state()
 
