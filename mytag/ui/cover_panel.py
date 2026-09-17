@@ -10,6 +10,7 @@ la imagen, o el botón de menú superpuesto "⋮"). Debajo de la carátula se mu
 """
 from __future__ import annotations
 
+import re
 import gi
 
 gi.require_version("Gtk", "4.0")
@@ -117,13 +118,15 @@ class CoverPanel(Gtk.Box):
         self._setup_context_menu()
         self._setup_drop_target()
 
-        # Texto discreto bajo la portada con el tamaño actual de la imagen
-        self.size_label = Gtk.Label(label="")
+        # Texto discreto bajo la portada con el tamaño actual de la imagen (editable inline)
+        self.size_label = Gtk.EditableLabel()
         self.size_label.add_css_class("dim-label")
         self.size_label.add_css_class("caption")
         self.size_label.add_css_class("cover-size-label")
         self.size_label.set_halign(Gtk.Align.CENTER)
         self.size_label.set_margin_top(2)
+        self.size_label.set_cursor_from_name("text")
+        self.size_label.connect("notify::editing", self._on_size_label_editing_changed)
         self.append(self.size_label)
 
         self.set_tracks([])
@@ -265,6 +268,8 @@ class CoverPanel(Gtk.Box):
             self._show_placeholder(i18n.t("cover.no_tracks_loaded"))
             self.size_label.set_text("")
             self.size_label.set_visible(False)
+            self.size_label.set_editable(False)
+            self.size_label.set_tooltip_text(None)
             self._current_cover_bytes = None
             self._current_width = 0
             self._current_height = 0
@@ -278,6 +283,8 @@ class CoverPanel(Gtk.Box):
                 self._show_placeholder(i18n.t("cover.no_cover"))
                 self.size_label.set_text("")
                 self.size_label.set_visible(False)
+                self.size_label.set_editable(False)
+                self.size_label.set_tooltip_text(None)
                 self._current_cover_bytes = None
                 self._current_width = 0
                 self._current_height = 0
@@ -291,6 +298,8 @@ class CoverPanel(Gtk.Box):
                 self._has_different_covers = False
                 self.size_label.set_text(f"{w} × {h} px")
                 self.size_label.set_visible(True)
+                self.size_label.set_editable(True)
+                self.size_label.set_tooltip_text(i18n.t("cover.edit_dimensions_tooltip"))
         else:
             self._show_placeholder(i18n.t("cover.multiple_covers"))
             self._current_cover_bytes = None
@@ -299,6 +308,76 @@ class CoverPanel(Gtk.Box):
             self._current_height = COVER_SIZE[1]
             self.size_label.set_text(i18n.t("cover.tracks_selected_count", n=len(self._tracks)))
             self.size_label.set_visible(True)
+            self.size_label.set_editable(False)
+            self.size_label.set_tooltip_text(None)
+
+    def _on_size_label_editing_changed(self, widget: Gtk.EditableLabel, _pspec) -> None:
+        if not self._tracks or self._current_cover_bytes is None:
+            return
+
+        is_editing = widget.get_property("editing")
+        if is_editing:
+            # Al entrar en modo edición: muestra el ancho si es cuadrada (ej: 500) o "800 × 600"
+            if self._current_width == self._current_height:
+                edit_text = str(self._current_width)
+            else:
+                edit_text = f"{self._current_width} × {self._current_height}"
+            widget.set_text(edit_text)
+            GLib.idle_add(lambda: widget.select_region(0, -1) or False)
+        else:
+            entered = widget.get_text().strip()
+            self._parse_and_apply_dimension(entered)
+
+    def _parse_and_apply_dimension(self, text: str) -> None:
+        orig_w = self._current_width
+        orig_h = self._current_height
+        reset_label = f"{orig_w} × {orig_h} px"
+
+        if not text or orig_w <= 0 or orig_h <= 0:
+            self.size_label.set_text(reset_label)
+            return
+
+        clean = text.lower().replace("px", "").strip()
+        nums = [int(n) for n in re.findall(r"\d+", clean)]
+        if not nums:
+            self.size_label.set_text(reset_label)
+            return
+
+        if len(nums) == 1:
+            target_w = nums[0]
+            target_h = max(1, round(target_w * orig_h / orig_w))
+        else:
+            cand_w, cand_h = nums[0], nums[1]
+            if cand_w != orig_w and cand_h == orig_h:
+                target_w = cand_w
+                target_h = max(1, round(target_w * orig_h / orig_w))
+            elif cand_h != orig_h and cand_w == orig_w:
+                target_h = cand_h
+                target_w = max(1, round(target_h * orig_w / orig_h))
+            else:
+                target_w = cand_w
+                target_h = max(1, round(target_w * orig_h / orig_w))
+
+        target_w = max(50, min(4000, target_w))
+        target_h = max(50, min(4000, target_h))
+
+        if target_w == orig_w and target_h == orig_h:
+            self.size_label.set_text(reset_label)
+            return
+
+        self._apply_resize(target_w, target_h)
+
+    def _apply_resize(self, width: int, height: int) -> None:
+        if not self._tracks:
+            return
+        covers = {t.get_cover_bytes() for t in self._tracks}
+        if len(covers) == 1:
+            source = next(iter(covers))
+            if source is not None:
+                data, mime = resize_image_bytes(source, size=(width, height))
+                self.emit("cover-change-requested", data, mime)
+        elif any(c is not None for c in covers):
+            self.emit("cover-resize-each-requested", width)
 
     def _show_placeholder(self, text: str) -> None:
         self.placeholder_label.set_text(text)
@@ -349,17 +428,7 @@ class CoverPanel(Gtk.Box):
         dialog.present(root)
 
     def _on_resize_dialog_applied(self, _dialog, width: int, height: int) -> None:
-        if not self._tracks:
-            return
-        covers = {t.get_cover_bytes() for t in self._tracks}
-        if len(covers) == 1:
-            source = next(iter(covers))
-            if source is not None:
-                data, mime = resize_image_bytes(source, size=(width, height))
-                self.emit("cover-change-requested", data, mime)
-        elif any(c is not None for c in covers):
-            # Portadas distintas: recorta y escala cada una al mismo tamaño cuadrado
-            self.emit("cover-resize-each-requested", width)
+        self._apply_resize(width, height)
 
     def _on_select_image(self, _button) -> None:
         dialog = Gtk.FileDialog(title=i18n.t("cover.select_dialog_title"))

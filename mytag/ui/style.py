@@ -99,11 +99,35 @@ list.boxed-list > row {
     border-color: @accent_bg_color;
 }
 
-/* Etiqueta discreta de tamaño bajo la portada */
+/* Etiqueta discreta de tamaño bajo la portada (editable inline) */
 .cover-size-label {
     font-size: 0.78em;
     font-variant-numeric: tabular-nums;
     opacity: 0.75;
+}
+
+editablelabel.cover-size-label {
+    min-height: 20px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    transition: all 150ms ease;
+}
+
+editablelabel.cover-size-label:hover {
+    opacity: 1;
+    background-color: alpha(@window_fg_color, 0.06);
+}
+
+editablelabel.cover-size-label text {
+    font-size: 0.78em;
+    font-variant-numeric: tabular-nums;
+    padding: 1px 4px;
+    margin: 0;
+    min-height: 0;
+    background-color: alpha(@window_fg_color, 0.08);
+    border: 1px solid @accent_bg_color;
+    border-radius: 4px;
+    color: @window_fg_color;
 }
 
 /* Badges / Píldoras de estado y contador */

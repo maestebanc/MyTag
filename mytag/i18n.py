@@ -375,6 +375,11 @@ STRINGS: dict[str, dict[str, str]] = {
         "en": "There is no cover to resize.",
         "ca": "No hi ha cap portada per redimensionar.",
     },
+    "cover.edit_dimensions_tooltip": {
+        "es": "Clic para cambiar tamaño (Intro para aplicar)",
+        "en": "Click to resize (Enter to apply)",
+        "ca": "Clica per canviar la mida (Intro per aplicar)",
+    },
     # ---- diálogo de búsqueda de portada ----
     "coversearch.title": {"es": "Buscar portada", "en": "Search for cover", "ca": "Cerca la portada"},
     "coversearch.loading": {
