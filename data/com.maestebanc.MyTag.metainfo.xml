@@ -61,6 +61,20 @@
   <url type="homepage">https://github.com/maestebanc/MyTag</url>
 
   <releases>
+    <release version="0.61.0" date="2026-09-17">
+      <description>
+        <p>
+          Inspector panel redesign, zero-scroll compact layout, and inline cover resizing:
+        </p>
+        <ul>
+          <li>Redesigned inspector panel with album cover art at the top as the visual anchor.</li>
+          <li>Zero-scroll compact layout ensuring all 8 metadata fields and album cover are simultaneously visible without scrollbars.</li>
+          <li>Direct inline editing of cover dimensions directly beneath the artwork with automatic aspect-ratio preservation.</li>
+          <li>Unified compact file status banner in the tag editor.</li>
+          <li>Refined padding and modern Libadwaita styling throughout the side panel.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.60.0" date="2026-09-16">
       <description>
         <p>

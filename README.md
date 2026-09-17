@@ -52,14 +52,14 @@ MyTag is built from the ground up with Python, GTK4, and Libadwaita to provide a
 
 ## Installation
 
-Prebuilt packages for version **0.60.0** are available on the [GitHub Releases](https://github.com/maestebanc/MyTag/releases) page.
+Prebuilt packages for version **0.61.0** are available on the [GitHub Releases](https://github.com/maestebanc/MyTag/releases) page.
 
 ### Flatpak (Universal across all Linux distributions)
 
 The Flatpak bundle includes all runtime dependencies, including GTK4, Libadwaita, Chromaprint (`fpcalc`), and audio tools:
 
 ```bash
-flatpak install mytag-0.60.0.flatpak
+flatpak install mytag-0.61.0.flatpak
 ```
 
 ### Debian / Ubuntu (24.04 LTS+, Debian trixie/sid)
@@ -67,7 +67,7 @@ flatpak install mytag-0.60.0.flatpak
 Install the `.deb` package using `apt`:
 
 ```bash
-sudo apt install ./mytag_0.60.0-1_all.deb
+sudo apt install ./mytag_0.61.0-1_all.deb
 ```
 
 ### Fedora / RHEL (RPM)
@@ -75,7 +75,7 @@ sudo apt install ./mytag_0.60.0-1_all.deb
 Install the `.rpm` package using `dnf`:
 
 ```bash
-sudo dnf install ./mytag-0.60.0-1.noarch.rpm
+sudo dnf install ./mytag-0.61.0-1.noarch.rpm
 ```
 
 ### Arch Linux
@@ -83,7 +83,7 @@ sudo dnf install ./mytag-0.60.0-1.noarch.rpm
 Install the prebuilt package using `pacman`:
 
 ```bash
-sudo pacman -U mytag-0.60.0-1-any.pkg.tar.zst
+sudo pacman -U mytag-0.61.0-1-any.pkg.tar.zst
 ```
 
 Or build from source using the included `PKGBUILD`:

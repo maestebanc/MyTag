@@ -2,7 +2,7 @@
 %define pysitelib /usr/lib/python3.13/site-packages
 
 Name:           mytag
-Version:        0.60.0
+Version:        0.61.0
 Release:        1%{?dist}
 Summary:        Edit tags and cover art on your FLAC and MP3 music files
 License:        MIT
@@ -68,6 +68,12 @@ update-desktop-database -q /usr/share/applications &>/dev/null || :
 gtk-update-icon-cache -q /usr/share/icons/hicolor &>/dev/null || :
 
 %changelog
+* Thu Sep 17 2026 Miguel Angel Esteban - 0.61.0-1
+- Inspector panel redesign with album cover at the top as visual anchor.
+- Compact zero-scroll layout with all metadata fields visible simultaneously.
+- Direct inline editing of cover dimensions maintaining aspect ratio.
+- Unified compact status banner in tag editor.
+
 * Wed Sep 16 2026 Miguel Angel Esteban - 0.60.0-1
 - Unified two-pane layout with merged tag and cover inspector panel and full-width track table.
 - Added Album column to track list with integrated search filtering.
