@@ -3,13 +3,15 @@ from __future__ import annotations
 
 import gi
 
+import re
+
 gi.require_version("GObject", "2.0")
 from gi.repository import GObject
 
 from ..audio_track import AudioTrack
 from ..constants import TAG_KEYS
 
-_PROPERTY_NAMES = ["filename", "missing-fields"] + [key.lower() for key in TAG_KEYS]
+_PROPERTY_NAMES = ["filename", "missing-fields", "track_order_key"] + [key.lower() for key in TAG_KEYS]
 
 
 class TrackItem(GObject.Object):
@@ -54,6 +56,17 @@ class TrackItem(GObject.Object):
     @GObject.Property(type=str)
     def discnumber(self) -> str:
         return self.track.get_tag("DISCNUMBER")
+
+    @GObject.Property(type=int)
+    def track_order_key(self) -> int:
+        raw_disc = self.track.get_tag("DISCNUMBER")
+        disc_nums = re.findall(r"\d+", raw_disc or "")
+        disc = int(disc_nums[0]) if disc_nums else 1
+
+        raw_track = self.track.get_tag("TRACKNUMBER")
+        track_nums = re.findall(r"\d+", raw_track or "")
+        track = int(track_nums[0]) if track_nums else 99999
+        return disc * 100000 + track
 
     @GObject.Property(type=str)
     def missing_fields(self) -> str:

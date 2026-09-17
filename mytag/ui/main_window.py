@@ -27,6 +27,7 @@ from .shortcuts_dialog import ShortcutsDialog
 from .tag_editor import TagEditor
 from .track_item import TrackItem
 from ..constants import ACOUSTID_CLIENT_KEY
+from ..natural_sort import natural_sort_key
 
 DEFAULT_WINDOW_WIDTH = 1200
 DEFAULT_WINDOW_HEIGHT = 700
@@ -86,6 +87,14 @@ def _make_column(
     factory.connect("unbind", on_unbind)
 
     column = Gtk.ColumnViewColumn(title=title, factory=factory)
+    if prop_name == "tracknumber":
+        expr = Gtk.PropertyExpression.new(TrackItem, None, "track_order_key")
+        column.set_sorter(Gtk.NumericSorter.new(expr))
+    else:
+        expr = Gtk.PropertyExpression.new(TrackItem, None, prop_name)
+        sorter = Gtk.StringSorter.new(expr)
+        sorter.set_ignore_case(True)
+        column.set_sorter(sorter)
     if expand:
         column.set_expand(True)
     if fixed_width is not None:
@@ -148,8 +157,9 @@ class MainWindow(Adw.ApplicationWindow):
         self.tracks: list[AudioTrack] = []
         self._search_query = ""
         self.list_store = Gio.ListStore(item_type=TrackItem)
+        self.sort_model = Gtk.SortListModel(model=self.list_store)
         self.search_filter = Gtk.CustomFilter.new(self._track_matches_search)
-        self.filter_model = Gtk.FilterListModel(model=self.list_store, filter=self.search_filter)
+        self.filter_model = Gtk.FilterListModel(model=self.sort_model, filter=self.search_filter)
         self.selection_model = Gtk.MultiSelection(model=self.filter_model)
         self.selection_model.connect("selection-changed", self._on_selection_changed)
 
@@ -468,6 +478,7 @@ class MainWindow(Adw.ApplicationWindow):
         )
 
         self.column_view = Gtk.ColumnView(model=self.selection_model)
+        self.sort_model.set_sorter(self.column_view.get_sorter())
         self.column_view.add_css_class("track-table")
         self.column_view.append_column(_make_status_column())
         for prop_name, label_key, width, expand, resizable in TRACK_LIST_COLUMNS:
@@ -658,8 +669,9 @@ class MainWindow(Adw.ApplicationWindow):
     @staticmethod
     def _find_audio_files(folder: str) -> list[str]:
         found = []
-        for root, _dirs, files in os.walk(folder):
-            for name in sorted(files):
+        for root, dirs, files in os.walk(folder):
+            dirs.sort(key=natural_sort_key)
+            for name in sorted(files, key=natural_sort_key):
                 if name.lower().endswith(SUPPORTED_EXTENSIONS):
                     found.append(os.path.join(root, name))
         return found
@@ -667,6 +679,7 @@ class MainWindow(Adw.ApplicationWindow):
     _find_flac_files = _find_audio_files
 
     def add_paths(self, paths: list[str]) -> None:
+        paths = sorted(paths, key=natural_sort_key)
         existing = {t.path for t in self.tracks}
         errors = []
         added = 0
