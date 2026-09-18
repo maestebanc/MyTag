@@ -29,34 +29,39 @@ from .track_item import TrackItem
 from ..constants import ACOUSTID_CLIENT_KEY
 from ..natural_sort import natural_sort_key
 
-DEFAULT_WINDOW_WIDTH = 1200
-DEFAULT_WINDOW_HEIGHT = 700
+DEFAULT_WINDOW_WIDTH = 1260
+DEFAULT_WINDOW_HEIGHT = 860
 RIGHT_PANEL_WIDTH = 290
 
-TRACK_LIST_COLUMNS = [
-    # (prop_name, label_key, fixed_width, expand, resizable)
-    ("tracknumber", "column.track", 76, False, False),
-    ("title", "column.title", 240, True, True),
-    ("artist", "column.artist", 180, True, True),
-    ("album", "column.album", 200, True, True),
+COLUMN_SPEC = [
+    # (col_id, label_key, resizable, center)
+    ("status", "column.status", False, True),
+    ("tracknumber", "column.track", True, True),
+    ("title", "column.title", True, False),
+    ("artist", "column.artist", True, False),
+    ("album", "column.album", True, False),
+    ("albumartist", "column.albumartist", True, False),
+    ("date", "column.date", True, True),
+    ("genre", "column.genre", True, False),
+    ("discnumber", "column.disc", True, True),
+    ("filename", "column.filename", True, False),
 ]
 
 
 def _make_column(
     title: str,
     prop_name: str,
-    expand: bool = False,
-    fixed_width: int | None = None,
+    fixed_width: int = 200,
     resizable: bool = True,
+    center: bool = False,
 ) -> Gtk.ColumnViewColumn:
     factory = Gtk.SignalListItemFactory()
 
     def on_setup(_factory, list_item: Gtk.ListItem) -> None:
-        label = Gtk.Label(xalign=0)
+        label = Gtk.Label(xalign=0.5 if center else 0.0)
         label.set_ellipsize(Pango.EllipsizeMode.END)
         if prop_name == "tracknumber":
             label.add_css_class("track-number-label")
-            label.set_xalign(0.5)
             label.set_margin_start(2)
             label.set_margin_end(2)
         else:
@@ -70,7 +75,8 @@ def _make_column(
         item = list_item.get_item()
 
         def update(*_args) -> None:
-            label.set_text(item.get_property(prop_name) or "")
+            val = item.get_property(prop_name)
+            label.set_text(val or "")
 
         update()
         list_item.mytag_handler_id = item.connect(f"notify::{prop_name}", update)
@@ -90,20 +96,33 @@ def _make_column(
     if prop_name == "tracknumber":
         expr = Gtk.PropertyExpression.new(TrackItem, None, "track_order_key")
         column.set_sorter(Gtk.NumericSorter.new(expr))
+    elif prop_name == "discnumber":
+        expr = Gtk.PropertyExpression.new(TrackItem, None, "discnumber")
+        sorter = Gtk.StringSorter.new(expr)
+        sorter.set_ignore_case(True)
+        column.set_sorter(sorter)
+    elif prop_name == "filename":
+        def _compare_filename(a, b) -> int:
+            if a is None or b is None:
+                return 0
+            ka = natural_sort_key(getattr(a, "filename", ""))
+            kb = natural_sort_key(getattr(b, "filename", ""))
+            return -1 if ka < kb else (1 if ka > kb else 0)
+
+        column.set_sorter(Gtk.CustomSorter.new(_compare_filename))
     else:
         expr = Gtk.PropertyExpression.new(TrackItem, None, prop_name)
         sorter = Gtk.StringSorter.new(expr)
         sorter.set_ignore_case(True)
         column.set_sorter(sorter)
-    if expand:
-        column.set_expand(True)
-    if fixed_width is not None:
-        column.set_fixed_width(fixed_width)
+
+    column.set_expand(False)
+    column.set_fixed_width(fixed_width)
     column.set_resizable(resizable)
     return column
 
 
-def _make_status_column() -> Gtk.ColumnViewColumn:
+def _make_status_column(fixed_width: int = 36) -> Gtk.ColumnViewColumn:
     """Columna estrecha con un icono de aviso si al tema le falta portada,
     año o género (indicador de "completitud" de un vistazo)."""
     factory = Gtk.SignalListItemFactory()
@@ -144,15 +163,28 @@ def _make_status_column() -> Gtk.ColumnViewColumn:
     factory.connect("unbind", on_unbind)
 
     column = Gtk.ColumnViewColumn(title="", factory=factory)
-    column.set_fixed_width(32)
+    column.set_fixed_width(fixed_width)
     column.set_resizable(False)
+    column.set_expand(False)
+    expr = Gtk.PropertyExpression.new(TrackItem, None, "missing_fields")
+    sorter = Gtk.StringSorter.new(expr)
+    column.set_sorter(sorter)
     return column
 
 
 class MainWindow(Adw.ApplicationWindow):
-    def __init__(self, app: Adw.Application):
+    def __init__(self, app: Adw.Application) -> None:
         super().__init__(application=app, title="MyTag")
-        self.set_default_size(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)
+
+        cfg = config.load_config()
+        w = cfg.get("window_width", DEFAULT_WINDOW_WIDTH)
+        h = cfg.get("window_height", DEFAULT_WINDOW_HEIGHT)
+        self.set_default_size(max(900, w), max(600, h))
+        if cfg.get("window_maximized", False):
+            self.maximize()
+
+        self._column_save_timeout_id: int | None = None
+        self._columns: dict[str, Gtk.ColumnViewColumn] = {}
 
         self.tracks: list[AudioTrack] = []
         self._search_query = ""
@@ -404,11 +436,13 @@ class MainWindow(Adw.ApplicationWindow):
                 break
             w = w.get_parent()
 
-        if target_pos is not None:
-            # Si el elemento clicado NO estaba en la selección, se selecciona en exclusiva.
-            # Si YA formaba parte de la selección, se conserva la selección múltiple.
-            if not self.selection_model.is_selected(target_pos):
-                self.selection_model.select_item(target_pos, True)
+        if target_pos is None:
+            return
+
+        # Si el elemento clicado NO estaba en la selección, se selecciona en exclusiva.
+        # Si YA formaba parte de la selección, se conserva la selección múltiple.
+        if not self.selection_model.is_selected(target_pos):
+            self.selection_model.select_item(target_pos, True)
 
         selected = self._selected_tracks()
         if not selected:
@@ -480,18 +514,36 @@ class MainWindow(Adw.ApplicationWindow):
         self.column_view = Gtk.ColumnView(model=self.selection_model)
         self.sort_model.set_sorter(self.column_view.get_sorter())
         self.column_view.add_css_class("track-table")
-        self.column_view.append_column(_make_status_column())
-        for prop_name, label_key, width, expand, resizable in TRACK_LIST_COLUMNS:
-            self.column_view.append_column(
-                _make_column(
-                    i18n.t(label_key),
-                    prop_name,
-                    expand=expand,
+
+        cfg = config.load_config()
+        cols_cfg = cfg.get("columns", {})
+
+        for col_id, label_key, resizable, center in COLUMN_SPEC:
+            col_info = cols_cfg.get(col_id, {})
+            def_info = config.DEFAULT_COLUMNS[col_id]
+            width = col_info.get("width", def_info["width"])
+            visible = col_info.get("visible", def_info["visible"])
+
+            if col_id == "status":
+                col = _make_status_column(fixed_width=width)
+            else:
+                col = _make_column(
+                    title=i18n.t(label_key),
+                    prop_name=col_id,
                     fixed_width=width,
                     resizable=resizable,
+                    center=center,
                 )
-            )
 
+            col.set_fixed_width(width)
+            col.set_visible(visible)
+            col.set_expand(False)
+            if resizable:
+                col.connect("notify::fixed-width", self._on_column_width_changed)
+            self._columns[col_id] = col
+            self.column_view.append_column(col)
+
+        columns_menu = self._setup_columns_menu()
         self._setup_track_list_context_menu()
 
         scroller = Gtk.ScrolledWindow()
@@ -508,6 +560,13 @@ class MainWindow(Adw.ApplicationWindow):
         self.list_status_label.set_hexpand(True)
         self.list_status_label.set_xalign(0)
         bottom_bar.append(self.list_status_label)
+
+        self.btn_columns = Gtk.MenuButton()
+        self.btn_columns.set_icon_name("view-more-symbolic")
+        self.btn_columns.set_tooltip_text(i18n.t("column.menu_tooltip"))
+        self.btn_columns.set_menu_model(columns_menu)
+        self.btn_columns.add_css_class("flat")
+        bottom_bar.append(self.btn_columns)
 
         self.btn_remove_selected = Gtk.Button()
         self.btn_remove_selected.set_icon_name("list-remove-symbolic")
@@ -544,6 +603,91 @@ class MainWindow(Adw.ApplicationWindow):
     def _on_search_changed(self, entry: Gtk.SearchEntry) -> None:
         self._search_query = entry.get_text().strip().lower()
         self.search_filter.changed(Gtk.FilterChange.DIFFERENT)
+
+    # ---------- configuración de columnas ----------
+
+    def _setup_columns_menu(self) -> Gio.Menu:
+        menu = Gio.Menu()
+        section = Gio.Menu()
+        for col_id, label_key, _resizable, _center in COLUMN_SPEC:
+            action_name = f"toggle_col_{col_id}"
+            is_visible = self._columns[col_id].get_visible()
+            action = Gio.SimpleAction.new_stateful(
+                action_name,
+                None,
+                GLib.Variant.new_boolean(is_visible),
+            )
+            action.connect(
+                "change-state",
+                lambda act, val, cid=col_id: self._on_toggle_column(act, val, cid),
+            )
+            self.add_action(action)
+            section.append(i18n.t(label_key), f"win.{action_name}")
+        menu.append_section(None, section)
+
+        reset_section = Gio.Menu()
+        reset_action = Gio.SimpleAction.new("reset_column_widths", None)
+        reset_action.connect("activate", lambda *_: self.reset_default_column_widths())
+        self.add_action(reset_action)
+        reset_section.append(i18n.t("column.reset_widths"), "win.reset_column_widths")
+        menu.append_section(None, reset_section)
+
+        for col in self._columns.values():
+            col.set_header_menu(menu)
+
+        return menu
+
+    def _on_toggle_column(self, action: Gio.SimpleAction, new_state: GLib.Variant, col_id: str) -> None:
+        target_visible = new_state.get_boolean()
+        if not target_visible:
+            visible_count = sum(1 for c in self._columns.values() if c.get_visible())
+            if visible_count <= 1:
+                return
+        action.set_state(new_state)
+        col = self._columns.get(col_id)
+        if col:
+            col.set_visible(target_visible)
+            self._save_column_config()
+
+    def _on_column_width_changed(self, _col: Gtk.ColumnViewColumn, _pspec) -> None:
+        if self._column_save_timeout_id:
+            GLib.source_remove(self._column_save_timeout_id)
+
+        def do_save() -> bool:
+            self._column_save_timeout_id = None
+            self._save_column_config()
+            return False
+
+        self._column_save_timeout_id = GLib.timeout_add(400, do_save)
+
+    def _save_column_config(self) -> None:
+        cfg = config.load_config()
+        cols_cfg = {}
+        for col_id, col in self._columns.items():
+            cols_cfg[col_id] = {
+                "visible": bool(col.get_visible()),
+                "width": max(24, int(col.get_fixed_width())),
+            }
+        cfg["columns"] = cols_cfg
+        config.save_config(cfg)
+
+    def reset_default_column_widths(self) -> None:
+        for col_id, def_info in config.DEFAULT_COLUMNS.items():
+            col = self._columns.get(col_id)
+            if col:
+                col.set_fixed_width(def_info["width"])
+                col.set_visible(def_info["visible"])
+                action = self.lookup_action(f"toggle_col_{col_id}")
+                if action:
+                    action.set_state(GLib.Variant.new_boolean(def_info["visible"]))
+        self._save_column_config()
+
+    def _save_window_state(self) -> None:
+        cfg = config.load_config()
+        cfg["window_width"] = self.get_width()
+        cfg["window_height"] = self.get_height()
+        cfg["window_maximized"] = self.is_maximized()
+        config.save_config(cfg)
 
     def _build_body(self) -> Gtk.Widget:
         self.paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
@@ -1105,6 +1249,11 @@ class MainWindow(Adw.ApplicationWindow):
     # ---------- cierre ----------
 
     def _on_close_request(self, _window) -> bool:
+        if self._column_save_timeout_id:
+            GLib.source_remove(self._column_save_timeout_id)
+            self._column_save_timeout_id = None
+            self._save_column_config()
+        self._save_window_state()
         if self._force_close or not self._has_unsaved_changes():
             return False  # permitir el cierre
 

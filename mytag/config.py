@@ -13,11 +13,28 @@ SUPPORTED_LANGUAGES = ["es", "en", "ca"]
 # Si el idioma del sistema no es ninguno de los soportados, se usa este.
 DEFAULT_LANGUAGE_FALLBACK = "en"
 
+DEFAULT_COLUMNS = {
+    "status": {"visible": True, "width": 36},
+    "tracknumber": {"visible": True, "width": 56},
+    "title": {"visible": True, "width": 280},
+    "artist": {"visible": True, "width": 200},
+    "album": {"visible": True, "width": 220},
+    "albumartist": {"visible": False, "width": 200},
+    "date": {"visible": False, "width": 80},
+    "genre": {"visible": False, "width": 130},
+    "discnumber": {"visible": False, "width": 65},
+    "filename": {"visible": False, "width": 260},
+}
+
 DEFAULTS = {
     "ui_scale": 100,
     "theme": "system",  # "system", "light" o "dark"
     "autonumber_zero_padding": False,
     "default_rename_pattern": "%tracknumber% - %artist% - %title%",
+    "columns": DEFAULT_COLUMNS,
+    "window_width": 1260,
+    "window_height": 860,
+    "window_maximized": False,
 }
 
 
@@ -55,6 +72,14 @@ def load_config() -> dict:
 
     merged = dict(DEFAULTS)
     merged.update(data)
+
+    # Asegurar que columns contiene todas las claves por defecto completas
+    cols = {k: dict(v) for k, v in DEFAULT_COLUMNS.items()}
+    if "columns" in data and isinstance(data["columns"], dict):
+        for k, v in data["columns"].items():
+            if k in cols and isinstance(v, dict):
+                cols[k].update(v)
+    merged["columns"] = cols
 
     if "base_dpi" in merged:
         del merged["base_dpi"]
