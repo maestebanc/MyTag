@@ -20,3 +20,6 @@ mytag = "mytag.app:main"
 
 [tool.setuptools]
 packages = ["mytag", "mytag.ui"]
+
+[tool.setuptools.package-data]
+mytag = ["resources/icons/*.svg"]

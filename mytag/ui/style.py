@@ -31,11 +31,26 @@ APP_ID = "com.maestebanc.MyTag"
 _REPO_ICON_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "icons"
 )
+_INTERNAL_ICON_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "resources", "icons"
+)
+
+_icon_theme_registered: bool = False
 
 
 def register_icon_theme() -> None:
+    global _icon_theme_registered
+    if _icon_theme_registered:
+        return
+    display = Gdk.Display.get_default()
+    if not display:
+        return
+    theme = Gtk.IconTheme.get_for_display(display)
     if os.path.isdir(_REPO_ICON_DIR):
-        Gtk.IconTheme.get_for_display(Gdk.Display.get_default()).add_search_path(_REPO_ICON_DIR)
+        theme.add_search_path(_REPO_ICON_DIR)
+    if os.path.isdir(_INTERNAL_ICON_DIR):
+        theme.add_search_path(_INTERNAL_ICON_DIR)
+    _icon_theme_registered = True
 
 # Estilo visual refinado para GNOME / Libadwaita
 EXTRA_CSS = """
