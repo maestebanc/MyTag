@@ -3,7 +3,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VERSION="0.61.0-1"
+VERSION="0.62.0-1"
 WORK="$REPO_ROOT/packaging/build/deb/mytag"
 OUT_DIR="$REPO_ROOT/packaging/dist"
 

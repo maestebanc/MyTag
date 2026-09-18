@@ -61,6 +61,20 @@
   <url type="homepage">https://github.com/maestebanc/MyTag</url>
 
   <releases>
+    <release version="0.62.0" date="2026-09-18">
+      <description>
+        <p>
+          Customizable column management, drag-and-drop column reordering, and cross-distribution icon compatibility:
+        </p>
+        <ul>
+          <li>Interactive drag-and-drop column reordering in the song table with real-time visual drop indicators.</li>
+          <li>Full column customization: toggle visibility, adjust widths, and preserve custom column order across sessions.</li>
+          <li>Dedicated column configuration menu and header context menu to easily toggle columns and restore defaults.</li>
+          <li>Adaptive table layout: last visible column dynamically expands to fill remaining panel width while prior columns remain fixed and cleanly resizable.</li>
+          <li>Bundled symbolic SVG icons ensuring complete, reliable rendering across all Linux distributions, including pure Debian with standard Adwaita.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.61.0" date="2026-09-17">
       <description>
         <p>
