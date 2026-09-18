@@ -26,12 +26,15 @@ DEFAULT_COLUMNS = {
     "filename": {"visible": False, "width": 260},
 }
 
+DEFAULT_COLUMN_ORDER = list(DEFAULT_COLUMNS.keys())
+
 DEFAULTS = {
     "ui_scale": 100,
     "theme": "system",  # "system", "light" o "dark"
     "autonumber_zero_padding": False,
     "default_rename_pattern": "%tracknumber% - %artist% - %title%",
     "columns": DEFAULT_COLUMNS,
+    "column_order": DEFAULT_COLUMN_ORDER,
     "window_width": 1260,
     "window_height": 860,
     "window_maximized": False,
@@ -80,6 +83,16 @@ def load_config() -> dict:
             if k in cols and isinstance(v, dict):
                 cols[k].update(v)
     merged["columns"] = cols
+
+    # Asegurar orden de columnas coherente y completo
+    order = list(DEFAULT_COLUMN_ORDER)
+    if "column_order" in data and isinstance(data["column_order"], list):
+        user_order = [k for k in data["column_order"] if k in DEFAULT_COLUMNS]
+        for k in DEFAULT_COLUMN_ORDER:
+            if k not in user_order:
+                user_order.append(k)
+        order = user_order
+    merged["column_order"] = order
 
     if "base_dpi" in merged:
         del merged["base_dpi"]

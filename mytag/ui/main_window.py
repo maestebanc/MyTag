@@ -47,6 +47,8 @@ COLUMN_SPEC = [
     ("filename", "column.filename", True, False),
 ]
 
+COLUMN_SPEC_MAP = {spec[0]: spec for spec in COLUMN_SPEC}
+
 
 def _make_column(
     title: str,
@@ -185,6 +187,7 @@ class MainWindow(Adw.ApplicationWindow):
 
         self._column_save_timeout_id: int | None = None
         self._columns: dict[str, Gtk.ColumnViewColumn] = {}
+        self._reordering_columns: bool = False
 
         self.tracks: list[AudioTrack] = []
         self._search_query = ""
@@ -512,13 +515,18 @@ class MainWindow(Adw.ApplicationWindow):
         )
 
         self.column_view = Gtk.ColumnView(model=self.selection_model)
+        self.column_view.set_reorderable(True)
         self.sort_model.set_sorter(self.column_view.get_sorter())
         self.column_view.add_css_class("track-table")
 
         cfg = config.load_config()
         cols_cfg = cfg.get("columns", {})
+        col_order = cfg.get("column_order", config.DEFAULT_COLUMN_ORDER)
 
-        for col_id, label_key, resizable, center in COLUMN_SPEC:
+        for col_id in col_order:
+            if col_id not in COLUMN_SPEC_MAP:
+                continue
+            _cid, label_key, resizable, center = COLUMN_SPEC_MAP[col_id]
             col_info = cols_cfg.get(col_id, {})
             def_info = config.DEFAULT_COLUMNS[col_id]
             width = col_info.get("width", def_info["width"])
@@ -535,6 +543,7 @@ class MainWindow(Adw.ApplicationWindow):
                     center=center,
                 )
 
+            col.set_id(col_id)
             col.set_fixed_width(width)
             col.set_visible(visible)
             col.set_expand(False)
@@ -545,6 +554,7 @@ class MainWindow(Adw.ApplicationWindow):
 
         columns_menu = self._setup_columns_menu()
         self._update_last_column_expand()
+        self.column_view.get_columns().connect("items-changed", self._on_columns_model_changed)
         self._setup_track_list_context_menu()
 
         scroller = Gtk.ScrolledWindow()
@@ -670,6 +680,14 @@ class MainWindow(Adw.ApplicationWindow):
             self._update_last_column_expand()
             self._save_column_config()
 
+    def _on_columns_model_changed(self, model: Gio.ListModel, _position: int, _removed: int, _added: int) -> None:
+        if getattr(self, "_reordering_columns", False):
+            return
+        if model.get_n_items() < len(self._columns):
+            return
+        self._update_last_column_expand()
+        self._save_column_config()
+
     def _on_column_width_changed(self, _col: Gtk.ColumnViewColumn, _pspec) -> None:
         if self._column_save_timeout_id:
             GLib.source_remove(self._column_save_timeout_id)
@@ -683,6 +701,14 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _save_column_config(self) -> None:
         cfg = config.load_config()
+        cols_model = self.column_view.get_columns()
+        order = []
+        for i in range(cols_model.get_n_items()):
+            col = cols_model.get_item(i)
+            cid = col.get_id()
+            if cid:
+                order.append(cid)
+
         cols_cfg = {}
         for col_id, col in self._columns.items():
             cols_cfg[col_id] = {
@@ -690,17 +716,38 @@ class MainWindow(Adw.ApplicationWindow):
                 "width": max(30, int(col.get_fixed_width())),
             }
         cfg["columns"] = cols_cfg
+        if order:
+            cfg["column_order"] = order
         config.save_config(cfg)
 
     def reset_default_column_widths(self) -> None:
-        for col_id, def_info in config.DEFAULT_COLUMNS.items():
-            col = self._columns.get(col_id)
-            if col:
-                col.set_fixed_width(def_info["width"])
-                col.set_visible(def_info["visible"])
-                action = self.lookup_action(f"toggle_col_{col_id}")
-                if action:
-                    action.set_state(GLib.Variant.new_boolean(def_info["visible"]))
+        self._reordering_columns = True
+        try:
+            for target_idx, col_id in enumerate(config.DEFAULT_COLUMN_ORDER):
+                col = self._columns.get(col_id)
+                if not col:
+                    continue
+                cols_model = self.column_view.get_columns()
+                current_idx = -1
+                for i in range(cols_model.get_n_items()):
+                    if cols_model.get_item(i) is col:
+                        current_idx = i
+                        break
+                if current_idx != -1 and current_idx != target_idx:
+                    self.column_view.remove_column(col)
+                    self.column_view.insert_column(target_idx, col)
+
+            for col_id, def_info in config.DEFAULT_COLUMNS.items():
+                col = self._columns.get(col_id)
+                if col:
+                    col.set_fixed_width(def_info["width"])
+                    col.set_visible(def_info["visible"])
+                    action = self.lookup_action(f"toggle_col_{col_id}")
+                    if action:
+                        action.set_state(GLib.Variant.new_boolean(def_info["visible"]))
+        finally:
+            self._reordering_columns = False
+
         self._update_last_column_expand()
         self._save_column_config()
 

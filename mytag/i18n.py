@@ -253,7 +253,7 @@ STRINGS: dict[str, dict[str, str]] = {
     "column.filename": {"es": "Nombre de archivo", "en": "Filename", "ca": "Nom de fitxer"},
     "column.menu_title": {"es": "Columnas", "en": "Columns", "ca": "Columnes"},
     "column.menu_tooltip": {"es": "Configurar columnas visibles", "en": "Configure visible columns", "ca": "Configura columnes visibles"},
-    "column.reset_widths": {"es": "Restablecer anchos predeterminados", "en": "Reset to default widths", "ca": "Restaura les amplades per defecte"},
+    "column.reset_widths": {"es": "Restablecer orden y anchos predeterminados", "en": "Reset to default order and widths", "ca": "Restaura l'ordre i les amplades per defecte"},
     "completeness.title": {"es": "título", "en": "title", "ca": "títol"},
     "completeness.artist": {"es": "artista", "en": "artist", "ca": "artista"},
     "completeness.cover": {"es": "portada", "en": "cover", "ca": "portada"},
