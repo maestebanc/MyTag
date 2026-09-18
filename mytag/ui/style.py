@@ -232,6 +232,22 @@ flowboxchild:selected .candidate-card {
 .track-table columnviewcell {
     padding: 2px 4px;
 }
+
+/* Reordenación de columnas mediante arrastrar y soltar (Drag and Drop) */
+.track-table header button.dnd-dragging {
+    opacity: 0.55;
+    background-color: alpha(@accent_bg_color, 0.2);
+}
+
+.track-table header button.dnd-target-left {
+    box-shadow: inset 3px 0 0 0 @accent_bg_color;
+    background-color: alpha(@accent_bg_color, 0.08);
+}
+
+.track-table header button.dnd-target-right {
+    box-shadow: inset -3px 0 0 0 @accent_bg_color;
+    background-color: alpha(@accent_bg_color, 0.08);
+}
 """
 
 

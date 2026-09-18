@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+from typing import Any
 
 import gi
 
@@ -188,6 +189,13 @@ class MainWindow(Adw.ApplicationWindow):
         self._column_save_timeout_id: int | None = None
         self._columns: dict[str, Gtk.ColumnViewColumn] = {}
         self._reordering_columns: bool = False
+        self._col_dnd_source_idx: int | None = None
+        self._col_dnd_source_col: Gtk.ColumnViewColumn | None = None
+        self._col_dnd_source_widget: Gtk.Widget | None = None
+        self._col_dnd_is_dragging: bool = False
+        self._col_dnd_target_info: tuple[int, Gtk.ColumnViewColumn, str] | None = None
+        self._col_dnd_start_x: float = 0.0
+        self._col_drag_gesture: Gtk.GestureDrag | None = None
 
         self.tracks: list[AudioTrack] = []
         self._search_query = ""
@@ -515,7 +523,7 @@ class MainWindow(Adw.ApplicationWindow):
         )
 
         self.column_view = Gtk.ColumnView(model=self.selection_model)
-        self.column_view.set_reorderable(True)
+        self.column_view.set_reorderable(False)
         self.sort_model.set_sorter(self.column_view.get_sorter())
         self.column_view.add_css_class("track-table")
 
@@ -556,6 +564,7 @@ class MainWindow(Adw.ApplicationWindow):
         self._update_last_column_expand()
         self.column_view.get_columns().connect("items-changed", self._on_columns_model_changed)
         self._setup_track_list_context_menu()
+        self._setup_column_drag_and_drop()
 
         scroller = Gtk.ScrolledWindow()
         scroller.set_child(self.column_view)
@@ -750,6 +759,254 @@ class MainWindow(Adw.ApplicationWindow):
 
         self._update_last_column_expand()
         self._save_column_config()
+
+    def _setup_column_drag_and_drop(self) -> None:
+        header = self.column_view.get_first_child()
+        if not header:
+            return
+
+        gesture = Gtk.GestureDrag()
+        gesture.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
+        gesture.set_button(Gdk.BUTTON_PRIMARY)
+        gesture.connect("drag-begin", self._on_col_drag_begin)
+        gesture.connect("drag-update", self._on_col_drag_update)
+        gesture.connect("drag-end", self._on_col_drag_end)
+        gesture.connect("cancel", self._on_col_drag_cancel)
+        header.add_controller(gesture)
+        self._col_drag_gesture = gesture
+
+    def _get_visible_column_title_items(self) -> list[tuple[int, Gtk.ColumnViewColumn, Gtk.Widget, Any]]:
+        """Devuelve una lista de tuplas (índice_modelo, columna, widget_cabecera, límites)
+        para todas las columnas actualmente visibles."""
+        header = self.column_view.get_first_child()
+        if not header:
+            return []
+        cols_model = self.column_view.get_columns()
+        n_cols = cols_model.get_n_items()
+
+        items: list[tuple[int, Gtk.ColumnViewColumn, Gtk.Widget, Any]] = []
+        child = header.get_first_child()
+        idx = 0
+        while child and idx < n_cols:
+            col = cols_model.get_item(idx)
+            if col.get_visible() and child.get_visible():
+                ok, bounds = child.compute_bounds(header)
+                if ok:
+                    items.append((idx, col, child, bounds))
+            child = child.get_next_sibling()
+            idx += 1
+        return items
+
+    def _clear_column_dnd_classes(self) -> None:
+        """Limpia todas las clases visuales de arrastre de las cabeceras."""
+        header = self.column_view.get_first_child()
+        if not header:
+            return
+        child = header.get_first_child()
+        while child:
+            child.remove_css_class("dnd-dragging")
+            child.remove_css_class("dnd-target-left")
+            child.remove_css_class("dnd-target-right")
+            child = child.get_next_sibling()
+
+    def _on_col_drag_begin(self, gesture: Gtk.GestureDrag, start_x: float, start_y: float) -> None:
+        self._col_dnd_source_idx = None
+        self._col_dnd_source_col = None
+        self._col_dnd_source_widget = None
+        self._col_dnd_is_dragging = False
+        self._col_dnd_target_info = None
+
+        items = self._get_visible_column_title_items()
+        if not items:
+            gesture.set_state(Gtk.EventSequenceState.DENIED)
+            return
+
+        clicked_item = None
+        prev_item = None
+        for i, item in enumerate(items):
+            idx, col, widget, bounds = item
+            bx = bounds.get_x()
+            bw = bounds.get_width()
+            if bx <= start_x < bx + bw:
+                clicked_item = item
+                prev_item = items[i - 1] if i > 0 else None
+                break
+
+        if not clicked_item:
+            gesture.set_state(Gtk.EventSequenceState.DENIED)
+            return
+
+        col_idx, col, widget, bounds = clicked_item
+
+        # Si el usuario hace clic en el borde de redimensionado (8px a la derecha de una
+        # columna redimensionable o 6px a la izquierda del divisor), denegamos
+        # para que GTK gestione nativamente el redimensionado del ancho de columnas.
+        bx = bounds.get_x()
+        bw = bounds.get_width()
+        if col.get_resizable() and (bx + bw - start_x) <= 8:
+            gesture.set_state(Gtk.EventSequenceState.DENIED)
+            return
+
+        if prev_item is not None and prev_item[1].get_resizable() and (start_x - bx) <= 6:
+            gesture.set_state(Gtk.EventSequenceState.DENIED)
+            return
+
+        # Clic en el cuerpo del botón de la columna: reclamamos la secuencia para gestionar
+        # con total precisión tanto la ordenación al hacer clic como el arrastre DnD.
+        self._col_dnd_source_idx = col_idx
+        self._col_dnd_source_col = col
+        self._col_dnd_source_widget = widget
+        self._col_dnd_start_x = start_x
+        gesture.set_state(Gtk.EventSequenceState.CLAIMED)
+
+    def _on_col_drag_update(self, gesture: Gtk.GestureDrag, offset_x: float, offset_y: float) -> None:
+        if self._col_dnd_source_col is None or self._col_dnd_source_widget is None:
+            return
+
+        # Se requiere un desplazamiento mínimo de 8px horizontal para activar el modo de arrastre
+        if not self._col_dnd_is_dragging:
+            if abs(offset_x) >= 8:
+                self._col_dnd_is_dragging = True
+                self._col_dnd_source_widget.add_css_class("dnd-dragging")
+                header = self.column_view.get_first_child()
+                if header:
+                    header.set_cursor_from_name("grabbing")
+            else:
+                return
+
+        items = self._get_visible_column_title_items()
+        if not items:
+            return
+
+        current_x = self._col_dnd_start_x + offset_x
+
+        first_item = items[0]
+        last_item = items[-1]
+
+        target_idx = None
+        target_col = None
+        target_widget = None
+        target_side = "left"
+
+        if current_x <= first_item[3].get_x():
+            target_idx, target_col, target_widget, _ = first_item
+            target_side = "left"
+        elif current_x >= (last_item[3].get_x() + last_item[3].get_width()):
+            target_idx, target_col, target_widget, _ = last_item
+            target_side = "right"
+        else:
+            for item in items:
+                idx, col, widget, bounds = item
+                bx = bounds.get_x()
+                bw = bounds.get_width()
+                if bx <= current_x <= bx + bw:
+                    target_idx = idx
+                    target_col = col
+                    target_widget = widget
+                    mid = bx + bw / 2.0
+                    target_side = "left" if current_x < mid else "right"
+                    break
+
+        # Actualizar clases de indicador de destino
+        header = self.column_view.get_first_child()
+        if header:
+            child = header.get_first_child()
+            while child:
+                if child != self._col_dnd_source_widget:
+                    child.remove_css_class("dnd-target-left")
+                    child.remove_css_class("dnd-target-right")
+                child = child.get_next_sibling()
+
+        if target_widget and target_col is not None and target_idx is not None:
+            self._col_dnd_target_info = (target_idx, target_col, target_side)
+            if target_widget != self._col_dnd_source_widget:
+                target_widget.add_css_class(f"dnd-target-{target_side}")
+        else:
+            self._col_dnd_target_info = None
+
+    def _on_col_drag_end(self, gesture: Gtk.GestureDrag, offset_x: float, offset_y: float) -> None:
+        header = self.column_view.get_first_child()
+        if header:
+            header.set_cursor(None)
+        self._clear_column_dnd_classes()
+
+        source_col = self._col_dnd_source_col
+        source_idx = self._col_dnd_source_idx
+        is_dragging = self._col_dnd_is_dragging
+        target_info = self._col_dnd_target_info
+
+        self._col_dnd_source_idx = None
+        self._col_dnd_source_col = None
+        self._col_dnd_source_widget = None
+        self._col_dnd_is_dragging = False
+        self._col_dnd_target_info = None
+        self._col_dnd_start_x = 0.0
+
+        if source_col is None or source_idx is None:
+            return
+
+        if not is_dragging:
+            # Clic simple: ordenación de columna
+            self._on_column_header_clicked(source_col)
+        else:
+            # Arrastre completado: reordenar columnas
+            if target_info:
+                target_idx, target_col, target_side = target_info
+                self._reorder_column(source_idx, source_col, target_idx, target_col, target_side)
+
+    def _on_col_drag_cancel(self, _gesture: Gtk.GestureDrag, _sequence) -> None:
+        header = self.column_view.get_first_child()
+        if header:
+            header.set_cursor(None)
+        self._clear_column_dnd_classes()
+        self._col_dnd_source_idx = None
+        self._col_dnd_source_col = None
+        self._col_dnd_source_widget = None
+        self._col_dnd_is_dragging = False
+        self._col_dnd_target_info = None
+        self._col_dnd_start_x = 0.0
+
+    def _on_column_header_clicked(self, col: Gtk.ColumnViewColumn) -> None:
+        if not col.get_sorter():
+            return
+        sorter = self.column_view.get_sorter()
+        if sorter.get_primary_sort_column() == col:
+            order = sorter.get_primary_sort_order()
+            new_order = Gtk.SortType.DESCENDING if order == Gtk.SortType.ASCENDING else Gtk.SortType.ASCENDING
+        else:
+            new_order = Gtk.SortType.ASCENDING
+        self.column_view.sort_by_column(col, new_order)
+
+    def _reorder_column(
+        self,
+        source_idx: int,
+        source_col: Gtk.ColumnViewColumn,
+        target_idx: int,
+        target_col: Gtk.ColumnViewColumn,
+        target_side: str,
+    ) -> None:
+        if source_col is target_col:
+            return
+
+        if source_idx < target_idx:
+            adj_target_idx = target_idx - 1
+        else:
+            adj_target_idx = target_idx
+        insert_pos = adj_target_idx if target_side == "left" else adj_target_idx + 1
+
+        if insert_pos == source_idx:
+            return
+
+        self._reordering_columns = True
+        try:
+            self.column_view.remove_column(source_col)
+            self.column_view.insert_column(insert_pos, source_col)
+        finally:
+            self._reordering_columns = False
+
+        self._update_last_column_expand()
+        self._save_column_config()
+
 
     def _save_window_state(self) -> None:
         cfg = config.load_config()
