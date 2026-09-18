@@ -10,7 +10,7 @@ depends=('python' 'python-mutagen' 'python-pillow' 'python-gobject' 'gtk4' 'liba
 optdepends=('flac: integrity checking (Verify integrity)'
             'chromaprint: audio fingerprint identification (Identify by audio fingerprint)')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/maestebanc/MyTag/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('45f93eaf87bd1fedc00cf3f10eb0be17872271f486cd3963ef2bb8a664b6a327')
+sha256sums=('c8a8c8b96c8030d6f2e77984b1d2bf78e2f23439e5bb752f30b3178b5c70bae3')
 
 package() {
   cd "$srcdir/MyTag-$pkgver"
