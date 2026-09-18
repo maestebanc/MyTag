@@ -544,6 +544,7 @@ class MainWindow(Adw.ApplicationWindow):
             self.column_view.append_column(col)
 
         columns_menu = self._setup_columns_menu()
+        self._update_last_column_expand()
         self._setup_track_list_context_menu()
 
         scroller = Gtk.ScrolledWindow()
@@ -637,6 +638,25 @@ class MainWindow(Adw.ApplicationWindow):
 
         return menu
 
+    def _update_last_column_expand(self) -> None:
+        """Asegura que la última columna visible tenga expand=True para que
+        rellene todo el ancho restante del panel izquierdo hasta el borde,
+        mientras que las anteriores tienen expand=False para que sus anchos
+        sean fijos y redimensionables de forma independiente."""
+        cols_model = self.column_view.get_columns()
+        last_visible_col: Gtk.ColumnViewColumn | None = None
+
+        for i in range(cols_model.get_n_items()):
+            col = cols_model.get_item(i)
+            if col.get_visible():
+                last_visible_col = col
+
+        for i in range(cols_model.get_n_items()):
+            col = cols_model.get_item(i)
+            should_expand = (col is last_visible_col)
+            if col.get_expand() != should_expand:
+                col.set_expand(should_expand)
+
     def _on_toggle_column(self, action: Gio.SimpleAction, new_state: GLib.Variant, col_id: str) -> None:
         target_visible = new_state.get_boolean()
         if not target_visible:
@@ -647,6 +667,7 @@ class MainWindow(Adw.ApplicationWindow):
         col = self._columns.get(col_id)
         if col:
             col.set_visible(target_visible)
+            self._update_last_column_expand()
             self._save_column_config()
 
     def _on_column_width_changed(self, _col: Gtk.ColumnViewColumn, _pspec) -> None:
@@ -666,7 +687,7 @@ class MainWindow(Adw.ApplicationWindow):
         for col_id, col in self._columns.items():
             cols_cfg[col_id] = {
                 "visible": bool(col.get_visible()),
-                "width": max(24, int(col.get_fixed_width())),
+                "width": max(30, int(col.get_fixed_width())),
             }
         cfg["columns"] = cols_cfg
         config.save_config(cfg)
@@ -680,6 +701,7 @@ class MainWindow(Adw.ApplicationWindow):
                 action = self.lookup_action(f"toggle_col_{col_id}")
                 if action:
                     action.set_state(GLib.Variant.new_boolean(def_info["visible"]))
+        self._update_last_column_expand()
         self._save_column_config()
 
     def _save_window_state(self) -> None:
