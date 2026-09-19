@@ -2,15 +2,16 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
+import sys
 import urllib.error
 import urllib.parse
 import urllib.request
 
 from .constants import ACOUSTID_CLIENT_KEY
 
-FPCALC_BINARY = "fpcalc"
 LOOKUP_URL = "https://api.acoustid.org/v2/lookup"
 REQUEST_TIMEOUT = 15
 
@@ -19,17 +20,44 @@ class AcoustIDError(Exception):
     """Error al calcular la huella de audio o al consultar AcoustID."""
 
 
+def _find_fpcalc_binary() -> str | None:
+    """Busca el binario fpcalc en el bundle empaquetado o en el PATH del sistema."""
+    if getattr(sys, "frozen", False):
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass:
+            for ext in (".exe", "") if sys.platform == "win32" else ("",):
+                cand = os.path.join(meipass, f"fpcalc{ext}")
+                if os.path.isfile(cand):
+                    return cand
+        exe_dir = os.path.dirname(sys.executable)
+        for sub in ("", "_internal"):
+            for ext in (".exe", "") if sys.platform == "win32" else ("",):
+                cand = os.path.join(exe_dir, sub, f"fpcalc{ext}")
+                if os.path.isfile(cand):
+                    return cand
+    return shutil.which("fpcalc")
+
+
 def fpcalc_available() -> bool:
-    return shutil.which(FPCALC_BINARY) is not None
+    return _find_fpcalc_binary() is not None
 
 
 def _fingerprint(path: str) -> tuple[int, str]:
+    binary = _find_fpcalc_binary()
+    if not binary:
+        raise AcoustIDError("fpcalc binary not found")
+
+    kwargs = {}
+    if sys.platform == "win32":
+        kwargs["creationflags"] = 0x08000000  # CREATE_NO_WINDOW
+
     try:
         result = subprocess.run(
-            [FPCALC_BINARY, "-json", path],
+            [binary, "-json", path],
             capture_output=True,
             text=True,
             timeout=60,
+            **kwargs,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
         raise AcoustIDError(str(exc)) from exc

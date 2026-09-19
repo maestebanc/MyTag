@@ -5,21 +5,40 @@
 # gtk4, libadwaita, python-gobject, python-pillow y python-mutagen
 # instalados vía pacman (ver packaging/windows/bootstrap.sh).
 
+import os
+import shutil
 from pathlib import Path
 
 ROOT = Path.cwd().resolve()
 ICON = ROOT / "packaging" / "windows" / "com.maestebanc.MyTag.ico"
 ENTRYPOINT = ROOT / "packaging" / "windows" / "run_mytag.py"
 
+extra_binaries = []
+for bin_name in ("flac", "fpcalc"):
+    found = shutil.which(f"{bin_name}.exe") or shutil.which(bin_name)
+    if not found:
+        p = Path(os.environ.get("MINGW_PREFIX", "C:/msys64/mingw64")) / "bin" / f"{bin_name}.exe"
+        if p.is_file():
+            found = str(p)
+    if found:
+        extra_binaries.append((found, "."))
+
+extra_datas = [
+    (str(ROOT / "mytag" / "resources" / "icons"), "mytag/resources/icons"),
+    (str(ROOT / "data" / "icons"), "data/icons"),
+    (str(ROOT / "LICENSE"), "."),
+]
+
+mingw_prefix = Path(os.environ.get("MINGW_PREFIX", "C:/msys64/mingw64"))
+etc_fonts = mingw_prefix / "etc" / "fonts"
+if etc_fonts.is_dir():
+    extra_datas.append((str(etc_fonts), "etc/fonts"))
+
 a = Analysis(
     [str(ENTRYPOINT)],
     pathex=[str(ROOT)],
-    binaries=[],
-    datas=[
-        (str(ROOT / "mytag" / "resources" / "icons"), "mytag/resources/icons"),
-        (str(ROOT / "data" / "icons"), "data/icons"),
-        (str(ROOT / "LICENSE"), "."),
-    ],
+    binaries=extra_binaries,
+    datas=extra_datas,
     hiddenimports=[
         "mytag",
         "mytag.app",
