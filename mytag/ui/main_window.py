@@ -13,7 +13,7 @@ gi.require_version("Gdk", "4.0")
 gi.require_version("Pango", "1.0")
 from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk, Pango
 
-from .. import acoustid, config, i18n, integrity
+from .. import __version__, acoustid, config, i18n, integrity
 from ..audio_track import AudioTrack
 from ..constants import SUPPORTED_EXTENSIONS
 from ..cover_utils import resize_image_bytes_exact
@@ -187,7 +187,7 @@ def _make_status_column(fixed_width: int = 36) -> Gtk.ColumnViewColumn:
 
 class MainWindow(Adw.ApplicationWindow):
     def __init__(self, app: Adw.Application) -> None:
-        super().__init__(application=app, title="MyTag")
+        super().__init__(application=app, title=f"MyTag {__version__}")
 
         cfg = config.load_config()
         w = cfg.get("window_width", DEFAULT_WINDOW_WIDTH)
@@ -309,7 +309,7 @@ class MainWindow(Adw.ApplicationWindow):
     def _build_headerbar(self) -> Adw.HeaderBar:
         header = Adw.HeaderBar()
 
-        self.window_title = Adw.WindowTitle(title=i18n.t("app.title"), subtitle="")
+        self.window_title = Adw.WindowTitle(title=f"{i18n.t('app.title')} {__version__}", subtitle="")
         header.set_title_widget(self.window_title)
 
         header.pack_start(self._build_open_menu_button())
