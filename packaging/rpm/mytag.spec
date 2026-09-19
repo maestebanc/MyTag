@@ -68,6 +68,7 @@ gtk-update-icon-cache -q /usr/share/icons/hicolor &>/dev/null || :
 - Automatic audio file integrity check on import with background async verification.
 - Clear error icons, tooltip diagnostics, and top-of-table sorting for corrupt files.
 - Dedicated Disc Number column enabled by default with numeric sorting.
+- Application title bar displays program name and active version number.
 - Python 3.14 compatibility and dynamic sitelib detection.
 
 * Fri Sep 18 2026 Miguel Angel Esteban - 0.62.0-1

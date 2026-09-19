@@ -72,6 +72,7 @@
           <li>Corrupt file warning dialog with options to review or remove corrupt files immediately.</li>
           <li>Integrity check toggle in Preferences dialog under File Options.</li>
           <li>Dedicated Disc Number column enabled by default in the song table with natural numeric sorting.</li>
+          <li>Application title bar displays the program name and active version number.</li>
           <li>Python 3.14 compatibility and dynamic sitelib packaging for Fedora 44.</li>
         </ul>
       </description>
