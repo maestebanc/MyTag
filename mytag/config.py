@@ -52,6 +52,15 @@ def _detect_system_language() -> str:
             code = part.split(".")[0].split("_")[0].lower()
             if code in SUPPORTED_LANGUAGES:
                 return code
+    try:
+        import locale
+        loc = locale.getlocale()[0]
+        if loc:
+            code = loc.split("_")[0].lower()
+            if code in SUPPORTED_LANGUAGES:
+                return code
+    except Exception:
+        pass
     return DEFAULT_LANGUAGE_FALLBACK
 
 

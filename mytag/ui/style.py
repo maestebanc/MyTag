@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import sys
 
 import gi
 
@@ -24,16 +25,18 @@ def apply_theme(theme: str) -> None:
 
 APP_ID = "com.maestebanc.MyTag"
 
-# Cuando se ejecuta desde el propio repositorio (./run.sh) los iconos no
-# están instalados en el tema de iconos del sistema; en un paquete
-# (deb/rpm/flatpak) sí lo estarán en /usr/share/icons, donde GTK ya busca
-# por defecto, y esta ruta extra simplemente no existirá.
-_REPO_ICON_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "icons"
-)
-_INTERNAL_ICON_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "resources", "icons"
-)
+def _get_icon_dirs() -> list[str]:
+    dirs: list[str] = []
+    # Entorno congelado de PyInstaller (sys._MEIPASS)
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        dirs.append(os.path.join(sys._MEIPASS, "data", "icons"))
+        dirs.append(os.path.join(sys._MEIPASS, "mytag", "resources", "icons"))
+    # Árbol de directorios de desarrollo / repositorio
+    root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    dirs.append(os.path.join(root_dir, "data", "icons"))
+    internal_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "resources", "icons")
+    dirs.append(internal_dir)
+    return [d for d in dirs if os.path.isdir(d)]
 
 _icon_theme_registered: bool = False
 
@@ -46,10 +49,8 @@ def register_icon_theme() -> None:
     if not display:
         return
     theme = Gtk.IconTheme.get_for_display(display)
-    if os.path.isdir(_REPO_ICON_DIR):
-        theme.add_search_path(_REPO_ICON_DIR)
-    if os.path.isdir(_INTERNAL_ICON_DIR):
-        theme.add_search_path(_INTERNAL_ICON_DIR)
+    for icon_dir in _get_icon_dirs():
+        theme.add_search_path(icon_dir)
     _icon_theme_registered = True
 
 # Estilo visual refinado para GNOME / Libadwaita

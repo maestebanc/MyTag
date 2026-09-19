@@ -9,9 +9,10 @@ from pathlib import Path
 
 ROOT = Path.cwd().resolve()
 ICON = ROOT / "packaging" / "windows" / "com.maestebanc.MyTag.ico"
+ENTRYPOINT = ROOT / "packaging" / "windows" / "run_mytag.py"
 
 a = Analysis(
-    [str(ROOT / "mytag" / "__main__.py")],
+    [str(ENTRYPOINT)],
     pathex=[str(ROOT)],
     binaries=[],
     datas=[
@@ -20,7 +21,36 @@ a = Analysis(
         (str(ROOT / "LICENSE"), "."),
     ],
     hiddenimports=[
+        "mytag",
+        "mytag.app",
+        "mytag.config",
+        "mytag.audio_track",
+        "mytag.i18n",
+        "mytag.integrity",
+        "mytag.acoustid",
+        "mytag.cover_search",
+        "mytag.cover_types",
+        "mytag.cover_utils",
+        "mytag.itunes",
+        "mytag.musicbrainz",
+        "mytag.rename_pattern",
+        "mytag.natural_sort",
+        "mytag.ui.main_window",
+        "mytag.ui.style",
+        "mytag.ui.tag_editor",
+        "mytag.ui.cover_panel",
+        "mytag.ui.track_item",
+        "mytag.ui.preferences_dialog",
+        "mytag.ui.rename_dialog",
+        "mytag.ui.fingerprint_dialog",
+        "mytag.ui.cover_search_dialog",
+        "mytag.ui.resize_cover_dialog",
+        "mytag.ui.shortcuts_dialog",
+        "mytag.ui.about_dialog",
+        "mytag.ui.feature_guide_dialog",
+        "mytag.ui.batch_fingerprint_dialog",
         "PIL",
+        "PIL.Image",
         "mutagen",
         "mutagen.flac",
         "mutagen.id3",
