@@ -33,6 +33,7 @@ DEFAULTS = {
     "theme": "system",  # "system", "light" o "dark"
     "autonumber_zero_padding": False,
     "default_rename_pattern": "%tracknumber% - %artist% - %title%",
+    "check_integrity_on_import": True,
     "columns": DEFAULT_COLUMNS,
     "column_order": DEFAULT_COLUMN_ORDER,
     "window_width": 1260,

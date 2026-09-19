@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import threading
 from typing import Any
 
 import gi
@@ -127,7 +128,7 @@ def _make_column(
 
 def _make_status_column(fixed_width: int = 36) -> Gtk.ColumnViewColumn:
     """Columna estrecha con un icono de aviso si al tema le falta portada,
-    año o género (indicador de "completitud" de un vistazo)."""
+    año o género (indicador de "completitud" de un vistazo) o error de integridad."""
     factory = Gtk.SignalListItemFactory()
 
     def on_setup(_factory, list_item: Gtk.ListItem) -> None:
@@ -142,6 +143,16 @@ def _make_status_column(fixed_width: int = 36) -> Gtk.ColumnViewColumn:
         item = list_item.get_item()
 
         def update(*_args) -> None:
+            err = getattr(item.track, "integrity_error", None)
+            if err:
+                image.remove_css_class("track-warning-icon")
+                image.add_css_class("track-error-icon")
+                image.set_from_icon_name("dialog-error-symbolic")
+                image.set_tooltip_text(f"{i18n.t('integrity.error_tooltip')}: {err}")
+                return
+
+            image.remove_css_class("track-error-icon")
+            image.add_css_class("track-warning-icon")
             missing = item.get_property("missing-fields")
             if missing:
                 fields = ", ".join(i18n.t(f"completeness.{code}") for code in missing.split(","))
@@ -152,14 +163,15 @@ def _make_status_column(fixed_width: int = 36) -> Gtk.ColumnViewColumn:
                 image.set_tooltip_text("")
 
         update()
-        list_item.mytag_handler_id = item.connect("notify::missing-fields", update)
-        list_item.mytag_handler_item = item
+        h1 = item.connect("notify::missing-fields", update)
+        h2 = item.connect("notify::integrity-error", update)
+        list_item.mytag_handlers = [(item, h1), (item, h2)]
 
     def on_unbind(_factory, list_item: Gtk.ListItem) -> None:
-        item = getattr(list_item, "mytag_handler_item", None)
-        handler_id = getattr(list_item, "mytag_handler_id", None)
-        if item is not None and handler_id is not None:
-            item.disconnect(handler_id)
+        handlers = getattr(list_item, "mytag_handlers", [])
+        for obj, handler_id in handlers:
+            obj.disconnect(handler_id)
+        list_item.mytag_handlers = []
 
     factory.connect("setup", on_setup)
     factory.connect("bind", on_bind)
@@ -169,7 +181,7 @@ def _make_status_column(fixed_width: int = 36) -> Gtk.ColumnViewColumn:
     column.set_fixed_width(fixed_width)
     column.set_resizable(False)
     column.set_expand(False)
-    expr = Gtk.PropertyExpression.new(TrackItem, None, "missing_fields")
+    expr = Gtk.PropertyExpression.new(TrackItem, None, "status_sort_key")
     sorter = Gtk.StringSorter.new(expr)
     column.set_sorter(sorter)
     return column
@@ -492,7 +504,6 @@ class MainWindow(Adw.ApplicationWindow):
         add_item(i18n.t("menu.autonumber"), "view-list-ordered-symbolic", self.autonumber_selected)
         add_item(i18n.t("menu.rename_from_tags"), "document-edit-symbolic", self.rename_selected_from_tags)
         add_item(i18n.t("menu.fill_missing_covers"), "image-x-generic-symbolic", self.fill_missing_covers)
-        add_item(i18n.t("menu.check_integrity"), "emblem-ok-symbolic", self.check_integrity_selected)
         box.append(Gtk.Separator())
         add_item(i18n.t("menu.revert_selected"), "document-revert-symbolic", self.revert_selected)
         add_item(i18n.t("toolbar.remove"), "list-remove-symbolic", self.remove_selected_rows)
@@ -1152,6 +1163,7 @@ class MainWindow(Adw.ApplicationWindow):
         paths = sorted(paths, key=natural_sort_key)
         existing = {t.path for t in self.tracks}
         errors = []
+        new_tracks = []
         added = 0
         for path in paths:
             if path in existing:
@@ -1163,6 +1175,7 @@ class MainWindow(Adw.ApplicationWindow):
                 continue
             self.tracks.append(track)
             self.list_store.append(TrackItem(track))
+            new_tracks.append(track)
             added += 1
 
         if errors:
@@ -1177,6 +1190,13 @@ class MainWindow(Adw.ApplicationWindow):
             GLib.idle_add(self._adjust_initial_paned_position)
         self._update_list_status()
         self._update_title_state()
+
+        if new_tracks and config.load_config().get("check_integrity_on_import", True):
+            threading.Thread(
+                target=self._check_integrity_worker,
+                args=(new_tracks,),
+                daemon=True,
+            ).start()
 
     def _refresh_row_for_track(self, track: AudioTrack) -> None:
         index = self.tracks.index(track)
@@ -1301,22 +1321,42 @@ class MainWindow(Adw.ApplicationWindow):
         self._update_title_state()
         self._toast(i18n.t("toast.reverted", n=len(tracks)))
 
-    def check_integrity_selected(self) -> None:
-        tracks = self._selected_tracks()
-        if not tracks:
-            return
-        if not integrity.is_available():
-            self._show_message(i18n.t("integrity.title"), i18n.t("integrity.flac_not_found"))
-            return
-        problems = []
+    def _check_integrity_worker(self, tracks: list[AudioTrack]) -> None:
+        corrupted = []
         for track in tracks:
+            if track not in self.tracks:
+                continue
+            if not track.path.lower().endswith((".flac", ".mp3")):
+                continue
             ok, message = integrity.check_integrity(track.path)
             if not ok:
-                problems.append(f"{track.filename}: {message}")
-        if problems:
-            self._show_message(i18n.t("integrity.problems_title"), "\n".join(problems))
-        else:
-            self._toast(i18n.t("integrity.all_ok", n=len(tracks)))
+                track.integrity_error = message
+                corrupted.append((track, message))
+                GLib.idle_add(self._on_track_integrity_updated, track)
+            else:
+                if track.integrity_error:
+                    track.integrity_error = None
+                    GLib.idle_add(self._on_track_integrity_updated, track)
+
+        if corrupted:
+            GLib.idle_add(self._notify_integrity_problems, corrupted)
+
+    def _on_track_integrity_updated(self, track: AudioTrack) -> None:
+        if track in self.tracks:
+            try:
+                idx = self.tracks.index(track)
+                item = self.list_store.get_item(idx)
+                if item:
+                    item.notify("integrity-error")
+                    item.notify("status-sort-key")
+                    item.notify("missing-fields")
+            except (ValueError, IndexError):
+                pass
+
+    def _notify_integrity_problems(self, corrupted: list[tuple[AudioTrack, str]]) -> None:
+        lines = [f"• {t.filename}: {msg}" for t, msg in corrupted]
+        summary = i18n.t("integrity.problems_found_desc", n=len(corrupted))
+        self._show_message(i18n.t("integrity.problems_title"), f"{summary}\n\n" + "\n".join(lines))
 
     def identify_selected_by_fingerprint(self) -> None:
         tracks = self._selected_tracks()

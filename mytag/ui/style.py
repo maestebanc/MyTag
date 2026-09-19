@@ -199,6 +199,11 @@ editablelabel.cover-size-label text {
     color: @warning_color;
 }
 
+/* Icono de error en pistas corruptas o con fallo de integridad */
+.track-error-icon {
+    color: @error_color;
+}
+
 /* Resaltado durante arrastrar y soltar (Drag & Drop) */
 .drop-highlight {
     outline: 2px solid @accent_bg_color;

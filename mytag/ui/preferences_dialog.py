@@ -45,6 +45,7 @@ class PreferencesDialog(Adw.Dialog):
         self._pending_theme = saved_config.get("theme", "system")
         self._pending_zero_padding = saved_config.get("autonumber_zero_padding", False)
         self._pending_rename_pattern = saved_config.get("default_rename_pattern", "%tracknumber% - %artist% - %title%")
+        self._pending_check_integrity = saved_config.get("check_integrity_on_import", True)
 
         toolbar_view = Adw.ToolbarView()
         header = Adw.HeaderBar()
@@ -56,6 +57,7 @@ class PreferencesDialog(Adw.Dialog):
 
         general_group = Adw.PreferencesGroup(title=i18n.t("prefs.general_group"))
         general_group.add(self._build_language_row())
+        general_group.add(self._build_integrity_row())
         page.add(general_group)
 
         appearance_group = Adw.PreferencesGroup(title=i18n.t("prefs.appearance_group"))
@@ -146,6 +148,22 @@ class PreferencesDialog(Adw.Dialog):
         row.connect("notify::selected", on_changed)
         return row
 
+    def _build_integrity_row(self) -> Adw.SwitchRow:
+        row = Adw.SwitchRow(
+            title=i18n.t("prefs.check_integrity_on_import"),
+            subtitle=i18n.t("prefs.check_integrity_on_import_subtitle"),
+        )
+        icon = Gtk.Image.new_from_icon_name("emblem-ok-symbolic")
+        icon.add_css_class("dim-label")
+        row.add_prefix(icon)
+        row.set_active(self._pending_check_integrity)
+
+        def on_changed(r: Adw.SwitchRow, _pspec) -> None:
+            self._pending_check_integrity = r.get_active()
+
+        row.connect("notify::active", on_changed)
+        return row
+
     def _build_scale_rows(self, saved_scale: int) -> tuple[Adw.ComboRow, Adw.EntryRow, Gtk.Revealer]:
         options = [f"{p}%" for p in SCALE_PRESETS] + [i18n.t("prefs.ui_scale_custom_option")]
         model = Gtk.StringList.new(options)
@@ -210,6 +228,7 @@ class PreferencesDialog(Adw.Dialog):
         cfg["theme"] = self._pending_theme
         cfg["autonumber_zero_padding"] = self._pending_zero_padding
         cfg["default_rename_pattern"] = self._pending_rename_pattern
+        cfg["check_integrity_on_import"] = self._pending_check_integrity
         cfg.pop("acoustid_api_key", None)
         config.save_config(cfg)
         apply_ui_scale(self._pending_scale)

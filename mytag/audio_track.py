@@ -39,6 +39,7 @@ class AudioTrack:
         self.path = path
         self.is_mp3 = path.lower().endswith(".mp3")
         self.dirty_tags = False
+        self.integrity_error: str | None = None
         # None -> sin cambio pendiente; (data, mime) -> nueva portada pendiente;
         # False -> pendiente de eliminar la portada.
         self.pending_cover: tuple[bytes, str] | bool | None = None

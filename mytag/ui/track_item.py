@@ -11,7 +11,7 @@ from gi.repository import GObject
 from ..audio_track import AudioTrack
 from ..constants import TAG_KEYS
 
-_PROPERTY_NAMES = ["filename", "missing-fields", "track_order_key"] + [key.lower() for key in TAG_KEYS]
+_PROPERTY_NAMES = ["filename", "missing-fields", "integrity-error", "status-sort-key", "track_order_key"] + [key.lower() for key in TAG_KEYS]
 
 
 class TrackItem(GObject.Object):
@@ -80,6 +80,20 @@ class TrackItem(GObject.Object):
         if not self.track.get_cover_bytes():
             missing.append("cover")
         return ",".join(missing)
+
+    @GObject.Property(type=str)
+    def integrity_error(self) -> str:
+        return self.track.integrity_error or ""
+
+    @GObject.Property(type=str)
+    def status_sort_key(self) -> str:
+        """Clave de ordenación para la columna de estado: errores primero (0_), incompletos (1_), correctos (2_)."""
+        if self.track.integrity_error:
+            return f"0_error_{self.track.integrity_error}"
+        missing = self.missing_fields
+        if missing:
+            return f"1_missing_{missing}"
+        return "2_ok"
 
     def refresh(self) -> None:
         """Notifica a las vistas ligadas que los valores han cambiado."""

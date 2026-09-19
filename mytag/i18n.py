@@ -110,11 +110,6 @@ STRINGS: dict[str, dict[str, str]] = {
         "en": "Identify by audio fingerprint…",
         "ca": "Identifica per empremta d'àudio…",
     },
-    "menu.check_integrity": {
-        "es": "Verificar integridad",
-        "en": "Verify integrity",
-        "ca": "Verifica la integritat",
-    },
     "menu.rename_from_tags": {
         "es": "Renombrar según etiquetas…",
         "en": "Rename from tags…",
@@ -449,6 +444,16 @@ STRINGS: dict[str, dict[str, str]] = {
         "en": "MyTag needs to restart to apply the new language.",
         "ca": "El MyTag s'ha de reiniciar per aplicar el nou idioma.",
     },
+    "prefs.check_integrity_on_import": {
+        "es": "Comprobar integridad al importar",
+        "en": "Check integrity on import",
+        "ca": "Comprova la integritat en importar",
+    },
+    "prefs.check_integrity_on_import_subtitle": {
+        "es": "Verifica en segundo plano los archivos FLAC y MP3 y avisa si hay errores",
+        "en": "Background-checks FLAC and MP3 files and alerts if corruption is detected",
+        "ca": "Verifica en segon pla els fitxers FLAC i MP3 i avisa si hi ha errors",
+    },
     "prefs.appearance_group": {"es": "Apariencia", "en": "Appearance", "ca": "Aparença"},
     "prefs.ui_scale": {
         "es": "Escala de la interfaz",
@@ -544,6 +549,16 @@ STRINGS: dict[str, dict[str, str]] = {
         "es": "Problemas de integridad encontrados",
         "en": "Integrity problems found",
         "ca": "S'han trobat problemes d'integritat",
+    },
+    "integrity.problems_found_desc": {
+        "es": "Se han detectado problemas de integridad en {n} archivo(s):",
+        "en": "Integrity problems detected in {n} file(s):",
+        "ca": "S'han detectat problemes d'integritat en {n} fitxer(s):",
+    },
+    "integrity.error_tooltip": {
+        "es": "Error de integridad",
+        "en": "Integrity error",
+        "ca": "Error d'integritat",
     },
     "integrity.all_ok": {
         "es": "{n} archivo(s) verificado(s) sin problemas.",
