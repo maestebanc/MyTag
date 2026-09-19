@@ -1,0 +1,90 @@
+app-id: com.maestebanc.MyTag
+runtime: org.gnome.Platform
+runtime-version: "50"
+sdk: org.gnome.Sdk
+command: mytag
+
+finish-args:
+  - --share=network
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  - --filesystem=home
+  - --filesystem=xdg-music
+
+cleanup:
+  - /include
+  - /lib/pkgconfig
+  - /lib/cmake
+  - /share/man
+  - /share/doc
+  - '*.a'
+  - '*.la'
+
+modules:
+  - name: flac
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DBUILD_PROGRAMS=ON
+      - -DBUILD_EXAMPLES=OFF
+      - -DBUILD_TESTING=OFF
+      - -DBUILD_DOCS=OFF
+    sources:
+      - type: archive
+        url: https://github.com/xiph/flac/releases/download/1.5.0/flac-1.5.0.tar.xz
+        sha256: f2c1c76592a82ffff8413ba3c4a1299b6c7ab06c734dee03fd88630485c2b920
+
+  - name: chromaprint
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+      - -DBUILD_TOOLS=ON
+      - -DBUILD_TESTS=OFF
+    sources:
+      - type: archive
+        url: https://github.com/acoustid/chromaprint/releases/download/v1.6.1/chromaprint-1.6.1.tar.gz
+        sha256: 3368805af0ee47b9df74df10b5001a44569e01df2844dab520031720dde9ad23
+
+  - name: python3-mutagen
+    buildsystem: simple
+    build-commands:
+      - pip3 install --verbose --no-index --no-build-isolation --find-links="file://${PWD}" --prefix=${FLATPAK_DEST} mutagen
+    sources:
+      - type: file
+        url: https://files.pythonhosted.org/packages/df/70/1675da133ea92227da41bf5b24e1c66be597ff736a1533ade41da986852f/mutagen-1.48.1.tar.gz
+        sha256: 8f95637ab9f6f305cec6bd1294e197debe207998e3e068596563c74f86b0a173
+
+  - name: python3-pillow
+    buildsystem: simple
+    build-commands:
+      - pip3 install --verbose --no-index --find-links="file://${PWD}" --prefix=${FLATPAK_DEST} pillow
+    sources:
+      - type: file
+        url: https://files.pythonhosted.org/packages/f7/62/de5bdd77d935331f4f802edc11e4d82950f642caad6cb2f949837b8560e2/pillow-12.3.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+        sha256: 0847a763afefb695bc912d7c131e7e0632d4edc1d8698f58ddabec8e46b8b6d3
+        only-arches: [x86_64]
+      - type: file
+        url: https://files.pythonhosted.org/packages/1f/01/e18aff37cb0b4aac47ac90f016d347a49aca667ef97f190b06ac2aabc928/pillow-12.3.0-cp313-cp313-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl
+        sha256: f7401aebd7f581d7f83a439d87d474999317ee099218e5ad25d125290990ba65
+        only-arches: [aarch64]
+
+  - name: mytag
+    buildsystem: simple
+    build-commands:
+      - pip3 install --verbose --no-index --no-build-isolation --no-deps --prefix=${FLATPAK_DEST} .
+      - install -Dm644 data/com.maestebanc.MyTag.desktop ${FLATPAK_DEST}/share/applications/com.maestebanc.MyTag.desktop
+      - install -Dm644 data/com.maestebanc.MyTag.metainfo.xml ${FLATPAK_DEST}/share/metainfo/com.maestebanc.MyTag.metainfo.xml
+      - for size in 16 22 24 32 48 64 128 256 512; do install -Dm644 data/icons/hicolor/${size}x${size}/apps/com.maestebanc.MyTag.png ${FLATPAK_DEST}/share/icons/hicolor/${size}x${size}/apps/com.maestebanc.MyTag.png; done
+      - install -Dm644 data/icons/hicolor/scalable/apps/com.maestebanc.MyTag.svg ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps/com.maestebanc.MyTag.svg
+    sources:
+      - type: dir
+        path: ../..
+        skip:
+          - .git
+          - .venv
+          - packaging/build
+          - packaging/dist
+          - packaging/flatpak/.flatpak-builder

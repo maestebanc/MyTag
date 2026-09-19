@@ -14,8 +14,13 @@ OUT_DIR="$REPO_ROOT/packaging/dist"
 APP_ID="com.maestebanc.MyTag"
 VERSION="$(python3 -c "import tomllib; print(tomllib.load(open('$REPO_ROOT/pyproject.toml', 'rb'))['project']['version'])")"
 
+MANIFEST="${1:-$MANIFEST_DIR/$APP_ID.local.yml}"
+if [ ! -f "$MANIFEST" ]; then
+    MANIFEST="$MANIFEST_DIR/$APP_ID.yml"
+fi
+
 cd "$MANIFEST_DIR"
-flatpak-builder --force-clean --disable-rofiles-fuse --user --repo="$REPO_DIR" "$BUILD_DIR" "$APP_ID.yml"
+flatpak-builder --force-clean --disable-rofiles-fuse --user --repo="$REPO_DIR" "$BUILD_DIR" "$MANIFEST"
 
 mkdir -p "$OUT_DIR"
 flatpak build-bundle "$REPO_DIR" "$OUT_DIR/mytag-${VERSION}.flatpak" "$APP_ID"
