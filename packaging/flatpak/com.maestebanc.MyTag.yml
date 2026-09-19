@@ -6,11 +6,21 @@ command: mytag
 
 finish-args:
   - --share=network
+  - --share=ipc
   - --socket=wayland
   - --socket=fallback-x11
   - --device=dri
   - --filesystem=home
   - --filesystem=xdg-music
+
+cleanup:
+  - /include
+  - /lib/pkgconfig
+  - /lib/cmake
+  - /share/man
+  - /share/doc
+  - '*.a'
+  - '*.la'
 
 modules:
   - name: flac
