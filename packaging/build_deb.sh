@@ -3,7 +3,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VERSION="0.62.0-1"
+VERSION="$(python3 -c "import tomllib; print(tomllib.load(open('$REPO_ROOT/pyproject.toml', 'rb'))['project']['version'])")-1"
 WORK="$REPO_ROOT/packaging/build/deb/mytag"
 OUT_DIR="$REPO_ROOT/packaging/dist"
 

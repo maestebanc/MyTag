@@ -61,6 +61,21 @@
   <url type="homepage">https://github.com/maestebanc/MyTag</url>
 
   <releases>
+    <release version="0.62.1" date="2026-09-19">
+      <description>
+        <p>
+          Automatic audio integrity verification, disc number column, and platform updates:
+        </p>
+        <ul>
+          <li>Automatic file integrity check on import: background async verification for FLAC and MP3 audio streams.</li>
+          <li>Visual error indicators: corrupt files display an error icon with tooltip details and sort to the top of the table.</li>
+          <li>Corrupt file warning dialog with options to review or remove corrupt files immediately.</li>
+          <li>Integrity check toggle in Preferences dialog under File Options.</li>
+          <li>Dedicated Disc Number column enabled by default in the song table with natural numeric sorting.</li>
+          <li>Python 3.14 compatibility and dynamic sitelib packaging for Fedora 44.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.62.0" date="2026-09-18">
       <description>
         <p>

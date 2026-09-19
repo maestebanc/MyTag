@@ -1,8 +1,8 @@
 %define srcdir %{getenv:MYTAG_SRCDIR}
-%define pysitelib /usr/lib/python3.13/site-packages
+%define pysitelib %(python3 -c "import sys; print(f'/usr/lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages')")
 
 Name:           mytag
-Version:        0.62.0
+Version:        0.62.1
 Release:        1%{?dist}
 Summary:        Edit tags and cover art on your FLAC and MP3 music files
 License:        MIT
@@ -21,10 +21,6 @@ MyTag is a simple, focused tag and cover art editor for FLAC and MP3 music
 files on Linux. Load a file or a whole folder of albums at once,
 edit as many tracks together as you like, and search for cover art
 online (MusicBrainz and iTunes) without leaving the app.
-
-This package targets distributions using Python 3.13 at
-%{pysitelib}; adjust that path when building for a different Python
-version.
 
 %install
 rm -rf %{buildroot}
@@ -68,6 +64,12 @@ update-desktop-database -q /usr/share/applications &>/dev/null || :
 gtk-update-icon-cache -q /usr/share/icons/hicolor &>/dev/null || :
 
 %changelog
+* Sat Sep 19 2026 Miguel Angel Esteban - 0.62.1-1
+- Automatic audio file integrity check on import with background async verification.
+- Clear error icons, tooltip diagnostics, and top-of-table sorting for corrupt files.
+- Dedicated Disc Number column enabled by default with numeric sorting.
+- Python 3.14 compatibility and dynamic sitelib detection.
+
 * Fri Sep 18 2026 Miguel Angel Esteban - 0.62.0-1
 - Interactive drag-and-drop column reordering with visual drop indicators.
 - Column customization: toggle visibility, adjust widths, and preserve custom order across sessions.
