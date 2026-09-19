@@ -1,0 +1,79 @@
+name: Build Windows executable
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build MyTag Windows
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up MSYS2 (MINGW64)
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+
+      - name: Install GTK4 / Libadwaita / PyGObject / PyInstaller
+        run: ./packaging/windows/bootstrap.sh
+
+      - name: Read version from pyproject.toml
+        run: |
+          VERSION=$(grep -m1 '^version' pyproject.toml | sed -E 's/version = "(.*)"/\1/')
+          echo "MYTAG_VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller packaging/windows/build.spec --distpath dist --workpath build --noconfirm
+
+      - name: Package ZIP and Setup EXE
+        shell: pwsh
+        run: |
+          # 1. Crear ZIP portable con dist/MyTag
+          Compress-Archive -Path dist/MyTag -DestinationPath "dist/MyTag-$env:MYTAG_VERSION-windows-x64.zip"
+
+          # 2. Instalar Inno Setup y compilar instalador .exe
+          choco install innosetup --no-progress -y
+          $isccPath = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $isccPath)) {
+            $isccPath = (Get-Command iscc.exe -ErrorAction SilentlyContinue).Source
+          }
+          & $isccPath /DMyAppVersion="$env:MYTAG_VERSION" packaging/windows/installer.iss
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: MyTag-${{ env.MYTAG_VERSION }}-windows
+          path: |
+            dist/MyTag-*-windows-x64.zip
+            dist/MyTag-*-setup.exe
+
+      - name: Upload to GitHub Release
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v${MYTAG_VERSION}"
+          echo "Comprobando release $TAG..."
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Subiendo instalador y zip a la release $TAG..."
+            gh release upload "$TAG" \
+              dist/MyTag-${MYTAG_VERSION}-setup.exe \
+              dist/MyTag-${MYTAG_VERSION}-windows-x64.zip \
+              --clobber
+            echo "Archivos subidos exitosamente a $TAG."
+          else
+            echo "Release $TAG no encontrada para adjuntar directamente."
+          fi
