@@ -22,8 +22,8 @@ DEFAULT_COLUMNS = {
     "albumartist": {"visible": False, "width": 200},
     "date": {"visible": False, "width": 80},
     "genre": {"visible": False, "width": 130},
-    "discnumber": {"visible": False, "width": 65},
     "filename": {"visible": False, "width": 260},
+    "discnumber": {"visible": True, "width": 65},
 }
 
 DEFAULT_COLUMN_ORDER = list(DEFAULT_COLUMNS.keys())

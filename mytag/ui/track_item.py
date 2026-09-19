@@ -58,6 +58,12 @@ class TrackItem(GObject.Object):
         return self.track.get_tag("DISCNUMBER")
 
     @GObject.Property(type=int)
+    def disc_order_key(self) -> int:
+        raw_disc = self.track.get_tag("DISCNUMBER")
+        disc_nums = re.findall(r"\d+", raw_disc or "")
+        return int(disc_nums[0]) if disc_nums else 0
+
+    @GObject.Property(type=int)
     def track_order_key(self) -> int:
         raw_disc = self.track.get_tag("DISCNUMBER")
         disc_nums = re.findall(r"\d+", raw_disc or "")

@@ -45,8 +45,8 @@ COLUMN_SPEC = [
     ("albumartist", "column.albumartist", True, False),
     ("date", "column.date", True, True),
     ("genre", "column.genre", True, False),
-    ("discnumber", "column.disc", True, True),
     ("filename", "column.filename", True, False),
+    ("discnumber", "column.disc", True, True),
 ]
 
 COLUMN_SPEC_MAP = {spec[0]: spec for spec in COLUMN_SPEC}
@@ -64,7 +64,7 @@ def _make_column(
     def on_setup(_factory, list_item: Gtk.ListItem) -> None:
         label = Gtk.Label(xalign=0.5 if center else 0.0)
         label.set_ellipsize(Pango.EllipsizeMode.END)
-        if prop_name == "tracknumber":
+        if prop_name in ("tracknumber", "discnumber"):
             label.add_css_class("track-number-label")
             label.set_margin_start(2)
             label.set_margin_end(2)
@@ -101,10 +101,8 @@ def _make_column(
         expr = Gtk.PropertyExpression.new(TrackItem, None, "track_order_key")
         column.set_sorter(Gtk.NumericSorter.new(expr))
     elif prop_name == "discnumber":
-        expr = Gtk.PropertyExpression.new(TrackItem, None, "discnumber")
-        sorter = Gtk.StringSorter.new(expr)
-        sorter.set_ignore_case(True)
-        column.set_sorter(sorter)
+        expr = Gtk.PropertyExpression.new(TrackItem, None, "disc_order_key")
+        column.set_sorter(Gtk.NumericSorter.new(expr))
     elif prop_name == "filename":
         def _compare_filename(a, b) -> int:
             if a is None or b is None:
