@@ -7,8 +7,8 @@ arch=('any')
 url="https://github.com/maestebanc/MyTag"
 license=('MIT')
 depends=('python' 'python-mutagen' 'python-pillow' 'python-gobject' 'gtk4' 'libadwaita')
-optdepends=('flac: integrity checking (Verify integrity)'
-            'chromaprint: audio fingerprint identification (Identify by audio fingerprint)')
+optdepends=('flac: audio stream integrity verification'
+            'chromaprint: audio fingerprint identification (AcoustID)')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/maestebanc/MyTag/archive/refs/tags/v$pkgver.tar.gz")
 sha256sums=('c8a8c8b96c8030d6f2e77984b1d2bf78e2f23439e5bb752f30b3178b5c70bae3')
 
