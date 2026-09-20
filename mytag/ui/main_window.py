@@ -1329,7 +1329,7 @@ class MainWindow(Adw.ApplicationWindow):
         for track in tracks:
             if track not in self.tracks:
                 continue
-            if not track.path.lower().endswith((".flac", ".mp3")):
+            if not track.path.lower().endswith(SUPPORTED_EXTENSIONS):
                 continue
             ok, message = integrity.check_integrity(track.path)
             if not ok:

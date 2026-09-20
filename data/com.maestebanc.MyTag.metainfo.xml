@@ -2,17 +2,17 @@
 <component type="desktop-application">
   <id>com.maestebanc.MyTag</id>
   <name>MyTag</name>
-  <summary>Edit tags and cover art on your FLAC and MP3 music files</summary>
-  <summary xml:lang="es">Edita las etiquetas y la portada de tus archivos FLAC y MP3</summary>
-  <summary xml:lang="ca">Edita les etiquetes i la portada dels teus fitxers FLAC i MP3</summary>
+  <summary>Edit tags and cover art on your music files</summary>
+  <summary xml:lang="es">Edita las etiquetas y la portada de tus archivos de música</summary>
+  <summary xml:lang="ca">Edita les etiquetes i la portada dels teus fitxers de música</summary>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT</project_license>
   <content_rating type="oars-1.1" />
 
   <description>
     <p>
-      MyTag is a simple, focused tag and cover art editor for FLAC and MP3 music
-      files on Linux. Load a single file or a whole folder of albums at
+      MyTag is a simple, focused tag and cover art editor for music files
+      on Linux. Load a single file or a whole folder of albums at
       once, see everything in a clean list, and edit as many tracks
       together as you like — MyTag always shows you when the selected
       tracks disagree on a value, so you never overwrite something by

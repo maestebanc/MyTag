@@ -52,9 +52,9 @@ STRINGS: dict[str, dict[str, str]] = {
         "ca": "Edita les etiquetes de la teva música",
     },
     "empty.description": {
-        "es": "Abre archivos de audio (FLAC, MP3) o arrastra carpetas directamente aquí para comenzar.",
-        "en": "Open audio files (FLAC, MP3) or drag folders directly here to get started.",
-        "ca": "Obre fitxers d'àudio (FLAC, MP3) o arrossega carpetes directament aquí per començar.",
+        "es": "Abre archivos de audio compatibles o arrastra carpetas directamente aquí para comenzar.",
+        "en": "Open supported audio files or drag folders directly here to get started.",
+        "ca": "Obre fitxers d'àudio compatibles o arrossega carpetes directament aquí per començar.",
     },
     "list.status_summary": {
         "es": "{total} tema(s)",
@@ -132,18 +132,18 @@ STRINGS: dict[str, dict[str, str]] = {
         "ca": "{n} canvi(s) sense desar",
     },
     "toast.startup": {
-        "es": "Abre archivos o una carpeta con FLAC o MP3 para empezar.",
-        "en": "Open files or a folder with FLAC or MP3 to get started.",
-        "ca": "Obre fitxers o una carpeta amb FLAC o MP3 per començar.",
+        "es": "Abre archivos de audio o una carpeta con música para empezar.",
+        "en": "Open audio files or a music folder to get started.",
+        "ca": "Obre fitxers d'àudio o una carpeta amb música per començar.",
     },
     # ---- diálogos de archivo ----
     "dialog.open_files.title": {"es": "Abrir archivos de audio", "en": "Open audio files", "ca": "Obre fitxers d'àudio"},
     "dialog.open_files.filter_name": {"es": "Archivos de audio compatibles (*.flac, *.mp3, *.m4a, *.ogg, *.opus)", "en": "Supported audio files (*.flac, *.mp3, *.m4a, *.ogg, *.opus)", "ca": "Fitxers d'àudio compatibles (*.flac, *.mp3, *.m4a, *.ogg, *.opus)"},
     "dialog.open_folder.title": {"es": "Abrir carpeta", "en": "Open folder", "ca": "Obre una carpeta"},
     "dialog.no_flac_found": {
-        "es": "No se encontraron archivos de audio compatibles (FLAC, MP3, M4A, OGG, OPUS) en esa carpeta.",
-        "en": "No supported audio files (FLAC, MP3, M4A, OGG, OPUS) were found in that folder.",
-        "ca": "No s'ha trobat cap fitxer d'àudio compatible (FLAC, MP3, M4A, OGG, OPUS) en aquesta carpeta.",
+        "es": "No se encontraron archivos de audio compatibles en esa carpeta.",
+        "en": "No supported audio files were found in that folder.",
+        "ca": "No s'ha trobat cap fitxer d'àudio compatible en aquesta carpeta.",
     },
     "dialog.load_errors_title": {
         "es": "Algunos archivos no se pudieron cargar",
@@ -450,9 +450,9 @@ STRINGS: dict[str, dict[str, str]] = {
         "ca": "Comprova la integritat en importar",
     },
     "prefs.check_integrity_on_import_subtitle": {
-        "es": "Verifica en segundo plano los archivos FLAC y MP3 y avisa si hay errores",
-        "en": "Background-checks FLAC and MP3 files and alerts if corruption is detected",
-        "ca": "Verifica en segon pla els fitxers FLAC i MP3 i avisa si hi ha errors",
+        "es": "Verifica en segundo plano los archivos de audio y avisa si hay errores",
+        "en": "Background-checks audio files and alerts if corruption is detected",
+        "ca": "Verifica en segon pla els fitxers d'àudio i avisa si hi ha errors",
     },
     "prefs.appearance_group": {"es": "Apariencia", "en": "Appearance", "ca": "Aparença"},
     "prefs.ui_scale": {
@@ -517,9 +517,9 @@ STRINGS: dict[str, dict[str, str]] = {
     },
     "menu.about": {"es": "Acerca de MyTag", "en": "About MyTag", "ca": "Quant al MyTag"},
     "about.comments": {
-        "es": "Edita etiquetas y portadas de tus archivos FLAC y MP3",
-        "en": "Edit tags and cover art on your FLAC and MP3 music files",
-        "ca": "Edita etiquetes i portades dels teus fitxers FLAC i MP3",
+        "es": "Edita etiquetas y portadas de tus archivos de música",
+        "en": "Edit tags and cover art on your music files",
+        "ca": "Edita etiquetes i portades dels teus fitxers de música",
     },
     "shortcuts.title": {"es": "Atajos de teclado", "en": "Keyboard Shortcuts", "ca": "Dreceres de teclat"},
     "shortcuts.group_general": {"es": "General", "en": "General", "ca": "General"},
@@ -725,9 +725,9 @@ STRINGS: dict[str, dict[str, str]] = {
         "ca": "Editor d'etiquetes i selector múltiple",
     },
     "guide.tags_desc": {
-        "es": "Edita metadatos completos en FLAC y MP3. En selecciones múltiples con valores distintos, un desplegable te muestra todos los valores existentes y te permite unificarlos en todas las pistas de un solo clic.",
-        "en": "Full metadata editing across FLAC and MP3. On multi-track selections with mixed values, a dropdown lets you view all values and unify them across all tracks in a single click.",
-        "ca": "Edita metadades completes a FLAC i MP3. En seleccions múltiples amb valors diferents, un desplegable et mostra tots els valors existents i et permet unificar-los a tots els temes d'un sol clic.",
+        "es": "Edita metadatos completos en todos los formatos de audio compatibles. En selecciones múltiples con valores distintos, un desplegable te muestra todos los valores existentes y te permite unificarlos en todas las pistas de un solo clic.",
+        "en": "Full metadata editing across all supported audio formats. On multi-track selections with mixed values, a dropdown lets you view all values and unify them across all tracks in a single click.",
+        "ca": "Edita metadades completes en tots els formats d'àudio compatibles. En seleccions múltiples amb valors diferents, un desplegable et mostra tots els valors existents i et permet unificar-los a tots els temes d'un sol clic.",
     },
     "guide.renaming_title": {
         "es": "Renombrado de archivos y autonumeración",
@@ -745,9 +745,9 @@ STRINGS: dict[str, dict[str, str]] = {
         "ca": "Verificació d'integritat d'àudio",
     },
     "guide.integrity_desc": {
-        "es": "Detecta archivos dañados validando el flujo de audio con 'flac --test' en pistas FLAC e inspeccionando tramas y cabeceras en archivos MP3 para asegurar que tu colección esté perfecta.",
-        "en": "Detects damaged audio files by verifying stream data via 'flac --test' on FLAC files and inspecting frames and headers on MP3 tracks.",
-        "ca": "Detecta fitxers danyats validant el flux d'àudio amb 'flac --test' en pistes FLAC i inspeccionant trames i capçaleres en fitxers MP3 per assegurar que la teva col·lecció estigui perfecta.",
+        "es": "Detecta archivos dañados validando el flujo y la estructura de los contenedores de audio para asegurar que tu colección esté perfecta.",
+        "en": "Detects damaged audio files by verifying audio streams and container integrity to ensure your collection is in perfect condition.",
+        "ca": "Detecta fitxers danyats validant el flux i l'estructura dels contenidors d'àudio per assegurar que la teva col·lecció estigui perfecta.",
     },
     "guide.context_title": {
         "es": "Menú contextual y acciones rápidas",
