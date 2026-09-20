@@ -15,7 +15,7 @@ TAG_KEYS = [
 
 COVER_SIZE = (500, 500)
 
-SUPPORTED_EXTENSIONS = (".flac", ".mp3")
+SUPPORTED_EXTENSIONS = (".flac", ".mp3", ".m4a", ".mp4", ".ogg", ".opus")
 
 # Clave de cliente de la aplicación registrada para AcoustID (pública)
 ACOUSTID_CLIENT_KEY = "paY8Ml6JIz"

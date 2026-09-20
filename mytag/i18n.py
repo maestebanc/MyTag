@@ -138,12 +138,12 @@ STRINGS: dict[str, dict[str, str]] = {
     },
     # ---- diálogos de archivo ----
     "dialog.open_files.title": {"es": "Abrir archivos de audio", "en": "Open audio files", "ca": "Obre fitxers d'àudio"},
-    "dialog.open_files.filter_name": {"es": "Archivos de audio (FLAC, MP3)", "en": "Audio files (FLAC, MP3)", "ca": "Fitxers d'àudio (FLAC, MP3)"},
+    "dialog.open_files.filter_name": {"es": "Archivos de audio compatibles (*.flac, *.mp3, *.m4a, *.ogg, *.opus)", "en": "Supported audio files (*.flac, *.mp3, *.m4a, *.ogg, *.opus)", "ca": "Fitxers d'àudio compatibles (*.flac, *.mp3, *.m4a, *.ogg, *.opus)"},
     "dialog.open_folder.title": {"es": "Abrir carpeta", "en": "Open folder", "ca": "Obre una carpeta"},
     "dialog.no_flac_found": {
-        "es": "No se encontraron archivos de audio (FLAC o MP3) en esa carpeta.",
-        "en": "No audio files (FLAC or MP3) were found in that folder.",
-        "ca": "No s'ha trobat cap fitxer d'àudio (FLAC o MP3) en aquesta carpeta.",
+        "es": "No se encontraron archivos de audio compatibles (FLAC, MP3, M4A, OGG, OPUS) en esa carpeta.",
+        "en": "No supported audio files (FLAC, MP3, M4A, OGG, OPUS) were found in that folder.",
+        "ca": "No s'ha trobat cap fitxer d'àudio compatible (FLAC, MP3, M4A, OGG, OPUS) en aquesta carpeta.",
     },
     "dialog.load_errors_title": {
         "es": "Algunos archivos no se pudieron cargar",

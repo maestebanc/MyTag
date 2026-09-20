@@ -17,8 +17,8 @@ Requires:       gtk4 >= 4.10
 Requires:       libadwaita >= 1.4
 
 %description
-MyTag is a simple, focused tag and cover art editor for FLAC and MP3 music
-files on Linux. Load a file or a whole folder of albums at once,
+MyTag is a simple, focused tag and cover art editor for FLAC, MP3, M4A, OGG
+and OPUS music files on Linux. Load a file or a whole folder of albums at once,
 edit as many tracks together as you like, and search for cover art
 online (MusicBrainz and iTunes) without leaving the app.
 
@@ -64,7 +64,8 @@ update-desktop-database -q /usr/share/applications &>/dev/null || :
 gtk-update-icon-cache -q /usr/share/icons/hicolor &>/dev/null || :
 
 %changelog
-* Sat Sep 19 2026 Miguel Angel Esteban - 0.62.1-1
+* Sun Sep 20 2026 Miguel Angel Esteban - 0.62.1-1
+- Expanded format support: edit tags and cover art on M4A/MP4, Ogg Vorbis, and Opus.
 - Automatic audio file integrity check on import with background async verification.
 - Clear error icons, tooltip diagnostics, and top-of-table sorting for corrupt files.
 - Dedicated Disc Number column enabled by default with numeric sorting.
