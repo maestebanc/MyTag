@@ -38,7 +38,7 @@ MyTag is built from the ground up with Python, GTK4, and Libadwaita to provide a
 
 | Feature | Description |
 | :--- | :--- |
-| **Supported Formats** | FLAC (`.flac`) and MP3 (`.mp3`). |
+| **Supported Formats** | FLAC (`.flac`), MP3 (`.mp3`), M4A / MP4 (`.m4a`, `.mp4`), OGG (`.ogg`), and OPUS (`.opus`). |
 | **Supported Tags** | Title, Artist, Album, Album Artist, Year / Date, Genre, Track Number (and Total), Disc Number (and Total). |
 | **Cover Art Sources** | Local file chooser, Drag & Drop (files or images), Clipboard paste, MusicBrainz, and iTunes. |
 | **Image Operations** | Direct proportional dimension inputs, square cropping, removal, export to file, and metadata extraction. |
