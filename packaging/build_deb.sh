@@ -42,5 +42,14 @@ find "$WORK" -type f -not -path "*/DEBIAN/postinst" -not -path "*/usr/bin/mytag"
 chmod 755 "$WORK/DEBIAN/postinst" "$WORK/usr/bin/mytag"
 
 mkdir -p "$OUT_DIR"
-dpkg-deb --root-owner-group --build "$WORK" "$OUT_DIR/mytag_${VERSION}_all.deb"
+if command -v dpkg-deb >/dev/null 2>&1; then
+    dpkg-deb --root-owner-group --build "$WORK" "$OUT_DIR/mytag_${VERSION}_all.deb"
+else
+    ARCHIVE_DIR="$(mktemp -d)"
+    echo "2.0" > "$ARCHIVE_DIR/debian-binary"
+    tar --numeric-owner --owner=0 --group=0 -cJf "$ARCHIVE_DIR/control.tar.xz" -C "$WORK/DEBIAN" .
+    tar --numeric-owner --owner=0 --group=0 --exclude="./DEBIAN" -cJf "$ARCHIVE_DIR/data.tar.xz" -C "$WORK" .
+    ar -rcs "$OUT_DIR/mytag_${VERSION}_all.deb" "$ARCHIVE_DIR/debian-binary" "$ARCHIVE_DIR/control.tar.xz" "$ARCHIVE_DIR/data.tar.xz"
+    rm -rf "$ARCHIVE_DIR"
+fi
 echo "Listo: $OUT_DIR/mytag_${VERSION}_all.deb"
