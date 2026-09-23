@@ -7,7 +7,7 @@ name = "mytag"
 version = "0.62.1"
 description = "Edit tags and cover art on your FLAC and MP3 music files"
 readme = "README.md"
-license = "MIT"
+license = "GPL-3.0-or-later"
 authors = [{ name = "Miguel Angel Esteban" }]
 requires-python = ">=3.11"
 dependencies = [

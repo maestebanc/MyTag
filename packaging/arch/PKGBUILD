@@ -5,7 +5,7 @@ pkgrel=1
 pkgdesc="Edit tags and cover art on your music files"
 arch=('any')
 url="https://github.com/maestebanc/MyTag"
-license=('MIT')
+license=('GPL-3.0-or-later')
 depends=('python' 'python-mutagen' 'python-pillow' 'python-gobject' 'gtk4' 'libadwaita')
 optdepends=('flac: audio stream integrity verification'
             'chromaprint: audio fingerprint identification (AcoustID)')

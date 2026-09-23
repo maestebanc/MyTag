@@ -163,4 +163,4 @@ python3 -m mytag
 
 ## License
 
-MyTag is open source software released under the [MIT License](LICENSE).
+MyTag is open source software released under the [GNU General Public License v3.0 or later (GPL-3.0-or-later)](LICENSE).

@@ -22,6 +22,6 @@ def build_about_dialog() -> Adw.AboutDialog:
         issue_url="https://github.com/maestebanc/MyTag/issues",
         developers=["Miguel Angel Esteban"],
         copyright="© 2026 Miguel Angel Esteban",
-        license_type=Gtk.License.MIT_X11,
+        license_type=Gtk.License.GPL_3_0,
     )
     return dialog
