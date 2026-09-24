@@ -13,6 +13,7 @@ from .. import i18n
 SHORTCUTS = [
     ("shortcuts.open_files", "<Control>o"),
     ("shortcuts.save", "<Control>s"),
+    ("shortcuts.export_playlist", "<Control>e"),
     ("shortcuts.toggle_search", "<Control>f"),
     ("shortcuts.remove_selected", "Delete"),
     ("shortcuts.preferences", "<Control>comma"),

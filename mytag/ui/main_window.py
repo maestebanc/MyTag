@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import re
 import threading
 from typing import Any
 
@@ -17,6 +18,7 @@ from .. import __version__, acoustid, config, i18n, integrity
 from ..audio_track import AudioTrack
 from ..constants import SUPPORTED_EXTENSIONS
 from ..cover_utils import resize_image_bytes_exact
+from ..playlist import write_m3u_file
 from .about_dialog import build_about_dialog
 from .batch_fingerprint_dialog import BatchFingerprintDialog
 from .cover_panel import CoverPanel
@@ -242,6 +244,7 @@ class MainWindow(Adw.ApplicationWindow):
         actions = {
             "open-files": lambda *_: self.open_files_dialog(),
             "save": lambda *_: self.save_all(),
+            "export-playlist": lambda *_: self.export_playlist(),
             "toggle-search": lambda *_: self.btn_search_toggle.set_active(
                 not self.btn_search_toggle.get_active()
             ),
@@ -252,6 +255,7 @@ class MainWindow(Adw.ApplicationWindow):
         accels = {
             "open-files": ["<Control>o"],
             "save": ["<Control>s"],
+            "export-playlist": ["<Control>e"],
             "toggle-search": ["<Control>f"],
             "remove-selected": ["Delete"],
             "preferences": ["<Control>comma"],
@@ -379,6 +383,8 @@ class MainWindow(Adw.ApplicationWindow):
             btn.connect("clicked", lambda _b: (callback(), popover.popdown()))
             box.append(btn)
 
+        add_item(i18n.t("menu.export_playlist"), "media-playlist-consecutive-symbolic", self.export_playlist)
+        box.append(Gtk.Separator())
         add_item(i18n.t("menu.preferences"), "preferences-system-symbolic", self._open_preferences)
         add_item(i18n.t("menu.keyboard_shortcuts"), "input-keyboard-symbolic", self._open_shortcuts)
         add_item(i18n.t("menu.feature_guide"), "help-browser-symbolic", self._open_feature_guide)
@@ -502,6 +508,7 @@ class MainWindow(Adw.ApplicationWindow):
         add_item(i18n.t("menu.autonumber"), "view-list-ordered-symbolic", self.autonumber_selected)
         add_item(i18n.t("menu.rename_from_tags"), "document-edit-symbolic", self.rename_selected_from_tags)
         add_item(i18n.t("menu.fill_missing_covers"), "image-x-generic-symbolic", self.fill_missing_covers)
+        add_item(i18n.t("menu.export_playlist"), "media-playlist-consecutive-symbolic", self.export_playlist)
         box.append(Gtk.Separator())
         add_item(i18n.t("menu.revert_selected"), "document-revert-symbolic", self.revert_selected)
         add_item(i18n.t("toolbar.remove"), "list-remove-symbolic", self.remove_selected_rows)
@@ -1470,6 +1477,62 @@ class MainWindow(Adw.ApplicationWindow):
             self._show_message(i18n.t("rename.errors_title"), "\n".join(errors))
         self.tag_editor.set_tracks(self._selected_tracks())
         self._toast(i18n.t("rename.done", n=renamed))
+
+    def export_playlist(self) -> None:
+        selected = self._selected_tracks()
+        tracks = selected if selected else self.tracks
+        if not tracks:
+            self._toast(i18n.t("playlist.no_tracks"))
+            return
+
+        # Calcular nombre sugerido a partir de álbum/artista si coinciden
+        albums = {t.get_tag("ALBUM") for t in tracks if t.get_tag("ALBUM")}
+        artists = {t.get_tag("ARTIST") for t in tracks if t.get_tag("ARTIST")}
+        if len(albums) == 1 and next(iter(albums)):
+            album = next(iter(albums))
+            if len(artists) == 1 and next(iter(artists)):
+                initial_name = f"{next(iter(artists))} - {album}.m3u8"
+            else:
+                initial_name = f"{album}.m3u8"
+        else:
+            initial_name = "playlist.m3u8"
+
+        # Sanear caracteres no válidos para nombres de archivo
+        initial_name = re.sub(r'[\\/*?:"<>|]', "_", initial_name)
+
+        dialog = Gtk.FileDialog(title=i18n.t("playlist.dialog_title"))
+        dialog.set_initial_name(initial_name)
+
+        if tracks and tracks[0].path:
+            track_dir = os.path.dirname(tracks[0].path)
+            if os.path.isdir(track_dir):
+                dialog.set_initial_folder(Gio.File.new_for_path(track_dir))
+
+        filter_m3u = Gtk.FileFilter()
+        filter_m3u.set_name(i18n.t("playlist.filter_name"))
+        filter_m3u.add_pattern("*.m3u8")
+        filter_m3u.add_pattern("*.m3u")
+        filters = Gio.ListStore.new(Gtk.FileFilter)
+        filters.append(filter_m3u)
+        dialog.set_filters(filters)
+
+        dialog.save(self, None, lambda d, res, tr=tracks: self._on_export_playlist_finished(d, res, tr))
+
+    def _on_export_playlist_finished(self, dialog: Gtk.FileDialog, result, tracks: list[AudioTrack]) -> None:
+        try:
+            gfile = dialog.save_finish(result)
+        except GLib.Error:
+            return
+        if gfile is None or not gfile.get_path():
+            return
+        path = gfile.get_path()
+        if not (path.endswith(".m3u8") or path.endswith(".m3u")):
+            path += ".m3u8"
+        try:
+            write_m3u_file(tracks, path)
+            self._toast(i18n.t("playlist.exported_success", n=len(tracks)))
+        except OSError as err:
+            self._show_message(i18n.t("playlist.error_title"), str(err))
 
     def remove_selected_rows(self) -> None:
         tracks = self._selected_tracks()

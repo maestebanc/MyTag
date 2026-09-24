@@ -81,5 +81,5 @@ modules:
       - install -Dm644 data/icons/hicolor/scalable/apps/com.maestebanc.MyTag.svg ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps/com.maestebanc.MyTag.svg
     sources:
       - type: archive
-        url: https://github.com/maestebanc/MyTag/archive/refs/tags/v0.62.1.tar.gz
+        url: https://github.com/maestebanc/MyTag/archive/refs/tags/v0.63.0.tar.gz
         sha256: 03caa0ecdfdc9c25fb740e697e52d7bd008442b414087cd68a220eb99c3b663f

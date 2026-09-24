@@ -120,6 +120,36 @@ STRINGS: dict[str, dict[str, str]] = {
         "en": "Fill in missing covers…",
         "ca": "Omple les portades que falten…",
     },
+    "menu.export_playlist": {
+        "es": "Exportar lista de reproducción…",
+        "en": "Export playlist…",
+        "ca": "Exporta la llista de reproducció…",
+    },
+    "playlist.dialog_title": {
+        "es": "Exportar lista de reproducción",
+        "en": "Export Playlist",
+        "ca": "Exporta la llista de reproducció",
+    },
+    "playlist.filter_name": {
+        "es": "Listas de reproducción M3U (*.m3u8, *.m3u)",
+        "en": "M3U Playlists (*.m3u8, *.m3u)",
+        "ca": "Llistes de reproducció M3U (*.m3u8, *.m3u)",
+    },
+    "playlist.exported_success": {
+        "es": "Lista de reproducción guardada con {n} pistas.",
+        "en": "Playlist saved with {n} tracks.",
+        "ca": "Llista de reproducció desada amb {n} pistes.",
+    },
+    "playlist.error_title": {
+        "es": "Error al exportar la lista",
+        "en": "Error exporting playlist",
+        "ca": "Error en exportar la llista",
+    },
+    "playlist.no_tracks": {
+        "es": "No hay pistas para exportar.",
+        "en": "No tracks to export.",
+        "ca": "No hi ha pistes per exportar.",
+    },
     "list.clear_all": {"es": "Vaciar lista", "en": "Clear list", "ca": "Buida la llista"},
     "list.search_placeholder": {
         "es": "Buscar por título o artista…",
@@ -212,12 +242,34 @@ STRINGS: dict[str, dict[str, str]] = {
         "en": "Changes discarded for {n} track(s).",
         "ca": "Canvis descartats a {n} tema(es).",
     },
-    # ---- portada: pegar desde el portapapeles ----
-    "cover.paste": {"es": "Pegar portada", "en": "Paste cover", "ca": "Enganxa la portada"},
+    # ---- portada: portapapeles y exportación ----
+    "cover.paste": {"es": "Pegar", "en": "Paste", "ca": "Enganxa"},
     "cover.paste_no_image": {
         "es": "El portapapeles no contiene ninguna imagen.",
         "en": "The clipboard doesn't contain an image.",
         "ca": "El porta-retalls no conté cap imatge.",
+    },
+    "cover.copy": {"es": "Copiar", "en": "Copy", "ca": "Copia"},
+    "cover.copied_to_clipboard": {
+        "es": "Portada copiada al portapapeles.",
+        "en": "Cover copied to clipboard.",
+        "ca": "Portada copiada al porta-retalls.",
+    },
+    "cover.export": {"es": "Guardar como…", "en": "Save as…", "ca": "Desa com a…"},
+    "cover.export_dialog_title": {
+        "es": "Guardar portada en archivo",
+        "en": "Save Cover to File",
+        "ca": "Desa la portada a un fitxer",
+    },
+    "cover.exported_success": {
+        "es": "Portada guardada como {name}.",
+        "en": "Cover saved as {name}.",
+        "ca": "Portada desada com a {name}.",
+    },
+    "cover.export_error_title": {
+        "es": "Error al guardar la portada",
+        "en": "Error saving cover",
+        "ca": "Error en desar la portada",
     },
     # ---- MusicBrainz (validación) ----
     "mb.title": {"es": "MusicBrainz", "en": "MusicBrainz", "ca": "MusicBrainz"},
@@ -310,9 +362,9 @@ STRINGS: dict[str, dict[str, str]] = {
     },
     "cover.resize": {"es": "Redimensionar", "en": "Resize", "ca": "Redimensiona"},
     "cover.resize_action": {
-        "es": "Redimensionar portada…",
-        "en": "Resize cover…",
-        "ca": "Redimensiona la portada…",
+        "es": "Redimensionar…",
+        "en": "Resize…",
+        "ca": "Redimensiona…",
     },
     "cover.resize_dialog_title": {
         "es": "Redimensionar portada",
@@ -536,6 +588,11 @@ STRINGS: dict[str, dict[str, str]] = {
         "es": "Mostrar esta ventana",
         "en": "Show this window",
         "ca": "Mostra aquesta finestra",
+    },
+    "shortcuts.export_playlist": {
+        "es": "Exportar lista de reproducción",
+        "en": "Export playlist",
+        "ca": "Exporta la llista de reproducció",
     },
     "shortcuts.quit": {"es": "Salir de MyTag", "en": "Quit MyTag", "ca": "Surt del MyTag"},
     # ---- verificación de integridad ----

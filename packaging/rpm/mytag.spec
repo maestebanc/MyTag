@@ -2,7 +2,7 @@
 %define pysitelib %(python3 -c "import sys; print(f'/usr/lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages')")
 
 Name:           mytag
-Version:        0.62.1
+Version:        0.63.0
 Release:        1%{?dist}
 Summary:        Edit tags and cover art on your music files
 License:        GPL-3.0-or-later
@@ -64,6 +64,13 @@ update-desktop-database -q /usr/share/applications &>/dev/null || :
 gtk-update-icon-cache -q /usr/share/icons/hicolor &>/dev/null || :
 
 %changelog
+* Thu Sep 24 2026 Miguel Angel Esteban - 0.63.0-1
+- Playlist export: export loaded tracks as standard extended M3U8 (.m3u/.m3u8) with relative paths (Ctrl+E).
+- Cover art clipboard and file export: copy cover directly to clipboard or save to disk.
+- Desktop font scaling: auto-detects GNOME text-scaling-factor at 100% UI scale and scales proportionally.
+- Refined cover panel context menu with simplified action labels.
+- Official trilingual web presence.
+
 * Sun Sep 20 2026 Miguel Angel Esteban - 0.62.1-1
 - Expanded format support: edit tags and cover art on M4A/MP4, Ogg Vorbis, and Opus.
 - Automatic audio file integrity check on import with background async verification.

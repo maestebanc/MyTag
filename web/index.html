@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="auto">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyTag — Editor nativo de etiquetas y carátulas para Linux</title>
+  <meta name="description" content="MyTag es un editor de etiquetas y carátulas de audio nativo, moderno y rápido para Linux, diseñado con GTK4 y Libadwaita. Soporta FLAC, MP3, M4A, OGG y Opus.">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="alternate icon" type="image/png" href="assets/icon-512.png">
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="MyTag — Audio tag and cover art editor for Linux">
+  <meta property="og:description" content="Native GTK4 and Libadwaita audio tag and cover editor. Fast, clean and safe metadata editing on Linux.">
+  <meta property="og:image" content="assets/main-window.png">
+  <meta property="og:type" content="website">
+</head>
+<body>
+  <!-- Navigation Header -->
+  <header class="site-header">
+    <div class="header-inner container">
+      <a href="#" class="brand">
+        <img src="assets/icon.svg" alt="MyTag Logo" class="brand-icon" width="36" height="36">
+        <span class="brand-name">MyTag</span>
+        <span class="version-badge">v0.63.0</span>
+      </a>
+
+      <nav class="nav-menu" id="navMenu">
+        <a href="#features" class="nav-link" data-i18n="nav_features">Características</a>
+        <a href="#screenshots" class="nav-link" data-i18n="nav_screenshots">Capturas</a>
+        <a href="#formats" class="nav-link" data-i18n="nav_formats">Formatos</a>
+        <a href="#download" class="nav-link" data-i18n="nav_download">Descargar</a>
+        <a href="https://github.com/maestebanc/MyTag" target="_blank" rel="noopener noreferrer" class="nav-link github-link" title="GitHub Repository">
+          <svg class="icon-svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          <span>GitHub</span>
+        </a>
+      </nav>
+
+      <div class="header-actions">
+        <!-- Trilingual Language Switcher -->
+        <div class="lang-switcher" role="group" aria-label="Language switcher">
+          <button class="lang-btn" data-lang="es" title="Español">ES</button>
+          <button class="lang-btn" data-lang="en" title="English">EN</button>
+          <button class="lang-btn" data-lang="ca" title="Català">CA</button>
+        </div>
+
+        <!-- Theme Toggle -->
+        <button class="theme-toggle" id="themeToggle" title="Cambiar tema (Claro / Oscuro / Sistema)" aria-label="Cambiar tema">
+          <svg class="sun-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="moon-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+
+        <!-- Mobile Menu Toggle -->
+        <button class="mobile-toggle" id="mobileToggle" aria-label="Menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <main>
+    <section class="hero-section">
+      <div class="container hero-container">
+        <div class="hero-badge">
+          <span class="badge-dot"></span>
+          <span data-i18n="hero_badge">Diseñado nativamente para GNOME &amp; Linux</span>
+        </div>
+
+        <h1 class="hero-title" data-i18n="hero_title">
+          El editor de etiquetas y carátulas nativo para Linux
+        </h1>
+
+        <p class="hero-subtitle" data-i18n="hero_subtitle">
+          Rápido, enfocado y diseñado con GTK4 y Libadwaita. Edita metadatos por lotes con total seguridad, busca portadas en alta resolución e identifica canciones con AcoustID.
+        </p>
+
+        <div class="hero-cta">
+          <a href="#download" class="btn btn-primary">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span data-i18n="btn_download">Descargar para Linux</span>
+          </a>
+          <a href="https://github.com/maestebanc/MyTag" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+            <span data-i18n="btn_github">Código en GitHub</span>
+          </a>
+        </div>
+
+        <!-- Window Mockup Frame with Screenshot -->
+        <div class="hero-window">
+          <div class="window-decorations">
+            <div class="window-controls">
+              <span class="control-btn close"></span>
+              <span class="control-btn min"></span>
+              <span class="control-btn max"></span>
+            </div>
+            <div class="window-title">MyTag — 0.63.0</div>
+            <div class="window-spacer"></div>
+          </div>
+          <div class="window-content">
+            <img src="assets/main-window.png" alt="MyTag Main Window" class="hero-img zoomable-img" id="heroScreenshot" loading="eager">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Key Highlights Grid -->
+    <section class="section-features" id="features">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title" data-i18n="feat_section_title">Diseñado para amantes de la música</h2>
+          <p class="section-desc" data-i18n="feat_section_desc">
+            Sin reproductores innecesarios ni bibliotecas pesadas. Sólo una herramienta precisa y moderna para dejar tus archivos de audio impecables.
+          </p>
+        </div>
+
+        <div class="features-grid">
+          <!-- Card 1 -->
+          <div class="feature-card">
+            <div class="feature-icon-wrapper">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+            </div>
+            <h3 class="feature-title" data-i18n="feat_gtk_title">GTK4 &amp; Libadwaita Nativo</h3>
+            <p class="feature-text" data-i18n="feat_gtk_text">
+              Integración total con el escritorio Linux moderno (GNOME, Wayland y X11). Sigue automáticamente tu tema claro u oscuro y respeta la escala de fuentes de tu sistema.
+            </p>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="feature-card">
+            <div class="feature-icon-wrapper">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </div>
+            <h3 class="feature-title" data-i18n="feat_batch_title">Edición por Lotes Segura</h3>
+            <p class="feature-text" data-i18n="feat_batch_text">
+              Edita álbumes completos a la vez. Cuando hay valores discrepantes, MyTag lo indica con claridad y te permite unificarlos mediante un selector desplegable. Nada se guarda en disco sin tu confirmación.
+            </p>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="feature-card">
+            <div class="feature-icon-wrapper">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+            </div>
+            <h3 class="feature-title" data-i18n="feat_cover_title">Gestor Integral de Portadas</h3>
+            <p class="feature-text" data-i18n="feat_cover_text">
+              Busca carátulas en MusicBrainz e iTunes sin salir de la app. Arrastra y suelta imágenes, pega desde el portapapeles, redimensiona con proporciones exactas y exporta la portada a archivo.
+            </p>
+          </div>
+
+          <!-- Card 4 -->
+          <div class="feature-card">
+            <div class="feature-icon-wrapper">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                <path d="M11 8v6"></path>
+                <path d="M8 11h6"></path>
+              </svg>
+            </div>
+            <h3 class="feature-title" data-i18n="feat_acoustid_title">Huella Acústica AcoustID</h3>
+            <p class="feature-text" data-i18n="feat_acoustid_text">
+              ¿Canciones sin etiquetar o con nombres incorrectos? Identifica pistas automáticamente mediante su huella de audio con Chromaprint (fpcalc), sin registros ni claves API que configurar.
+            </p>
+          </div>
+
+          <!-- Card 5 -->
+          <div class="feature-card">
+            <div class="feature-icon-wrapper">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </div>
+            <h3 class="feature-title" data-i18n="feat_integrity_title">Comprobación de Integridad</h3>
+            <p class="feature-text" data-i18n="feat_integrity_text">
+              Verifica en segundo plano los flujos de audio al cargar carpetas. Detecta archivos dañados o incompletos con alertas visuales inmediatas antes de guardarlos.
+            </p>
+          </div>
+
+          <!-- Card 6 -->
+          <div class="feature-card">
+            <div class="feature-icon-wrapper">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+            </div>
+            <h3 class="feature-title" data-i18n="feat_rename_title">Renombrado &amp; Listas M3U8</h3>
+            <p class="feature-text" data-i18n="feat_rename_text">
+              Renombra tus archivos según sus metadatos con patrones configurables (%track% - %title%), autonumera pistas con ceros opcionales y genera listas de reproducción estándar M3U8.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Screenshot Gallery Section -->
+    <section class="section-screenshots" id="screenshots">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title" data-i18n="gallery_title">Elegante, funcional y claro</h2>
+          <p class="section-desc" data-i18n="gallery_desc">
+            Cada elemento está ubicado pensando en la máxima eficiencia y comodidad de uso.
+          </p>
+        </div>
+
+        <div class="gallery-tabs">
+          <button class="gallery-tab active" data-img="assets/main-window.png" data-caption-i18n="caption_main">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+            <span data-i18n="tab_main">Ventana Principal</span>
+          </button>
+          <button class="gallery-tab" data-img="assets/cover-search.png" data-caption-i18n="caption_search">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <span data-i18n="tab_search">Búsqueda de Carátulas</span>
+          </button>
+        </div>
+
+        <div class="gallery-preview-wrapper">
+          <div class="window-decorations">
+            <div class="window-controls">
+              <span class="control-btn close"></span>
+              <span class="control-btn min"></span>
+              <span class="control-btn max"></span>
+            </div>
+            <div class="window-title" id="galleryWindowTitle">MyTag — Ventana Principal</div>
+            <div class="window-spacer"></div>
+          </div>
+          <div class="gallery-img-container">
+            <img src="assets/main-window.png" alt="Captura de MyTag" id="galleryMainImg" class="gallery-img zoomable-img">
+            <div class="gallery-overlay-hint" data-i18n="zoom_hint">Haz clic para ampliar la imagen</div>
+          </div>
+        </div>
+        <p class="gallery-caption" id="galleryCaption" data-i18n="caption_main">
+          Vista principal: lista ordenada de pistas con indicadores de estado, panel inspector de carátula y etiquetas directas.
+        </p>
+      </div>
+    </section>
+
+    <!-- Supported Formats Section -->
+    <section class="section-formats" id="formats">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title" data-i18n="formats_title">Compatibilidad amplia de formatos</h2>
+          <p class="section-desc" data-i18n="formats_desc">
+            Soporta las extensiones y estándares más populares manteniendo intacta la calidad del audio.
+          </p>
+        </div>
+
+        <div class="formats-grid">
+          <div class="format-card">
+            <div class="format-badge flac">FLAC</div>
+            <h3>Free Lossless Audio Codec</h3>
+            <p data-i18n="fmt_flac_desc">Comentarios Vorbis nativos e inserción de carátulas sin pérdidas en bloques de imagen FLAC.</p>
+          </div>
+
+          <div class="format-card">
+            <div class="format-badge mp3">MP3</div>
+            <h3>MPEG Audio Layer III</h3>
+            <p data-i18n="fmt_mp3_desc">Marcos estándar ID3v2.4 completos y portadas incrustadas en marcos APIC frontales.</p>
+          </div>
+
+          <div class="format-card">
+            <div class="format-badge m4a">M4A / MP4</div>
+            <h3>AAC &amp; Apple Lossless (ALAC)</h3>
+            <p data-i18n="fmt_m4a_desc">Átomos estándar de metadatos de audio de Apple e imágenes incrustadas de alta resolución.</p>
+          </div>
+
+          <div class="format-card">
+            <div class="format-badge ogg">OGG &amp; OPUS</div>
+            <h3>Ogg Vorbis &amp; Opus Audio</h3>
+            <p data-i18n="fmt_ogg_desc">Etiquetas estándar Vorbis y portadas codificadas en bloques METADATA_BLOCK_PICTURE.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Download / Installation Section -->
+    <section class="section-download" id="download">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title" data-i18n="download_title">Instala MyTag en tu distribución</h2>
+          <p class="section-desc" data-i18n="download_desc">
+            Elige el método de instalación que prefieras para tu sistema operativo Linux.
+          </p>
+        </div>
+
+        <div class="download-tabs-container">
+          <div class="install-tabs">
+            <button class="install-tab active" data-target="flatpak">
+              <span class="tab-label">Flatpak</span>
+              <span class="tab-tag" data-i18n="tag_universal">Universal</span>
+            </button>
+            <button class="install-tab" data-target="debian">
+              <span class="tab-label">Debian / Ubuntu</span>
+              <span class="tab-tag">.deb</span>
+            </button>
+            <button class="install-tab" data-target="fedora">
+              <span class="tab-label">Fedora / RHEL</span>
+              <span class="tab-tag">.rpm</span>
+            </button>
+            <button class="install-tab" data-target="arch">
+              <span class="tab-label">Arch Linux</span>
+              <span class="tab-tag">AUR / Pacman</span>
+            </button>
+            <button class="install-tab" data-target="source">
+              <span class="tab-label" data-i18n="tab_source">Código Fuente</span>
+              <span class="tab-tag">Git</span>
+            </button>
+          </div>
+
+          <!-- Flatpak Panel -->
+          <div class="install-panel active" id="panel-flatpak">
+            <div class="install-card">
+              <div class="install-info">
+                <h3 data-i18n="inst_flatpak_title">Paquete Flatpak Universal</h3>
+                <p data-i18n="inst_flatpak_desc">
+                  La forma más recomendada. Incluye todas las dependencias aisladas, Chromaprint (fpcalc) y acceso a tu carpeta de música.
+                </p>
+              </div>
+              <div class="terminal-box">
+                <div class="terminal-bar">
+                  <span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span>
+                  <span class="term-title">Terminal</span>
+                  <button class="copy-btn" data-copy="flatpak install mytag-0.63.0.flatpak" title="Copiar comando">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    <span class="copy-text" data-i18n="copy_btn">Copiar</span>
+                  </button>
+                </div>
+                <pre><code>flatpak install mytag-0.63.0.flatpak</code></pre>
+              </div>
+              <div class="install-note">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span data-i18n="flathub_note">Próximamente disponible de forma directa en Flathub (submission en revisión).</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Debian/Ubuntu Panel -->
+          <div class="install-panel" id="panel-debian">
+            <div class="install-card">
+              <div class="install-info">
+                <h3 data-i18n="inst_deb_title">Paquete para Debian, Ubuntu y derivados</h3>
+                <p data-i18n="inst_deb_desc">
+                  Compatible con Ubuntu 24.04 LTS+, Linux Mint, Debian Trixie/Sid y sistemas basados en APT.
+                </p>
+              </div>
+              <div class="terminal-box">
+                <div class="terminal-bar">
+                  <span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span>
+                  <span class="term-title">Terminal</span>
+                  <button class="copy-btn" data-copy="sudo apt install ./mytag_0.63.0-1_all.deb" title="Copiar comando">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    <span class="copy-text" data-i18n="copy_btn">Copiar</span>
+                  </button>
+                </div>
+                <pre><code>sudo apt install ./mytag_0.63.0-1_all.deb</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fedora Panel -->
+          <div class="install-panel" id="panel-fedora">
+            <div class="install-card">
+              <div class="install-info">
+                <h3 data-i18n="inst_fedora_title">Paquete RPM para Fedora y RHEL</h3>
+                <p data-i18n="inst_fedora_desc">
+                  Compatible con Fedora 40, 41, 42, Rawhide y distribuciones compatibles con DNF / RPM.
+                </p>
+              </div>
+              <div class="terminal-box">
+                <div class="terminal-bar">
+                  <span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span>
+                  <span class="term-title">Terminal</span>
+                  <button class="copy-btn" data-copy="sudo dnf install ./mytag-0.63.0-1.noarch.rpm" title="Copiar comando">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    <span class="copy-text" data-i18n="copy_btn">Copiar</span>
+                  </button>
+                </div>
+                <pre><code>sudo dnf install ./mytag-0.63.0-1.noarch.rpm</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- Arch Linux Panel -->
+          <div class="install-panel" id="panel-arch">
+            <div class="install-card">
+              <div class="install-info">
+                <h3 data-i18n="inst_arch_title">Instalación en Arch Linux / Manjaro</h3>
+                <p data-i18n="inst_arch_desc">
+                  Instala el paquete binario precompilado con Pacman o compílalo tú mismo con makepkg:
+                </p>
+              </div>
+              <div class="terminal-box">
+                <div class="terminal-bar">
+                  <span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span>
+                  <span class="term-title">Terminal</span>
+                  <button class="copy-btn" data-copy="sudo pacman -U mytag-0.63.0-1-any.pkg.tar.zst" title="Copiar comando">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    <span class="copy-text" data-i18n="copy_btn">Copiar</span>
+                  </button>
+                </div>
+                <pre><code>sudo pacman -U mytag-0.63.0-1-any.pkg.tar.zst</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- Source Panel -->
+          <div class="install-panel" id="panel-source">
+            <div class="install-card">
+              <div class="install-info">
+                <h3 data-i18n="inst_source_title">Ejecutar desde el código fuente</h3>
+                <p data-i18n="inst_source_desc">
+                  Clona el repositorio oficial de GitHub y ejecútalo directamente con Python:
+                </p>
+              </div>
+              <div class="terminal-box">
+                <div class="terminal-bar">
+                  <span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span>
+                  <span class="term-title">Terminal</span>
+                  <button class="copy-btn" data-copy="git clone https://github.com/maestebanc/MyTag.git&#10;cd MyTag&#10;./run.sh" title="Copiar comando">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    <span class="copy-text" data-i18n="copy_btn">Copiar</span>
+                  </button>
+                </div>
+                <pre><code>git clone https://github.com/maestebanc/MyTag.git
+cd MyTag
+./run.sh</code></pre>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="releases-banner">
+          <p data-i18n="releases_text">¿Buscas archivos individuales de instalación o notas de versión?</p>
+          <a href="https://github.com/maestebanc/MyTag/releases" target="_blank" rel="noopener noreferrer" class="btn btn-outline">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+            <span data-i18n="btn_releases">Ver todas las descargas en GitHub Releases</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Lightbox Modal for Screenshots -->
+  <div class="lightbox-modal" id="lightboxModal" aria-hidden="true" role="dialog">
+    <div class="lightbox-backdrop" id="lightboxBackdrop"></div>
+    <div class="lightbox-dialog">
+      <button class="lightbox-close" id="lightboxClose" aria-label="Cerrar">&times;</button>
+      <img src="" alt="" id="lightboxImg" class="lightbox-image">
+      <p class="lightbox-caption" id="lightboxCaption"></p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container footer-content">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <img src="assets/icon.svg" alt="MyTag Logo" width="28" height="28">
+          <span class="footer-title">MyTag</span>
+        </div>
+        <p class="footer-desc" data-i18n="footer_desc">
+          Editor de etiquetas y carátulas de audio nativo y enfocado para Linux.
+        </p>
+      </div>
+
+      <div class="footer-links">
+        <div class="links-group">
+          <h4 data-i18n="footer_project">Proyecto</h4>
+          <a href="https://github.com/maestebanc/MyTag" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://github.com/maestebanc/MyTag/releases" target="_blank" rel="noopener" data-i18n="footer_releases">Versiones</a>
+          <a href="https://github.com/maestebanc/MyTag/issues" target="_blank" rel="noopener" data-i18n="footer_issues">Informar de un error</a>
+        </div>
+        <div class="links-group">
+          <h4 data-i18n="footer_license_title">Licencia</h4>
+          <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">GNU GPL v3.0</a>
+          <span class="footer-author" data-i18n="footer_author">Por Miguel Angel Esteban</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom container">
+      <p>&copy; 2026 Miguel Angel Esteban (maestebanc) &bull; MyTag is Free &amp; Open Source Software.</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

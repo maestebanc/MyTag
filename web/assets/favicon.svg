@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="tagGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7bb4f0"/>
+      <stop offset="1" stop-color="#1c71d8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Tag shape (simple pentagon/arrow silhouette, reads well at any size) -->
+  <path
+    fill="url(#tagGradient)"
+    d="M 20 22 L 80 22 L 112 64 L 80 106 L 20 106 Z"
+  />
+
+  <!-- Bold quarter note: thick notehead + thick stem, no thin flag -->
+  <g fill="#ffffff">
+    <ellipse cx="52" cy="88" rx="13" ry="11" transform="rotate(-14 52 88)"/>
+    <rect x="61" y="34" width="10" height="56" rx="5"/>
+  </g>
+</svg>

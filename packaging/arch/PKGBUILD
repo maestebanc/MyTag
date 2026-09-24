@@ -1,6 +1,6 @@
 # Maintainer: Miguel Angel Esteban <maestebanc@gmail.com>
 pkgname=mytag
-pkgver=0.62.1
+pkgver=0.63.0
 pkgrel=1
 pkgdesc="Edit tags and cover art on your music files"
 arch=('any')

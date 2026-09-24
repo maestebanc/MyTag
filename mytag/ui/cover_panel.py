@@ -10,6 +10,7 @@ la imagen, o el botón de menú superpuesto "⋮"). Debajo de la carátula se mu
 """
 from __future__ import annotations
 
+import os
 import re
 import gi
 
@@ -229,8 +230,11 @@ class CoverPanel(Gtk.Box):
 
         add_item(i18n.t("cover.select_image"), "document-open-symbolic", lambda: self._on_select_image(None), sensitive=has_tracks)
         add_item(i18n.t("cover.paste"), "edit-paste-symbolic", lambda: self._on_paste(None), sensitive=has_tracks)
+        add_item(i18n.t("cover.copy"), "edit-copy-symbolic", self._on_copy, sensitive=has_cover)
+        add_item(i18n.t("cover.export"), "document-save-as-symbolic", self._on_export, sensitive=has_cover)
         add_item(i18n.t("cover.musicbrainz_search"), "system-search-symbolic", lambda: self.emit("musicbrainz-search-requested"), sensitive=has_tracks)
         add_item(i18n.t("cover.resize_action"), "image-crop-symbolic", self._open_resize_dialog, sensitive=has_cover)
+        box.append(Gtk.Separator())
         add_item(i18n.t("cover.remove"), "user-trash-symbolic", lambda: self._on_remove(None), destructive=True, sensitive=has_cover)
 
         popover.set_child(box)
@@ -539,3 +543,84 @@ class CoverPanel(Gtk.Box):
         if not self._tracks:
             return
         self.emit("cover-remove-requested")
+
+    def _on_copy(self) -> None:
+        data = self._current_cover_bytes
+        if not data and self._tracks:
+            data = next((t.get_cover_bytes() for t in self._tracks if t.get_cover_bytes() is not None), None)
+        if not data:
+            return
+
+        try:
+            gbytes = GLib.Bytes.new(data)
+            texture = Gdk.Texture.new_from_bytes(gbytes)
+        except Exception:
+            loader = GdkPixbuf.PixbufLoader()
+            loader.write(data)
+            loader.close()
+            pixbuf = loader.get_pixbuf()
+            if pixbuf:
+                texture = Gdk.Texture.new_for_pixbuf(pixbuf)
+            else:
+                return
+
+        clipboard = self.get_clipboard()
+        clipboard.set(texture)
+        root = self.get_root()
+        if root and hasattr(root, "_toast"):
+            root._toast(i18n.t("cover.copied_to_clipboard"))
+
+    def _on_export(self) -> None:
+        data = self._current_cover_bytes
+        if not data and self._tracks:
+            data = next((t.get_cover_bytes() for t in self._tracks if t.get_cover_bytes() is not None), None)
+        if not data:
+            return
+
+        dialog = Gtk.FileDialog(title=i18n.t("cover.export_dialog_title"))
+
+        ext = ".jpg"
+        if data.startswith(b"\x89PNG\r\n\x1a\n"):
+            ext = ".png"
+        elif data.startswith(b"RIFF") and b"WEBP" in data[:16]:
+            ext = ".webp"
+
+        dialog.set_initial_name(f"cover{ext}")
+
+        if self._tracks and self._tracks[0].path:
+            track_dir = os.path.dirname(self._tracks[0].path)
+            if os.path.isdir(track_dir):
+                dialog.set_initial_folder(Gio.File.new_for_path(track_dir))
+
+        filter_images = Gtk.FileFilter()
+        filter_images.set_name(i18n.t("cover.images_filter_name"))
+        for pattern in ("*.jpg", "*.jpeg", "*.png", "*.webp"):
+            filter_images.add_pattern(pattern)
+        filters = Gio.ListStore.new(Gtk.FileFilter)
+        filters.append(filter_images)
+        dialog.set_filters(filters)
+
+        root = self.get_root()
+        dialog.save(root, None, lambda d, res, cdata=data: self._on_export_cover_finished(d, res, cdata))
+
+    def _on_export_cover_finished(self, dialog: Gtk.FileDialog, result, data: bytes) -> None:
+        try:
+            gfile = dialog.save_finish(result)
+        except GLib.Error:
+            return
+        if gfile is None:
+            return
+        path = gfile.get_path()
+        if not path:
+            return
+        try:
+            with open(path, "wb") as f:
+                f.write(data)
+            root = self.get_root()
+            if root and hasattr(root, "_toast"):
+                root._toast(i18n.t("cover.exported_success", name=os.path.basename(path)))
+        except OSError as err:
+            root = self.get_root()
+            if root and hasattr(root, "_show_message"):
+                root._show_message(i18n.t("cover.export_error_title"), str(err))
+
