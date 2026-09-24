@@ -66,14 +66,13 @@
     <release version="0.63.0" date="2026-09-24">
       <description>
         <p>
-          Playlist export, cover clipboard and export tools, GNOME font scaling, and web landing page:
+          Playlist export, cover clipboard and export tools, and GNOME font scaling:
         </p>
         <ul>
           <li>Playlist export: save track order and loaded files as standard extended M3U8 (.m3u / .m3u8) with portable relative paths and track duration metadata (Ctrl + E).</li>
           <li>Cover art clipboard and file export: copy album art directly to the system clipboard or export to a local file (cover.jpg/png) via cover panel context menu.</li>
           <li>Desktop font scaling: automatically detects org.gnome.desktop.interface text-scaling-factor so custom font scales render sharply at 100% UI scale and scale proportionally.</li>
           <li>Refined cover menu: simplified context menu labels with natural phrasing.</li>
-          <li>Official website: launched trilingual web presence with interactive gallery and packaging guides.</li>
         </ul>
       </description>
     </release>
