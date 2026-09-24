@@ -5,7 +5,7 @@ Priority: optional
 Architecture: all
 Depends: python3 (>= 3.11), python3-mutagen, python3-pil, python3-gi, gir1.2-gtk-4.0 (>= 4.10), gir1.2-adw-1 (>= 1.4)
 Maintainer: Miguel Angel Esteban <noreply@example.com>
-Homepage: https://github.com/maestebanc/MyTag
+Homepage: https://maestebanc.github.io/MyTag/
 Description: Edit tags and cover art on your music files
  MyTag is a simple, focused tag and cover art editor for music files
  files on Linux. Load a file or a whole folder of albums at once,

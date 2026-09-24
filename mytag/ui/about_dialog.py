@@ -18,7 +18,7 @@ def build_about_dialog() -> Adw.AboutDialog:
         developer_name="Miguel Angel Esteban",
         version=__version__,
         comments=i18n.t("about.comments"),
-        website="https://github.com/maestebanc/MyTag",
+        website="https://maestebanc.github.io/MyTag/",
         issue_url="https://github.com/maestebanc/MyTag/issues",
         developers=["Miguel Angel Esteban"],
         copyright="© 2026 Miguel Angel Esteban",

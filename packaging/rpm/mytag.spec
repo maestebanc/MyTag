@@ -6,7 +6,7 @@ Version:        0.63.0
 Release:        1%{?dist}
 Summary:        Edit tags and cover art on your music files
 License:        GPL-3.0-or-later
-URL:            https://github.com/maestebanc/MyTag
+URL:            https://maestebanc.github.io/MyTag/
 BuildArch:      noarch
 
 Requires:       python3 >= 3.11

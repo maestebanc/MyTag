@@ -3,7 +3,7 @@
 #define MyAppVersion "0.63.0"
 #endif
 #define MyAppPublisher "Miguel Angel Esteban"
-#define MyAppURL "https://github.com/maestebanc/MyTag"
+#define MyAppURL "https://maestebanc.github.io/MyTag/"
 #define MyAppExeName "MyTag.exe"
 
 [Setup]

@@ -2,6 +2,8 @@
 
 **A clean, fast, and modern audio tag and cover art editor for Linux.**
 
+🌐 **Website**: [maestebanc.github.io/MyTag](https://maestebanc.github.io/MyTag/)
+
 MyTag is built from the ground up with Python, GTK4, and Libadwaita to provide a focused, native, and reliable workflow for managing music collections. Whether you want to quickly fix a single track or clean up metadata across hundreds of albums, MyTag gives you full control with safe batch editing, integrated artwork lookup, audio fingerprinting, and file organization.
 
 ![MyTag Main Window](screenshots/main-window.png)
