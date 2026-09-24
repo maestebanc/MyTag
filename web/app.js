@@ -12,7 +12,7 @@ const translations = {
     meta_desc: "MyTag es un editor de etiquetas y carátulas de audio nativo, moderno y rápido para Linux, diseñado con GTK4 y Libadwaita. Soporta FLAC, MP3, M4A, OGG y Opus.",
     
     // Header
-    nav_about: "Acerca de",
+    nav_about: "Por qué MyTag",
     nav_features: "Características",
     nav_screenshots: "Capturas",
     nav_formats: "Formatos",
@@ -26,17 +26,17 @@ const translations = {
     btn_github: "Código en GitHub",
     
     // About Section
-    about_badge: "Historia & Filosofía",
-    about_title: "Hecho por un amante de la música, para quien lo necesite",
-    about_lead: "Nació de una necesidad real: gestionar una biblioteca musical en Linux sin complicaciones.",
-    about_story_1: "Escucho música sobre todo en mi reproductor portátil (DAP) y siempre me ha gustado tener cada álbum bien etiquetado y con su portada. El problema era que en Linux nunca encontraba una herramienta que hiciera todo lo que necesitaba, y acababa arrancando Windows solo para usar Mp3tag.",
-    about_story_2: "Por eso creé MyTag. La hice para mi uso personal, pero la comparto por si a alguien le pasa lo mismo que a mí.",
-    pillar_artist_title: "Album Artist, sin excusas",
-    pillar_artist_text: "Muchos editores no gestionan bien esta etiqueta, y es clave para que los reproductores agrupen correctamente los recopilatorios y los álbumes con colaboraciones.",
-    pillar_cover_title: "Portadas a medida para tu DAP",
-    pillar_cover_text: "Algunos reproductores portátiles se atascan o no muestran la carátula si la imagen es demasiado grande. MyTag te permite redimensionarla con proporciones exactas antes de guardarla.",
-    pillar_linux_title: "Todo sin salir de Linux",
-    pillar_linux_text: "Se acabó reiniciar en Windows para ordenar tu música. Edición por lotes, búsqueda de portadas e identificación de pistas desde tu escritorio nativo.",
+    about_badge: "Origen & Filosofía",
+    about_title: "Por qué he creado MyTag",
+    about_lead: "Nació de una necesidad real: gestionar mi biblioteca musical en Linux.",
+    about_story_1: "Escucho música sobre todo en mi reproductor portátil (DAP) y me gusta tener cada álbum bien etiquetado y con su portada. El problema era que en Linux nunca encontraba una herramienta que hiciera todo lo que necesitaba, y acababa arrancando Windows para usar Mp3tag.",
+    about_story_2: "Por eso creé MyTag. La hice para mi uso personal, pero la publico por si le resulta útil a alguien más.",
+    pillar_artist_title: "Soporte para Album Artist",
+    pillar_artist_text: "Muchos editores no gestionan bien esta etiqueta, y es importante para que los reproductores agrupen correctamente los recopilatorios y los álbumes con colaboraciones.",
+    pillar_cover_title: "Portadas adaptadas a tu DAP",
+    pillar_cover_text: "Algunos reproductores portátiles dan problemas o no muestran la carátula si la imagen es demasiado grande. MyTag permite redimensionarla con proporciones exactas antes de guardarla.",
+    pillar_linux_title: "Todo desde Linux",
+    pillar_linux_text: "Edición por lotes, búsqueda de portadas e identificación de pistas sin necesidad de cambiar de sistema.",
     
     // Features Section
     feat_section_title: "Diseñado para amantes de la música",
@@ -120,7 +120,7 @@ const translations = {
     meta_desc: "MyTag is a fast, clean, and native audio tag and cover art editor for Linux, crafted with GTK4 and Libadwaita. Supports FLAC, MP3, M4A, OGG, and Opus.",
     
     // Header
-    nav_about: "About",
+    nav_about: "Why MyTag",
     nav_features: "Features",
     nav_screenshots: "Screenshots",
     nav_formats: "Formats",
@@ -134,17 +134,17 @@ const translations = {
     btn_github: "GitHub Repository",
     
     // About Section
-    about_badge: "Story & Philosophy",
-    about_title: "Built by a music lover, for anyone who needs it",
-    about_lead: "Born from a real need: managing an audio collection on Linux without compromises.",
-    about_story_1: "I listen to music mostly on my portable digital audio player (DAP) and I've always liked having every album properly tagged and covered. The problem was that on Linux I never found a tool that did everything I needed, and I ended up booting Windows just to use Mp3tag.",
-    about_story_2: "That's why I created MyTag. I built it for my personal use, but I share it in case someone else is facing the same situation.",
-    pillar_artist_title: "Album Artist, done right",
-    pillar_artist_text: "Many tag editors mishandle or neglect this field, yet it's critical for players to properly group compilations and collaborative releases.",
-    pillar_cover_title: "Tailored covers for your DAP",
-    pillar_cover_text: "Some portable players choke or fail to display artwork if images are too large. MyTag lets you resize covers with exact proportions before saving.",
-    pillar_linux_title: "Everything natively on Linux",
-    pillar_linux_text: "No more rebooting into Windows to organize your music. Batch editing, cover art lookup, and track identification right from your native desktop.",
+    about_badge: "Origin & Philosophy",
+    about_title: "Why I created MyTag",
+    about_lead: "Born from a real need: managing my music library on Linux.",
+    about_story_1: "I listen to music mostly on my portable digital audio player (DAP) and I like having every album properly tagged and with its cover art. The problem was that on Linux I never found a tool that did everything I needed, and I ended up booting Windows just to use Mp3tag.",
+    about_story_2: "That's why I created MyTag. I built it for my own personal use, but I'm publishing it in case it proves useful to someone else.",
+    pillar_artist_title: "Album Artist Support",
+    pillar_artist_text: "Many tag editors don't handle this tag well, and it's essential for players to properly group compilations and collaborative albums.",
+    pillar_cover_title: "Covers tailored for your DAP",
+    pillar_cover_text: "Some portable players struggle or fail to display artwork if the image is too large. MyTag lets you resize it with exact proportions before saving.",
+    pillar_linux_title: "Everything from Linux",
+    pillar_linux_text: "Batch editing, cover art lookup, and track identification without ever having to switch systems.",
     
     // Features Section
     feat_section_title: "Built for music lovers",
@@ -228,7 +228,7 @@ const translations = {
     meta_desc: "MyTag és un editor d'etiquetes i caràtules d'àudio natiu, modern i ràpid per a Linux, dissenyat amb GTK4 i Libadwaita. Suporta FLAC, MP3, M4A, OGG i Opus.",
     
     // Header
-    nav_about: "Quant a MyTag",
+    nav_about: "Per què MyTag",
     nav_features: "Característiques",
     nav_screenshots: "Captures",
     nav_formats: "Formats",
@@ -242,17 +242,17 @@ const translations = {
     btn_github: "Codi a GitHub",
     
     // About Section
-    about_badge: "Història & Filosofia",
-    about_title: "Fet per un amant de la música, per a qui ho necessiti",
-    about_lead: "Va néixer d'una necessitat real: gestionar una biblioteca musical a Linux sense complicacions.",
-    about_story_1: "Escolto música sobretot al meu reproductor portàtil (DAP) i sempre m'ha agradat tenir cada àlbum ben etiquetat i amb la seva caràtula. El problema era que a Linux mai no trobava una eina que fes tot el que necessitava, i acabava arrencant Windows només per fer servir Mp3tag.",
-    about_story_2: "Per això vaig crear MyTag. La vaig fer per al meu ús personal, però la comparteixo per si a algú li passa el mateix que a mi.",
-    pillar_artist_title: "Album Artist, sense excuses",
-    pillar_artist_text: "Molts editors no gestionen bé aquesta etiqueta, i és clau perquè els reproductors agrupin correctament els recopilatoris i els àlbums amb col·laboracions.",
-    pillar_cover_title: "Caràtules a mida per al teu DAP",
-    pillar_cover_text: "Alguns reproductors portàtils s'encallen o no mostren la caràtula si la imatge és massa gran. MyTag et permet redimensionar-la amb proporcions exactes abans de desar-la.",
-    pillar_linux_title: "Tot sense sortir de Linux",
-    pillar_linux_text: "S'ha acabat reiniciar a Windows per ordenar la teva música. Edició per lots, cerca de caràtules i identificació de pistes des del teu escriptori natiu.",
+    about_badge: "Origen & Filosofia",
+    about_title: "Per què he creat MyTag",
+    about_lead: "Va néixer d'una necessitat real: gestionar la meva biblioteca musical a Linux.",
+    about_story_1: "Escolto música sobretot al meu reproductor portàtil (DAP) i m'agrada tenir cada àlbum ben etiquetat i amb la seva caràtula. El problema era que a Linux mai no trobava una eina que fes tot el que necessitava, i acabava arrencant Windows per fer servir Mp3tag.",
+    about_story_2: "Per això vaig crear MyTag. La vaig fer per al meu ús personal, però la publico per si li resulta útil a algú més.",
+    pillar_artist_title: "Suport per a Album Artist",
+    pillar_artist_text: "Molts editors no gestionen bé aquesta etiqueta, i és important perquè els reproductors agrupin correctament els recopilatoris i els àlbums amb col·laboracions.",
+    pillar_cover_title: "Caràtules adaptades al teu DAP",
+    pillar_cover_text: "Alguns reproductors portàtils donen problemes o no mostren la caràtula si la imatge és massa gran. MyTag permet redimensionar-la amb proporcions exactes abans de desar-la.",
+    pillar_linux_title: "Tot des de Linux",
+    pillar_linux_text: "Edició per lots, cerca de caràtules i identificació de pistes sense necessitat de canviar de sistema.",
     
     // Features Section
     feat_section_title: "Dissenyat per a amants de la música",
