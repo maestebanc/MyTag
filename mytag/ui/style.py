@@ -283,44 +283,6 @@ def load_extra_css() -> None:
 DEFAULT_DPI_1024 = 98304  # 96 DPI * 1024 (estándar de fuentes en X11/Wayland)
 
 
-def _get_windows_system_dpi() -> int:
-    """Detecta el DPI configurado en Windows para adaptar la interfaz a pantallas HiDPI (4K, 175%, etc.)."""
-    if sys.platform != "win32":
-        return 96
-    try:
-        import ctypes
-        # 1. Habilitar contexto Per-Monitor V2 si el sistema lo soporta
-        try:
-            ctypes.windll.user32.SetProcessDpiAwarenessContext(-4)
-        except Exception:
-            try:
-                ctypes.windll.shcore.SetProcessDpiAwareness(2)
-            except Exception:
-                try:
-                    ctypes.windll.user32.SetProcessDPIAware()
-                except Exception:
-                    pass
-
-        # 2. GetDpiForSystem (Windows 10 1607+)
-        try:
-            dpi = ctypes.windll.user32.GetDpiForSystem()
-            if dpi and dpi > 0:
-                return int(dpi)
-        except Exception:
-            pass
-
-        # 3. Fallback con GetDeviceCaps
-        hdc = ctypes.windll.user32.GetDC(0)
-        if hdc:
-            dpi = ctypes.windll.gdi32.GetDeviceCaps(hdc, 88)  # LOGPIXELSX
-            ctypes.windll.user32.ReleaseDC(0, hdc)
-            if dpi and dpi > 0:
-                return int(dpi)
-    except Exception:
-        pass
-    return 96
-
-
 _gnome_settings: Gio.Settings | None = None
 _gnome_settings_connected: bool = False
 _current_ui_scale_percent: int = 100
@@ -372,18 +334,12 @@ def apply_ui_scale(percent: int) -> None:
     if settings is None:
         return
 
-    if sys.platform == "win32":
-        # En Windows, GTK4 Win32 no sincroniza automáticamente el escalado fraccional.
-        # Obtenemos el DPI nativo de Windows (ej. 168 DPI para 175% en 4K) y lo aplicamos.
-        win_dpi = _get_windows_system_dpi()
-        dpi_1024 = int(round(win_dpi * 1024 * (percent / 100.0)))
-        settings.set_property("gtk-xft-dpi", dpi_1024)
-    else:
-        # En Linux/GNOME, obtenemos el factor de escala de fuentes del sistema (ej. 1.33).
-        # Al 100% de escala en MyTag, la tipografía coincide exactamente con la escala de GNOME.
-        # Por encima o por debajo (110%, 125%, 90%), escala proporcionalmente a partir de esa base.
-        font_scale = _get_linux_system_font_scale()
-        base_dpi = 96.0 * font_scale
-        dpi_1024 = int(round(base_dpi * 1024 * (percent / 100.0)))
-        settings.set_property("gtk-xft-dpi", dpi_1024)
+    # En Linux/GNOME, obtenemos el factor de escala de fuentes del sistema (ej. 1.33).
+    # Al 100% de escala en MyTag, la tipografía coincide exactamente con la escala de GNOME.
+    # Por encima o por debajo (110%, 125%, 90%), escala proporcionalmente a partir de esa base.
+    font_scale = _get_linux_system_font_scale()
+    base_dpi = 96.0 * font_scale
+    dpi_1024 = int(round(base_dpi * 1024 * (percent / 100.0)))
+    settings.set_property("gtk-xft-dpi", dpi_1024)
+
 

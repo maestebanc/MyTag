@@ -13,20 +13,7 @@ from mutagen.oggvorbis import OggVorbis
 
 
 def _find_flac_binary() -> str | None:
-    """Busca el binario flac en el bundle empaquetado o en el PATH del sistema."""
-    if getattr(sys, "frozen", False):
-        meipass = getattr(sys, "_MEIPASS", None)
-        if meipass:
-            for ext in (".exe", "") if sys.platform == "win32" else ("",):
-                cand = os.path.join(meipass, f"flac{ext}")
-                if os.path.isfile(cand):
-                    return cand
-        exe_dir = os.path.dirname(sys.executable)
-        for sub in ("", "_internal"):
-            for ext in (".exe", "") if sys.platform == "win32" else ("",):
-                cand = os.path.join(exe_dir, sub, f"flac{ext}")
-                if os.path.isfile(cand):
-                    return cand
+    """Busca el binario flac en el PATH del sistema."""
     return shutil.which("flac")
 
 
@@ -75,17 +62,12 @@ def check_integrity(path: str) -> tuple[bool, str]:
     if not flac_bin:
         return False, "flac binary not found"
 
-    kwargs = {}
-    if sys.platform == "win32":
-        kwargs["creationflags"] = 0x08000000  # CREATE_NO_WINDOW
-
     try:
         result = subprocess.run(
             [flac_bin, "--test", "--silent", path],
             capture_output=True,
             text=True,
             timeout=120,
-            **kwargs,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
         return False, str(exc)

@@ -73,14 +73,6 @@ def update_arch(new_ver: str) -> None:
     print(f"✓ packaging/arch/PKGBUILD -> {new_ver}")
 
 
-def update_windows(new_ver: str) -> None:
-    path = ROOT / "packaging" / "windows" / "installer.iss"
-    content = path.read_text(encoding="utf-8")
-    content = re.sub(r'#define MyAppVersion\s*"[^"]+"', f'#define MyAppVersion "{new_ver}"', content, count=1)
-    path.write_text(content, encoding="utf-8")
-    print(f"✓ packaging/windows/installer.iss -> {new_ver}")
-
-
 def update_flatpak_manifest(new_ver: str) -> None:
     path = ROOT / "packaging" / "flatpak" / "com.maestebanc.MyTag.yml"
     if path.exists():
@@ -131,7 +123,6 @@ def main() -> int:
     update_metainfo(new_ver)
     update_rpm_spec(new_ver)
     update_arch(new_ver)
-    update_windows(new_ver)
     update_flatpak_manifest(new_ver)
     update_web(new_ver)
     print(f"=== Actualización completa para versión {new_ver} ===")
