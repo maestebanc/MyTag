@@ -926,15 +926,22 @@ section {
 
 .install-note {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.86rem;
-  color: var(--text-muted);
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  background-color: var(--bg-card-hover);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  margin-top: 16px;
 }
 
 .install-note svg {
   color: var(--accent);
   flex-shrink: 0;
+  margin-top: 3px;
 }
 
 .releases-banner {

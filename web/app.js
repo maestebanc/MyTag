@@ -89,7 +89,7 @@ const translations = {
     
     inst_flatpak_title: "Paquete Flatpak Universal",
     inst_flatpak_desc: "La forma más recomendada. Incluye todas las dependencias aisladas, Chromaprint (fpcalc) y acceso a tu carpeta de música.",
-    flathub_note: "Próximamente disponible de forma directa en Flathub (submission en revisión).",
+    flathub_note: "Flathub, de manera prepotente y sin ninguna educación ni empatía, ha decidido que este proyecto no es digno de estar en su repositorio. Por tanto, la única forma oficial de usar MyTag en Flatpak es descargándolo directamente desde aquí.",
     
     inst_deb_title: "Paquete para Debian, Ubuntu y derivados",
     inst_deb_desc: "Compatible con Ubuntu 24.04 LTS+, Linux Mint, Debian Trixie/Sid y sistemas basados en APT.",
@@ -197,7 +197,7 @@ const translations = {
     
     inst_flatpak_title: "Universal Flatpak Package",
     inst_flatpak_desc: "The recommended way. Includes all sandboxed dependencies, Chromaprint (fpcalc), and music folder access out of the box.",
-    flathub_note: "Coming soon directly to Flathub (submission awaiting review).",
+    flathub_note: "Flathub, in an arrogant manner and lacking any courtesy or empathy, decided this project is not worthy of their repository. Therefore, the only official way to run MyTag on Flatpak is downloading it directly from here.",
     
     inst_deb_title: "Debian, Ubuntu & Derivatives Package",
     inst_deb_desc: "Compatible with Ubuntu 24.04 LTS+, Linux Mint, Debian Trixie/Sid, and APT-based systems.",
@@ -305,7 +305,7 @@ const translations = {
     
     inst_flatpak_title: "Paquet Flatpak Universal",
     inst_flatpak_desc: "La manera més recomanada. Inclou totes les dependències aïllades, Chromaprint (fpcalc) i accés a la teva carpeta de música.",
-    flathub_note: "Properament disponible directament a Flathub (submission en revisió).",
+    flathub_note: "Flathub, de manera prepotent i sense cap educació ni empatia, ha decidit que aquest projecte no és digne d'estar al seu repositori. Per tant, l'única manera oficial de fer servir MyTag en Flatpak és descarregant-lo directament des d'aquí.",
     
     inst_deb_title: "Paquet per a Debian, Ubuntu i derivats",
     inst_deb_desc: "Compatible amb Ubuntu 24.04 LTS+, Linux Mint, Debian Trixie/Sid i sistemes basats en APT.",
