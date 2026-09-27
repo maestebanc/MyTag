@@ -392,25 +392,18 @@ function setLanguage(lang) {
 }
 
 // ==========================================
-// 3. Theme Engine (Light / Dark / Auto)
+// 3. Theme Engine (Dark by default)
 // ==========================================
 function initTheme() {
-  const storedTheme = localStorage.getItem('mytag_theme') || 'auto';
-  document.documentElement.setAttribute('data-theme', storedTheme);
+  const storedTheme = localStorage.getItem('mytag_theme');
+  const activeTheme = storedTheme === 'light' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', activeTheme);
 
   const themeToggle = document.getElementById('themeToggle');
   if (themeToggle) {
     themeToggle.addEventListener('click', () => {
-      const current = document.documentElement.getAttribute('data-theme') || 'auto';
-      let nextTheme;
-      if (current === 'auto') {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        nextTheme = prefersDark ? 'light' : 'dark';
-      } else if (current === 'light') {
-        nextTheme = 'dark';
-      } else {
-        nextTheme = 'auto';
-      }
+      const current = document.documentElement.getAttribute('data-theme') || 'dark';
+      const nextTheme = current === 'dark' ? 'light' : 'dark';
 
       document.documentElement.setAttribute('data-theme', nextTheme);
       localStorage.setItem('mytag_theme', nextTheme);

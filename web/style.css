@@ -33,7 +33,7 @@
 }
 
 /* Light Theme Variables */
-:root, [data-theme="light"] {
+[data-theme="light"] {
   --bg-app: #f6f8fb;
   --bg-card: #ffffff;
   --bg-card-hover: #fcfdfe;
@@ -59,36 +59,8 @@
   --accent-light: rgba(53, 132, 228, 0.12);
 }
 
-/* Dark Theme Variables */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg-app: #18181c;
-    --bg-card: #24242a;
-    --bg-card-hover: #2a2a32;
-    --bg-subtle: #303038;
-    --bg-header: rgba(24, 24, 28, 0.88);
-    --bg-terminal: #151518;
-    --text-terminal: #f0f0f5;
-
-    --text-primary: #f2f3f7;
-    --text-secondary: #a0a2af;
-    --text-muted: #727480;
-
-    --border-subtle: rgba(255, 255, 255, 0.09);
-    --border-card: rgba(255, 255, 255, 0.07);
-
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
-    --shadow-lg: 0 14px 40px rgba(0, 0, 0, 0.45);
-    --shadow-window: 0 20px 56px rgba(0, 0, 0, 0.55), 0 4px 16px rgba(0, 0, 0, 0.3);
-
-    --accent: var(--blue-2);
-    --accent-hover: var(--blue-1);
-    --accent-light: rgba(98, 160, 234, 0.16);
-  }
-}
-
-[data-theme="dark"] {
+/* Dark Theme Variables (Default) */
+:root, [data-theme="dark"] {
   --bg-app: #18181c;
   --bg-card: #24242a;
   --bg-card-hover: #2a2a32;
@@ -317,16 +289,14 @@ body {
   border-color: var(--accent);
 }
 
-.sun-icon { display: none; }
-.moon-icon { display: block; }
+.sun-icon { display: block; }
+.moon-icon { display: none; }
+
+[data-theme="light"] .sun-icon { display: none; }
+[data-theme="light"] .moon-icon { display: block; }
 
 [data-theme="dark"] .sun-icon { display: block; }
 [data-theme="dark"] .moon-icon { display: none; }
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .sun-icon { display: block; }
-  :root:not([data-theme="light"]) .moon-icon { display: none; }
-}
 
 .mobile-toggle {
   display: none;
