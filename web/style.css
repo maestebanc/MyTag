@@ -32,33 +32,6 @@
   --radius-pill: 9999px;
 }
 
-/* Light Theme Variables */
-[data-theme="light"] {
-  --bg-app: #f6f8fb;
-  --bg-card: #ffffff;
-  --bg-card-hover: #fcfdfe;
-  --bg-subtle: #ebedf2;
-  --bg-header: rgba(246, 248, 251, 0.88);
-  --bg-terminal: #1e1e24;
-  --text-terminal: #f0f0f5;
-
-  --text-primary: #1c1d22;
-  --text-secondary: #5c5e69;
-  --text-muted: #8b8e9b;
-
-  --border-subtle: rgba(0, 0, 0, 0.08);
-  --border-card: rgba(0, 0, 0, 0.06);
-
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
-  --shadow-window: 0 16px 48px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
-
-  --accent: var(--blue-3);
-  --accent-hover: var(--blue-4);
-  --accent-light: rgba(53, 132, 228, 0.12);
-}
-
 /* Dark Theme Variables (Default) */
 :root, [data-theme="dark"] {
   --bg-app: #18181c;
@@ -84,6 +57,33 @@
   --accent: var(--blue-2);
   --accent-hover: var(--blue-1);
   --accent-light: rgba(98, 160, 234, 0.16);
+}
+
+/* Light Theme Variables — Libadwaita Slate Soft Palette */
+:root[data-theme="light"], [data-theme="light"] {
+  --bg-app: #ebeef3;
+  --bg-card: #f7f9fb;
+  --bg-card-hover: #ffffff;
+  --bg-subtle: #dfe3ea;
+  --bg-header: rgba(235, 238, 243, 0.88);
+  --bg-terminal: #1e1e24;
+  --text-terminal: #f0f0f5;
+
+  --text-primary: #242731;
+  --text-secondary: #5b6070;
+  --text-muted: #868c9e;
+
+  --border-subtle: rgba(0, 0, 0, 0.09);
+  --border-card: rgba(40, 50, 70, 0.08);
+
+  --shadow-sm: 0 1px 3px rgba(20, 30, 50, 0.06);
+  --shadow-md: 0 4px 14px rgba(20, 30, 50, 0.08), 0 1px 3px rgba(20, 30, 50, 0.04);
+  --shadow-lg: 0 12px 36px rgba(20, 30, 50, 0.1), 0 2px 8px rgba(20, 30, 50, 0.05);
+  --shadow-window: 0 16px 48px rgba(20, 30, 50, 0.14), 0 4px 12px rgba(20, 30, 50, 0.06);
+
+  --accent: var(--blue-3);
+  --accent-hover: var(--blue-4);
+  --accent-light: rgba(53, 132, 228, 0.12);
 }
 
 /* CSS Reset & Base */
