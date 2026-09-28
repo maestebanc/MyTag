@@ -17,6 +17,8 @@ const translations = {
     nav_screenshots: "Capturas",
     nav_formats: "Formatos",
     nav_download: "Descargar",
+    theme_to_light: "Cambiar a modo claro",
+    theme_to_dark: "Cambiar a modo oscuro",
     
     // Hero
     hero_badge: "Diseñado nativamente para GNOME & Linux",
@@ -125,6 +127,8 @@ const translations = {
     nav_screenshots: "Screenshots",
     nav_formats: "Formats",
     nav_download: "Download",
+    theme_to_light: "Switch to light theme",
+    theme_to_dark: "Switch to dark theme",
     
     // Hero
     hero_badge: "Natively crafted for GNOME & Linux",
@@ -233,6 +237,8 @@ const translations = {
     nav_screenshots: "Captures",
     nav_formats: "Formats",
     nav_download: "Descarregar",
+    theme_to_light: "Canviar a mode clar",
+    theme_to_dark: "Canviar a mode fosc",
     
     // Hero
     hero_badge: "Dissenyat nativament per a GNOME & Linux",
@@ -394,19 +400,49 @@ function setLanguage(lang) {
 // ==========================================
 // 3. Theme Engine (Dark by default)
 // ==========================================
-function initTheme() {
-  const storedTheme = localStorage.getItem('mytag_theme');
-  const activeTheme = storedTheme === 'light' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', activeTheme);
+function getEffectiveTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  if (current === 'dark' || current === 'light') return current;
+  return 'dark';
+}
+
+function applyTheme(theme) {
+  const root = document.documentElement;
+  const isLight = theme === 'light';
+  root.setAttribute('data-theme', isLight ? 'light' : 'dark');
+  localStorage.setItem('mytag_theme', isLight ? 'light' : 'dark');
 
   const themeToggle = document.getElementById('themeToggle');
   if (themeToggle) {
-    themeToggle.addEventListener('click', () => {
-      const current = document.documentElement.getAttribute('data-theme') || 'dark';
-      const nextTheme = current === 'dark' ? 'light' : 'dark';
+    themeToggle.setAttribute('title', isLight ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro');
+    themeToggle.setAttribute('aria-label', isLight ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro');
+  }
+}
 
-      document.documentElement.setAttribute('data-theme', nextTheme);
-      localStorage.setItem('mytag_theme', nextTheme);
+function toggleTheme() {
+  const current = getEffectiveTheme();
+  const next = current === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+}
+
+function initTheme() {
+  const storedTheme = localStorage.getItem('mytag_theme');
+  const activeTheme = storedTheme === 'light' ? 'light' : 'dark';
+  applyTheme(activeTheme);
+
+  const themeToggle = document.getElementById('themeToggle');
+  if (themeToggle) {
+    themeToggle.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleTheme();
+    });
+  }
+
+  const navThemeBtn = document.getElementById('navThemeBtn');
+  if (navThemeBtn) {
+    navThemeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleTheme();
     });
   }
 }
